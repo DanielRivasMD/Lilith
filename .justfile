@@ -57,7 +57,9 @@ install app=goapp exe=goexe:
   @mv -v "${HOME}/go/bin/{{app}}" "${HOME}/go/bin/{{exe}}"
   @echo "\n\033[1;33mCopying\033[0;37m...\n=================================================="
   @if [ ! -d "${HOME}/{{dir}}" ]; then mkdir "${HOME}/{{dir}}"; fi
-
+  @if test -e "${HOME}/{{sh}}"; then rm -r "${HOME}/{{sh}}"; fi && echo "\033[1;33msh\033[0;37m" && cp -v -R "sh" "${HOME}/{{sh}}"
+  @if test -e "${HOME}/{{config}}"; then rm -r "${HOME}/{{config}}"; fi && echo "\033[1;33mconfig\033[0;37m" && cp -v -R "config" "${HOME}/{{config}}"
+  
 ####################################################################################################
 
 # watch changes
