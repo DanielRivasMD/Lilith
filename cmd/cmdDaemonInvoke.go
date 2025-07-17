@@ -43,15 +43,6 @@ var (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func bindWorkflowFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
-	if !cmd.Flags().Changed(flagName) && cfg.IsSet(flagName) {
-		*dest = cfg.GetString(flagName)
-		cmd.Flags().Set(flagName, *dest)
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Start a new watcher daemon",
@@ -61,10 +52,10 @@ var invokeCmd = &cobra.Command{
 			if wf == nil {
 				return fmt.Errorf("workflow %q is not a table in config", daemonName)
 			}
-			bindWorkflowFlag(cmd, "watch", &watchDir, wf)
-			bindWorkflowFlag(cmd, "script", &scriptPath, wf)
-			bindWorkflowFlag(cmd, "group", &groupName, wf)
-			bindWorkflowFlag(cmd, "log", &logName, wf)
+			bindFlag(cmd, "watch", &watchDir, wf)
+			bindFlag(cmd, "script", &scriptPath, wf)
+			bindFlag(cmd, "group", &groupName, wf)
+			bindFlag(cmd, "log", &logName, wf)
 		}
 		return nil
 	},
