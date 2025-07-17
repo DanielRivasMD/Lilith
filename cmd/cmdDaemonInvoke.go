@@ -24,7 +24,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/DanielRivasMD/domovoi"
+	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/ttacon/chalk"
 )
 
@@ -35,46 +38,81 @@ var (
 	watchDir   string
 	scriptPath string
 	groupName  string
-	logPath    string
+	logName    string
 )
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func bindWorkflowFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
+	if !cmd.Flags().Changed(flagName) && cfg.IsSet(flagName) {
+		*dest = cfg.GetString(flagName)
+		cmd.Flags().Set(flagName, *dest)
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Start a new watcher daemon",
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// TODO: add mkdir
-// TODO: use domovoi
-
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if daemonName != "" && viper.IsSet("workflows."+daemonName) {
+			wf := viper.Sub("workflows." + daemonName)
+			if wf == nil {
+				return fmt.Errorf("workflow %q is not a table in config", daemonName)
+			}
+			bindWorkflowFlag(cmd, "watch", &watchDir, wf)
+			bindWorkflowFlag(cmd, "script", &scriptPath, wf)
+			bindWorkflowFlag(cmd, "group", &groupName, wf)
+			bindWorkflowFlag(cmd, "log", &logName, wf)
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// validate required flags
+		const op = "lilith.invoke"
+
+		// 1) Validate required flags before using horus
 		if daemonName == "" {
-			fmt.Fprintln(os.Stderr, "Error: --name is required")
-			os.Exit(1)
+			horus.CheckErr(
+				fmt.Errorf("`--name` is required"),
+				horus.WithOp(op),
+				horus.WithMessage("you must specify a unique daemon name"),
+			)
 		}
 		if watchDir == "" {
-			fmt.Fprintln(os.Stderr, "Error: --watch is required")
-			os.Exit(1)
+			horus.CheckErr(
+				fmt.Errorf("`--watch` is required"),
+				horus.WithOp(op),
+				horus.WithMessage("you must specify a directory to watch"),
+			)
 		}
 		if scriptPath == "" {
-			fmt.Fprintln(os.Stderr, "Error: --script is required")
-			os.Exit(1)
+			horus.CheckErr(
+				fmt.Errorf("`--script` is required"),
+				horus.WithOp(op),
+				horus.WithMessage("you must specify a script to run"),
+			)
 		}
 
-		// expand env and tildes
+		// 2) Expand environment variables and tildes
 		watchDir = os.ExpandEnv(watchDir)
 		scriptPath = os.ExpandEnv(scriptPath)
-		home := os.Getenv("HOME")
 
-		// default log path
-		if logPath == "" {
-			logPath = filepath.Join(home, ".lou", "logs", daemonName+".log")
-		} else {
-			logPath = os.ExpandEnv(logPath)
-		}
+		// 3) Prepare log directory under ~/.lilith/logs/
+		home, err := os.UserHomeDir()
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("fetching home directory"))
 
-		// build metadata
+		logDir := filepath.Join(home, ".lilith", "logs")
+		horus.CheckErr(
+			domovoi.CreateDir(logDir),
+			horus.WithOp(op),
+			horus.WithMessage(fmt.Sprintf("creating log directory %q", logDir)),
+		)
+
+		// 4) Construct full log path
+		logPath := filepath.Join(logDir, logName+".log")
+
+		// 5) Build and persist metadata
 		meta := &daemonMeta{
 			Name:       daemonName,
 			Group:      groupName,
@@ -84,33 +122,32 @@ var invokeCmd = &cobra.Command{
 			InvokedAt:  time.Now(),
 		}
 
-		// spawn watcher
+		// 6) Spawn the watcher process
 		pid, err := spawnWatcher(meta)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Failed to start watcher:", err)
-			os.Exit(1)
-		}
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("starting watcher"))
 		meta.PID = pid
 
-		// persist metadata
-		if err := saveMeta(meta); err != nil {
-			fmt.Fprintln(os.Stderr, "Failed to write metadata:", err)
-			os.Exit(1)
-		}
+		// 7) Save metadata to disk
+		horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("writing metadata"))
 
-		fmt.Printf("%s invoked daemon %q (group=%q) with PID %d\n",
-			chalk.Green.Color("OK:"), daemonName, groupName, pid)
+		// 8) Final success message
+		fmt.Printf(
+			"%s invoked daemon %q (group=%q) with PID %d\n",
+			chalk.Green.Color("OK:"), daemonName, groupName, pid,
+		)
 	},
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
 	invokeCmd.Flags().StringVarP(&daemonName, "name", "n", "", "Unique daemon name")
-	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch")
-	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to run on change")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Daemon group name")
-	invokeCmd.Flags().StringVarP(&logPath, "log", "l", "", "Path for log file")
+	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", viper.GetString("watch"), "Directory to watch")
+	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", viper.GetString("script"), "Script to execute on change")
+	invokeCmd.Flags().StringVarP(&groupName, "group", "g", viper.GetString("group"), "Watcher group name")
+	invokeCmd.Flags().StringVarP(&logName, "log", "l", viper.GetString("log"), "Name for log file (without extension)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
