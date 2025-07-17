@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,7 +25,6 @@ import (
 
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/ttacon/chalk"
 )
@@ -117,6 +115,13 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	return pid, nil
 }
 
+func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
+	if !cmd.Flags().Changed(flagName) && cfg.IsSet(flagName) {
+		*dest = cfg.GetString(flagName)
+		cmd.Flags().Set(flagName, *dest)
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rootCmd defines the base command when called without any subcommands.
@@ -137,49 +142,6 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	horus.CheckErr(err)
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// initializeConfig sets up configuration using Viper.
-// It also leverages the Domovoi library for any additional configuration management.
-func initializeConfig(cmd *cobra.Command, configPath string, configName string) error {
-	// Create a new Viper instance for configuration management.
-	vConfig := viper.New()
-
-	// Set the path and name of the configuration file.
-	vConfig.AddConfigPath(configPath)
-	vConfig.SetConfigName(configName)
-
-	// Attempt to read the configuration file.
-	err := vConfig.ReadInConfig()
-	if err != nil {
-		// If the config file is not found, that's acceptable.
-		_, notFound := err.(viper.ConfigFileNotFoundError)
-		if !notFound {
-			// Return the error for any other issue.
-			return err
-		}
-	}
-
-	// Bind command flags with configuration values.
-	bindFlags(cmd, vConfig)
-
-	return nil
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// bindFlags synchronizes each Cobra flag with the corresponding Viper configuration value.
-// If the flag is unset and a configuration value is available, the flag is updated.
-func bindFlags(cmd *cobra.Command, vConfig *viper.Viper) {
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		// If the flag wasn't explicitly set but has a value in the config, apply that value.
-		if !flag.Changed && vConfig.IsSet(flag.Name) {
-			value := vConfig.Get(flag.Name)
-			cmd.Flags().Set(flag.Name, fmt.Sprintf("%v", value))
-		}
-	})
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
