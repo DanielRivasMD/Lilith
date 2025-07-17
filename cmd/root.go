@@ -16,6 +16,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 package cmd
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import (
 	"encoding/json"
 	"os"
@@ -31,12 +33,6 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Global declarations (reserved for future variables)
-var (
-// Add any global variables here if necessary.
-)
-
-// Metadata structure and helpers
 // daemonMeta holds persistent info about a watcher process.
 type daemonMeta struct {
 	Name       string    `json:"name"`
@@ -48,12 +44,12 @@ type daemonMeta struct {
 	InvokedAt  time.Time `json:"invokedAt"`
 }
 
-// getDaemonDir returns ~/.lou/daemons
+// getDaemonDir returns ~/.lilith/daemon
 func getDaemonDir() string {
-	return filepath.Join(os.Getenv("HOME"), ".lou", "daemons")
+	return filepath.Join(os.Getenv("HOME"), ".lilith", "daemon")
 }
 
-// saveMeta writes meta to ~/.lou/daemons/<name>.json
+// saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) error {
 	dir := getDaemonDir()
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -63,37 +59,31 @@ func saveMeta(meta *daemonMeta) error {
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(dir, meta.Name+".json")
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(filepath.Join(dir, meta.Name+".json"), data, 0644)
 }
 
-// loadMeta reads ~/.lou/daemons/<name>.json
+// loadMeta reads ~/.lilith/daemon/<name>.json
 func loadMeta(name string) (*daemonMeta, error) {
 	path := filepath.Join(getDaemonDir(), name+".json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var meta daemonMeta
-	err = json.Unmarshal(data, &meta)
-	return &meta, err
+	var m daemonMeta
+	return &m, json.Unmarshal(data, &m)
 }
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
 func spawnWatcher(meta *daemonMeta) (int, error) {
-	// ensure log directory exists
 	if err := os.MkdirAll(filepath.Dir(meta.LogPath), 0755); err != nil {
 		return 0, err
 	}
 
-	cmdArgs := []string{
+	cmd := exec.Command("watchexec",
 		"--watch", meta.WatchDir,
 		"--",
 		"bash", meta.ScriptPath,
-	}
-	cmd := exec.Command("watchexec", cmdArgs...)
-
-	// open (or create) log file
+	)
 	f, err := os.OpenFile(meta.LogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return 0, err
@@ -101,20 +91,19 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	cmd.Stdout = f
 	cmd.Stderr = f
 
-	// start detached
 	if err := cmd.Start(); err != nil {
 		f.Close()
 		return 0, err
 	}
 	pid := cmd.Process.Pid
 
-	// detach to avoid zombies
 	if err := cmd.Process.Release(); err != nil {
 		return pid, err
 	}
 	return pid, nil
 }
 
+// bindFlag copies a Viper value into a flag variable if the flag wasn’t set.
 func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
 	if !cmd.Flags().Changed(flagName) && cfg.IsSet(flagName) {
 		*dest = cfg.GetString(flagName)
@@ -124,33 +113,26 @@ func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Vipe
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// rootCmd defines the base command when called without any subcommands.
+// rootCmd
 var rootCmd = &cobra.Command{
 	Use: "lilith",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) + chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.White.Color("lilith") + `, manage background watcher daemons
+` + chalk.White.Color("lilith") + `, manage background watcher daemon
 `,
-
 	Example: chalk.White.Color("lilith") + " help",
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Execute is the entry point for executing the command.
-// It wraps the root command execution and handles any errors using Horus's checkErr function.
+// Execute runs rootCmd
 func Execute() {
-	err := rootCmd.Execute()
-	horus.CheckErr(err)
+	horus.CheckErr(rootCmd.Execute())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Execute prior main.
-// init registers persistent flags and performs additional initialization tasks.
 func init() {
-	// Set up persistent flags.
-	// rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.tool.yaml)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
