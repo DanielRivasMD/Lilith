@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/DanielRivasMD/domovoi"
@@ -33,77 +34,117 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// invocation flags + derived defaults
 var (
 	daemonName string
 	watchDir   string
 	scriptPath string
-	groupName  string
 	logName    string
+	groupName  string
+	configName string
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// invokeCmd starts a new watcher daemon, pulling defaults from ~/.lilith/forge.toml
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Start a new watcher daemon",
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if daemonName != "" && viper.IsSet("workflows."+daemonName) {
-			wf := viper.Sub("workflows." + daemonName)
-			if wf == nil {
-				return fmt.Errorf("workflow %q is not a table in config", daemonName)
+		// 1) Load ~/.lilith/forge.{toml,yaml,json}
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		v := viper.New()
+		v.AddConfigPath(filepath.Join(home, ".lilith"))
+		v.SetConfigName(configName)
+		if err := v.ReadInConfig(); err != nil {
+			if _, notFound := err.(viper.ConfigFileNotFoundError); !notFound {
+				return err
 			}
+		}
+
+		// 2) Default group ← the config filename
+		if used := v.ConfigFileUsed(); used != "" {
+			base := filepath.Base(used) // e.g. "forge.toml"
+			groupName = strings.TrimSuffix(base, filepath.Ext(base))
+		} else {
+			groupName = configName
+		}
+
+		// 3) Bind top–level keys from forge.toml if flags unset
+		bindFlag(cmd, "group", &groupName, v)
+		bindFlag(cmd, "watch", &watchDir, v)
+		bindFlag(cmd, "script", &scriptPath, v)
+		bindFlag(cmd, "log", &logName, v)
+
+		// 4) Per–workflow overrides under [workflows.<daemonName>]
+		if daemonName != "" && v.IsSet("workflows."+daemonName) {
+			wf := v.Sub("workflows." + daemonName)
+			if wf == nil {
+				return fmt.Errorf("workflow %q is not defined", daemonName)
+			}
+			bindFlag(cmd, "group", &groupName, wf)
 			bindFlag(cmd, "watch", &watchDir, wf)
 			bindFlag(cmd, "script", &scriptPath, wf)
-			bindFlag(cmd, "group", &groupName, wf)
 			bindFlag(cmd, "log", &logName, wf)
 		}
+
 		return nil
 	},
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.invoke"
 
-		// 1) Validate required flags before using horus
+		// 5) Validate required inputs
 		if daemonName == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--name` is required"),
-				horus.WithOp(op),
-				horus.WithMessage("you must specify a unique daemon name"),
+				horus.WithOp(op), horus.WithMessage("provide a unique daemon name"),
 			)
 		}
 		if watchDir == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--watch` is required"),
-				horus.WithOp(op),
-				horus.WithMessage("you must specify a directory to watch"),
+				horus.WithOp(op), horus.WithMessage("provide a directory to watch"),
 			)
 		}
 		if scriptPath == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--script` is required"),
-				horus.WithOp(op),
-				horus.WithMessage("you must specify a script to run"),
+				horus.WithOp(op), horus.WithMessage("provide a script to run"),
+			)
+		}
+		if logName == "" {
+			horus.CheckErr(
+				fmt.Errorf("`--log` is required"),
+				horus.WithOp(op), horus.WithMessage("provide a log name"),
 			)
 		}
 
-		// 2) Expand environment variables and tildes
+		// 6) Expand ~ and $ENV
 		watchDir = os.ExpandEnv(watchDir)
 		scriptPath = os.ExpandEnv(scriptPath)
 
-		// 3) Prepare log directory under ~/.lilith/logs/
+		// 7) Ensure ~/.lilith/logs exists
 		home, err := os.UserHomeDir()
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("fetching home directory"))
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
 
 		logDir := filepath.Join(home, ".lilith", "logs")
 		horus.CheckErr(
 			domovoi.CreateDir(logDir),
-			horus.WithOp(op),
-			horus.WithMessage(fmt.Sprintf("creating log directory %q", logDir)),
+			horus.WithOp(op), horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		)
 
-		// 4) Construct full log path
 		logPath := filepath.Join(logDir, logName+".log")
 
-		// 5) Build and persist metadata
+		// 8) Build & persist metadata
 		meta := &daemonMeta{
 			Name:       daemonName,
 			Group:      groupName,
@@ -113,15 +154,13 @@ var invokeCmd = &cobra.Command{
 			InvokedAt:  time.Now(),
 		}
 
-		// 6) Spawn the watcher process
 		pid, err := spawnWatcher(meta)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("starting watcher"))
 		meta.PID = pid
 
-		// 7) Save metadata to disk
 		horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("writing metadata"))
 
-		// 8) Final success message
+		// 9) Final message
 		fmt.Printf(
 			"%s invoked daemon %q (group=%q) with PID %d\n",
 			chalk.Green.Color("OK:"), daemonName, groupName, pid,
@@ -135,10 +174,10 @@ func init() {
 	rootCmd.AddCommand(invokeCmd)
 
 	invokeCmd.Flags().StringVarP(&daemonName, "name", "n", "", "Unique daemon name")
-	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", viper.GetString("watch"), "Directory to watch")
-	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", viper.GetString("script"), "Script to execute on change")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "g", viper.GetString("group"), "Watcher group name")
-	invokeCmd.Flags().StringVarP(&logName, "log", "l", viper.GetString("log"), "Name for log file (without extension)")
+	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides config default)")
+	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch")
+	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change")
+	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
