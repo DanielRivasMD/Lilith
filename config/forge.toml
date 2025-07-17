@@ -1,0 +1,11 @@
+[workflows.helix]
+watch  = "~/.archive/ex-situ/helix/modes"
+script = "~/.lilith/sh/helix.sh"
+group  = "forge"
+log    = "helix"
+
+[workflows.goku]
+watch  = "~/.saiyajin/frag"
+script = "~/.lilith/sh/goku.sh"
+group  = "forge"
+log    = "goku"
