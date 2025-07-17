@@ -34,81 +34,134 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// invocation flags + derived defaults
+// invocation flags + derived values
 var (
-	daemonName string
+	daemonName string // instance name, defaults to configName
+	configName string // workflow key
 	watchDir   string
 	scriptPath string
 	logName    string
-	groupName  string
-	configName string
+
+	groupName string // derived from TOML filename
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// invokeCmd starts a new watcher daemon, pulling defaults from ~/.lilith/forge.toml
+// completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys.
+func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveDefault
+	}
+	cfgDir := filepath.Join(home, ".lilith", "config")
+	fis, err := os.ReadDir(cfgDir)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveDefault
+	}
+
+	seen := map[string]struct{}{}
+	for _, fi := range fis {
+		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
+			continue
+		}
+		path := filepath.Join(cfgDir, fi.Name())
+		v := viper.New()
+		v.SetConfigFile(path)
+		if err := v.ReadInConfig(); err != nil {
+			continue
+		}
+		for wf := range v.GetStringMap("workflows") {
+			if strings.HasPrefix(wf, toComplete) {
+				seen[wf] = struct{}{}
+			}
+		}
+	}
+
+	var out []string
+	for wf := range seen {
+		out = append(out, wf)
+	}
+	return out, cobra.ShellCompDirectiveNoFileComp
+}
+
+// expandPath replaces a leading "~" with $HOME and then does os.ExpandEnv.
+func expandPath(p string) (string, error) {
+	if strings.HasPrefix(p, "~"+string(filepath.Separator)) {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		p = filepath.Join(home, p[2:]) // drop the "~/" and re-join
+	}
+	return os.ExpandEnv(p), nil
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// invokeCmd starts a watcher using settings from ~/.lilith/config/*.toml
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Start a new watcher daemon",
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		// 1) Load ~/.lilith/forge.{toml,yaml,json}
+		// 1) Load every TOML in ~/.lilith/config
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return err
 		}
-		v := viper.New()
-		v.AddConfigPath(filepath.Join(home, ".lilith"))
-		v.SetConfigName(configName)
-		if err := v.ReadInConfig(); err != nil {
-			if _, notFound := err.(viper.ConfigFileNotFoundError); !notFound {
-				return err
+		cfgDir := filepath.Join(home, ".lilith", "config")
+		var (
+			foundV      *viper.Viper
+			cfgFileUsed string
+		)
+
+		fis, err := os.ReadDir(cfgDir)
+		if err != nil {
+			return err
+		}
+		for _, fi := range fis {
+			if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
+				continue
+			}
+			path := filepath.Join(cfgDir, fi.Name())
+			v := viper.New()
+			v.SetConfigFile(path)
+			if err := v.ReadInConfig(); err != nil {
+				continue
+			}
+			if v.IsSet("workflows." + configName) {
+				foundV = v
+				cfgFileUsed = path
+				break
 			}
 		}
-
-		// 2) Default group ← the config filename
-		if used := v.ConfigFileUsed(); used != "" {
-			base := filepath.Base(used) // e.g. "forge.toml"
-			groupName = strings.TrimSuffix(base, filepath.Ext(base))
-		} else {
-			groupName = configName
+		if foundV == nil {
+			return fmt.Errorf("workflow %q not found in %s/*.toml", configName, cfgDir)
 		}
 
-		// 3) Bind top–level keys from forge.toml if flags unset
-		bindFlag(cmd, "group", &groupName, v)
-		bindFlag(cmd, "watch", &watchDir, v)
-		bindFlag(cmd, "script", &scriptPath, v)
-		bindFlag(cmd, "log", &logName, v)
-
-		// 4) Per–workflow overrides under [workflows.<daemonName>]
-		if daemonName != "" && v.IsSet("workflows."+daemonName) {
-			wf := v.Sub("workflows." + daemonName)
-			if wf == nil {
-				return fmt.Errorf("workflow %q is not defined", daemonName)
-			}
-			bindFlag(cmd, "group", &groupName, wf)
-			bindFlag(cmd, "watch", &watchDir, wf)
-			bindFlag(cmd, "script", &scriptPath, wf)
-			bindFlag(cmd, "log", &logName, wf)
+		// 2) Default daemonName ← configName if none provided
+		if daemonName == "" {
+			daemonName = configName
+			cmd.Flags().Set("name", daemonName)
 		}
+
+		// 3) Derive groupName from the TOML file basename
+		base := filepath.Base(cfgFileUsed)                       // e.g. "forge.toml"
+		groupName = strings.TrimSuffix(base, filepath.Ext(base)) // e.g. "forge"
+		cmd.Flags().Set("group", groupName)
+
+		// 4) Bind flags from that workflow block
+		wf := foundV.Sub("workflows." + configName)
+		bindFlag(cmd, "watch", &watchDir, wf)
+		bindFlag(cmd, "script", &scriptPath, wf)
+		bindFlag(cmd, "log", &logName, wf)
 
 		return nil
 	},
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.invoke"
 
-		// 5) Validate required inputs
-		if daemonName == "" {
-			horus.CheckErr(
-				fmt.Errorf("`--name` is required"),
-				horus.WithOp(op), horus.WithMessage("provide a unique daemon name"),
-			)
-		}
+		// 5) Validate
+		// (name now always set after PreRunE)
 		if watchDir == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--watch` is required"),
@@ -128,9 +181,13 @@ var invokeCmd = &cobra.Command{
 			)
 		}
 
-		// 6) Expand ~ and $ENV
-		watchDir = os.ExpandEnv(watchDir)
-		scriptPath = os.ExpandEnv(scriptPath)
+		// 6) Expand env vars / tilde
+		var err error
+		watchDir, err = expandPath(watchDir)
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("expanding watch path"))
+
+		scriptPath, err = expandPath(scriptPath)
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("expanding script path"))
 
 		// 7) Ensure ~/.lilith/logs exists
 		home, err := os.UserHomeDir()
@@ -141,7 +198,6 @@ var invokeCmd = &cobra.Command{
 			domovoi.CreateDir(logDir),
 			horus.WithOp(op), horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		)
-
 		logPath := filepath.Join(logDir, logName+".log")
 
 		// 8) Build & persist metadata
@@ -157,10 +213,9 @@ var invokeCmd = &cobra.Command{
 		pid, err := spawnWatcher(meta)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("starting watcher"))
 		meta.PID = pid
-
 		horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("writing metadata"))
 
-		// 9) Final message
+		// 9) Done
 		fmt.Printf(
 			"%s invoked daemon %q (group=%q) with PID %d\n",
 			chalk.Green.Color("OK:"), daemonName, groupName, pid,
@@ -173,11 +228,14 @@ var invokeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
-	invokeCmd.Flags().StringVarP(&daemonName, "name", "n", "", "Unique daemon name")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides config default)")
+	invokeCmd.Flags().StringVarP(&daemonName, "name", "n", "", "Unique daemon name (defaults to --config)")
+	invokeCmd.Flags().StringVarP(&configName, "config", "c", "", "Workflow to apply")
+	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides TOML)")
 	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch")
 	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change")
 	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension)")
+
+	invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
