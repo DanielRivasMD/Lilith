@@ -31,11 +31,8 @@ import (
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var tallyCmd = &cobra.Command{
-	Use:     "tally",
-	Short:   "List all daemons started by Lou",
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	Use:   "tally",
+	Short: "List all daemons started by Lou, with invocation time",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir := getDaemonDir()
 		entries, err := os.ReadDir(dir)
@@ -44,7 +41,10 @@ var tallyCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Printf("%-20s %-15s %-6s %s\n", "NAME", "GROUP", "PID", "STATUS")
+		// Header now includes INVOKED
+		fmt.Printf("%-20s %-15s %-6s %-20s %s\n",
+			"NAME", "GROUP", "PID", "INVOKED", "STATUS")
+
 		for _, e := range entries {
 			if e.IsDir() {
 				continue
@@ -54,19 +54,24 @@ var tallyCmd = &cobra.Command{
 			if err != nil {
 				continue
 			}
+
+			// determine running/stopped
 			status := chalk.Red.Color("stopped")
 			if p, err := os.FindProcess(meta.PID); err == nil {
 				if err = p.Signal(syscall.Signal(0)); err == nil {
 					status = chalk.Green.Color("running")
 				}
 			}
-			fmt.Printf("%-20s %-15s %-6d %s\n",
-				meta.Name, meta.Group, meta.PID, status)
+
+			// format invoked time
+			invoked := meta.InvokedAt.Format("2006-01-02 15:04:05")
+
+			// print row
+			fmt.Printf("%-20s %-15s %-6d %-20s %s\n",
+				meta.Name, meta.Group, meta.PID, invoked, status)
 		}
 	},
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
 	rootCmd.AddCommand(tallyCmd)
