@@ -1,5 +1,7 @@
 github.com/DanielRivasMD/domovoi v0.0.0-20250709023351-542763d06ded h1:cNgjihZ0lklaem5Cr22DHVZ5Qp782iQElIRaxJoG5IA=
 github.com/DanielRivasMD/domovoi v0.0.0-20250709023351-542763d06ded/go.mod h1:A+G3Z0BTecntlot/13Yy1AYgnbD2hmyZ8Q9CURuDtog=
+github.com/DanielRivasMD/domovoi v0.0.0-20250718113042-159707b9b296 h1:D/O53jZQjycaKFKb+D96LxWqrSvjg0g+7bpajaFRlZs=
+github.com/DanielRivasMD/domovoi v0.0.0-20250718113042-159707b9b296/go.mod h1:A+G3Z0BTecntlot/13Yy1AYgnbD2hmyZ8Q9CURuDtog=
 github.com/DanielRivasMD/horus v1.0.0 h1:NFSFxWKxM0VM5UB503YZz1mj3ewjau4UeMuDv0AtQ+E=
 github.com/DanielRivasMD/horus v1.0.0/go.mod h1:BisGQ8GHkm7XjzTnXRhGznkg9wFaCHiIQXroK3vhKu8=
 github.com/atrox/homedir v1.0.0 h1:99Vwk+XECZTDLaAPeMj7vF9JMNcVarWddqPeyDzJT5E=
