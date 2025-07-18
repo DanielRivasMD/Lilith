@@ -3,7 +3,7 @@
 ####################################################################################################
 
 # config
-source "${HOME}/.lou/sh/config.sh"
+source "${HOME}/.lilith/sh/config.sh"
 
 # check & remove target
 if test -f "${config}/alacritty/alacritty.toml"
