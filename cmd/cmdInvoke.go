@@ -102,6 +102,22 @@ func expandPath(p string) (string, error) {
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Start a new watcher daemon",
+	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
+
+` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` invoke reads a named workflow from your ~/.lilith/config/*.toml files, spawns a background watcher process for the specified directory, and executes the configured script on each change.  Metadata is persisted so you can later inspect or summon the daemon.`,
+
+	Example: chalk.White.Color("lilith") + " " +
+		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
+		chalk.Italic.TextStyle("--config") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
+
+		chalk.White.Color("lilith") + " " +
+		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
+		chalk.Italic.TextStyle("--name") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
+		chalk.Italic.TextStyle("--watch") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("~/src/helix")) + " " +
+		chalk.Italic.TextStyle("--script") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix.sh")) + " " +
+		chalk.Italic.TextStyle("--log") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
+
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// 1) Load every TOML in ~/.lilith/config
 		home, err := os.UserHomeDir()
