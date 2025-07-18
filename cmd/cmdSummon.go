@@ -22,36 +22,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var follow bool
-
-// completeDaemonNames offers tab‐completion based on ~/.lilith/daemons/*.json
-func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	dir := getDaemonDir()
-	fis, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveNoFileComp
-	}
-
-	var out []string
-	for _, fi := range fis {
-		if fi.IsDir() {
-			continue
-		}
-		name := strings.TrimSuffix(fi.Name(), filepath.Ext(fi.Name()))
-		if strings.HasPrefix(name, toComplete) {
-			out = append(out, name)
-		}
-	}
-	return out, cobra.ShellCompDirectiveNoFileComp
-}
+var (
+	follow bool
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
