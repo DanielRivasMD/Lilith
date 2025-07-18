@@ -3,7 +3,7 @@
 ####################################################################################################
 
 # config
-source "${HOME}/.lou/sh/config.sh"
+source "${HOME}/.lilith/sh/config.sh"
 
 # create temporary files
 for type in normal insert select
