@@ -153,7 +153,12 @@ var invokeCmd = &cobra.Command{
 		wf := foundV.Sub("workflows." + configName)
 		bindFlag(cmd, "watch", &watchDir, wf)
 		bindFlag(cmd, "script", &scriptPath, wf)
-		bindFlag(cmd, "log", &logName, wf)
+
+		// Auto‐assign logName from workflow key
+		if !cmd.Flags().Changed("log") {
+			logName = configName
+			cmd.Flags().Set("log", logName)
+		}
 
 		return nil
 	},
