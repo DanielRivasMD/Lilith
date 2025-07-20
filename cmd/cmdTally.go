@@ -20,10 +20,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
@@ -39,7 +39,7 @@ var tallyCmd = &cobra.Command{
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` lists all daemons you have invoked, shows their group, PID, time they were started, and whether they’re still running`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` tally lists all daemons you have invoked, shows their group, PID, time they were started, and whether they’re running, paused, or stopped.`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("tally")),
 
@@ -74,11 +74,16 @@ var tallyCmd = &cobra.Command{
 				continue
 			}
 
-			// 5) Check process status
-			status := chalk.Red.Color("stopped")
-			if p, err := os.FindProcess(meta.PID); err == nil {
-				if err = p.Signal(syscall.Signal(0)); err == nil {
-					status = chalk.Green.Color("running")
+			// 5) Determine process status via `ps` (detect T=stopped/paused)
+			status := chalk.Red.Color("dead")
+			stateOut, err := exec.Command("ps", "-o", "state=", "-p", strconv.Itoa(meta.PID)).Output()
+			if err == nil {
+				state := strings.TrimSpace(string(stateOut))
+				switch {
+				case strings.HasPrefix(state, "T"):
+					status = chalk.Yellow.Color("limbo")
+				default:
+					status = chalk.Green.Color("alive")
 				}
 			}
 
