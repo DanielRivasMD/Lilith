@@ -20,9 +20,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/ttacon/chalk"
 )
@@ -32,28 +32,38 @@ import (
 var rekindleCmd = &cobra.Command{
 	Use:   "rekindle [name]",
 	Short: "Restart a stopped daemon",
-	Args:  cobra.ExactArgs(1),
+	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
+
+` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` rekindle restarts a stopped watcher daemon using its saved metadata.`,
+	Example: chalk.White.Color("lilith") + " " +
+		chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
+		chalk.Cyan.Color("helix"),
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeDaemonNames,
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Run: func(cmd *cobra.Command, args []string) {
+		const op = "lilith.rekindle"
 		name := args[0]
+
+		// load existing metadata
 		meta, err := loadMeta(name)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "No such daemon %q\n", name)
-			os.Exit(1)
-		}
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
+
+		// spawn new watcher
 		pid, err := spawnWatcher(meta)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Failed to restart:", err)
-			os.Exit(1)
-		}
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("restarting watcher"))
+
+		// update and save metadata
 		meta.PID = pid
 		meta.InvokedAt = time.Now()
-		if err := saveMeta(meta); err != nil {
-			fmt.Fprintln(os.Stderr, "Failed to update metadata:", err)
-			os.Exit(1)
-		}
+		horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("updating metadata"))
+
 		fmt.Printf("%s rekindled %q with PID %d\n",
 			chalk.Green.Color("OK:"), name, pid)
 	},
