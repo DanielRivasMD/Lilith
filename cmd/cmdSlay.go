@@ -65,11 +65,11 @@ var slayCmd = &cobra.Command{
 
 		// 3) Remove the metadata JSON file
 		metaFile := filepath.Join(getDaemonDir(), name+".json")
-		_, err = domovoi.RemoveFile(metaFile)(metaFile)
+		_, err = domovoi.RemoveFile(metaFile, verbose)(metaFile)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("removing metadata file"))
 
 		// 4) Remove the log file
-		_, err = domovoi.RemoveFile(meta.LogPath)(meta.LogPath)
+		_, err = domovoi.RemoveFile(meta.LogPath, verbose)(meta.LogPath)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("removing log file"))
 
 		// 5) Final confirmation
