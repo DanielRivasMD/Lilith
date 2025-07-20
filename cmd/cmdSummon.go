@@ -21,9 +21,11 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
+	"github.com/DanielRivasMD/domovoi"
+	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
+	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,36 +36,52 @@ var (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// summonCmd
 var summonCmd = &cobra.Command{
-	Use:               "summon [name]",
-	Short:             "View logs for a daemon",
+	Use:   "summon [name]",
+	Short: "View logs for a daemon",
+	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
+
+` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` summon displays your daemon's log file. Pass --follow to stream updates in real time.`,
+	Example: chalk.White.Color("lilith") + " " +
+		chalk.Bold.TextStyle(chalk.White.Color("summon")) + " " +
+		chalk.Cyan.Color("helix") + " " +
+		chalk.Cyan.Color("--follow"),
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDaemonNames,
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Run: func(cmd *cobra.Command, args []string) {
+		const op = "lilith.summon"
 		name := args[0]
+
 		meta, err := loadMeta(name)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "No such daemon %q\n", name)
-			os.Exit(1)
-		}
+		horus.CheckErr(err,
+			horus.WithOp(op),
+			horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)),
+		)
 
 		if follow {
-			// tail -f style continuous output
-			tail := exec.Command("tail", "-f", meta.LogPath)
-			tail.Stdout = os.Stdout
-			tail.Stderr = os.Stderr
-			tail.Run() // ignore error
+			horus.CheckErr(
+				domovoi.ExecCmd("tail", "-f", meta.LogPath),
+				horus.WithOp(op),
+				horus.WithMessage("streaming log"),
+			)
 		} else {
-			// one‐off pager
 			pager := os.Getenv("PAGER")
 			if pager == "" {
 				pager = "less"
 			}
-			c := exec.Command(pager, "--paging", "always", meta.LogPath)
-			c.Stdin = os.Stdin
-			c.Stdout = os.Stdout
-			c.Stderr = os.Stderr
-			c.Run() // ignore error
+			horus.CheckErr(
+				domovoi.ExecCmd(pager, "--paging", "always", meta.LogPath),
+				horus.WithOp(op),
+				horus.WithMessage("paging log"),
+			)
 		}
 	},
 }
