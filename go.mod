@@ -3,7 +3,7 @@ module github.com/DanielRivasMD/Lilith
 go 1.23.4
 
 require (
-	github.com/DanielRivasMD/domovoi v0.0.0-20250720073022-b0950f71558b
+	github.com/DanielRivasMD/domovoi v0.0.0-20250720111118-ab5676b21552
 	github.com/DanielRivasMD/horus v0.0.0-20250720074121-f8b5256376f9
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.7
