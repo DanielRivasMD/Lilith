@@ -33,17 +33,22 @@ import (
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var slayCmd = &cobra.Command{
-	Use:   "slay [name]",
+	Use:   "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
 	Short: "Stop and clean up a daemon by name",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` slay gracefully stops a running daemon, removes its metadata file and its log file, allowing you to start fresh later.`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` gracefully stops a running daemon, removes its metadata file and its log file, allowing you to start fresh later`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("slay")) + " " +
-		chalk.Cyan.Color("helix"),
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDaemonNames,
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.slay"
