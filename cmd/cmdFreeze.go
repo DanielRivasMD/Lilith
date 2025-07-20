@@ -32,7 +32,7 @@ import (
 
 var freezeCmd = &cobra.Command{
 	Use:   "freeze [name]",
-	Short: "Pause a daemon without killing it",
+	Short: "Pause a daemon",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
