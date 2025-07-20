@@ -50,7 +50,7 @@ var tallyCmd = &cobra.Command{
 
 		// 1) Read the daemon directory
 		dir := getDaemonDir()
-		entries, err := domovoi.ReadDir(dir)
+		entries, err := domovoi.ReadDir(dir, verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
 		// 2) Print header
