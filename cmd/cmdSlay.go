@@ -34,7 +34,7 @@ import (
 
 var slayCmd = &cobra.Command{
 	Use:   "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "Stop and clean up a daemon by name",
+	Short: "Stop and clean up daemon",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
