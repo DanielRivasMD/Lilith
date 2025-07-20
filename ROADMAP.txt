@@ -1,0 +1,3 @@
+- add tests
+- make release v1.0.0
+- add readme
