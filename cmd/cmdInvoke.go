@@ -41,8 +41,7 @@ var (
 	watchDir   string
 	scriptPath string
 	logName    string
-
-	groupName string // derived from TOML filename
+	groupName  string // derived from TOML filename
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,32 +106,37 @@ var invokeCmd = &cobra.Command{
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` invoke reads a named workflow from your ~/.lilith/config/*.toml files, spawns a background watcher process for the specified directory, and executes the configured script on each change. Metadata is persisted so you can later inspect or summon the daemon.`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` reads a named workflow from your ~/.lilith/config/*.toml files, spawns a background watcher process for the specified directory, and executes the configured script on each change. Metadata is persisted so you can later inspect or summon the daemon`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
-		chalk.Italic.TextStyle(chalk.White.Color("--config")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n\n" +
+		chalk.Italic.TextStyle(chalk.White.Color("--config")) + " " +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
 		chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
-		chalk.Italic.TextStyle(chalk.White.Color("--name")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
-		chalk.Italic.TextStyle(chalk.White.Color("--watch")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("~/src/helix")) + " " +
-		chalk.Italic.TextStyle(chalk.White.Color("--script")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix.sh")) + " " +
-		chalk.Italic.TextStyle(chalk.White.Color("--log")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
+		chalk.Italic.TextStyle(chalk.White.Color("--name")) + " " +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
+		chalk.Italic.TextStyle(chalk.White.Color("--watch")) + " " +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("~/src/helix")) + " " +
+		chalk.Italic.TextStyle(chalk.White.Color("--script")) + " " +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix.sh")) + " " +
+		chalk.Italic.TextStyle(chalk.White.Color("--log")) + " " +
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		const op = "lilith.invoke.pre"
 
-		// 1) Load every TOML in ~/.lilith/config
+		// 1) Find home and read config dir
 		home, err := domovoi.FindHome()
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
 		cfgDir := filepath.Join(home, ".lilith", "config")
 
+		// 2) Load matching TOML
 		var (
 			foundV      *viper.Viper
 			cfgFileUsed string
 		)
-
 		fis, err := domovoi.ReadDir(cfgDir)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading config dir"))
 
@@ -156,26 +160,44 @@ var invokeCmd = &cobra.Command{
 			return fmt.Errorf("workflow %q not found in %s/*.toml", configName, cfgDir)
 		}
 
-		// 2) Default daemonName ← configName if none provided
+		// 3) Default daemonName ← configName if none provided
 		if daemonName == "" {
 			daemonName = configName
-			cmd.Flags().Set("name", daemonName)
+			if err := cmd.Flags().Set("name", daemonName); err != nil {
+				horus.CheckErr(
+					err,
+					horus.WithOp(op),
+					horus.WithMessage("setting default --name from config"),
+				)
+			}
 		}
 
-		// 3) Derive groupName from the TOML file basename
+		// 4) Derive groupName from TOML filename
 		base := filepath.Base(cfgFileUsed)                       // e.g. "forge.toml"
 		groupName = strings.TrimSuffix(base, filepath.Ext(base)) // e.g. "forge"
-		cmd.Flags().Set("group", groupName)
+		if err := cmd.Flags().Set("group", groupName); err != nil {
+			horus.CheckErr(
+				err,
+				horus.WithOp(op),
+				horus.WithMessage("setting default --group from TOML filename"),
+			)
+		}
 
-		// 4) Bind flags from that workflow block
+		// 5) Bind watch & script flags
 		wf := foundV.Sub("workflows." + configName)
 		bindFlag(cmd, "watch", &watchDir, wf)
 		bindFlag(cmd, "script", &scriptPath, wf)
 
-		// Auto‐assign logName from workflow key
+		// 6) Auto‐assign logName from workflow key
 		if !cmd.Flags().Changed("log") {
 			logName = configName
-			cmd.Flags().Set("log", logName)
+			if err := cmd.Flags().Set("log", logName); err != nil {
+				horus.CheckErr(
+					err,
+					horus.WithOp(op),
+					horus.WithMessage("setting default --log from workflow key"),
+				)
+			}
 		}
 
 		return nil
@@ -186,55 +208,58 @@ var invokeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.invoke"
 
-		// 5) Validate
-		if watchDir == "" {
-			horus.CheckErr(
-				fmt.Errorf("`--watch` is required"),
-				horus.WithOp(op), horus.WithMessage("provide a directory to watch"),
-			)
-		}
+		// 7) Validate required flags
+		horus.CheckEmpty(
+			watchDir,
+			"`--watch` is required",
+			horus.WithOp(op),
+			horus.WithMessage("provide a directory to watch"),
+		)
+		horus.CheckEmpty(
+			scriptPath,
+			"`--script` is required",
+			horus.WithOp(op),
+			horus.WithMessage("provide a script to run"),
+		)
+		horus.CheckEmpty(
+			logName,
+			"`--log` is required",
+			horus.WithOp(op),
+			horus.WithMessage("provide a log name"),
+		)
 
-		if scriptPath == "" {
-			horus.CheckErr(
-				fmt.Errorf("`--script` is required"),
-				horus.WithOp(op), horus.WithMessage("provide a script to run"),
-			)
-		}
-
-		if logName == "" {
-			horus.CheckErr(
-				fmt.Errorf("`--log` is required"),
-				horus.WithOp(op), horus.WithMessage("provide a log name"),
-			)
-		}
-
-		// 6) Expand env vars / tilde
+		// 8) Expand env vars / tilde
 		horus.CheckErr(
 			func() error {
 				var err error
 				watchDir, err = expandPath(watchDir)
 				return err
-			}(), horus.WithOp(op), horus.WithMessage("expanding watch path"),
+			}(),
+			horus.WithOp(op),
+			horus.WithMessage("expanding watch path"),
 		)
 		horus.CheckErr(
 			func() error {
 				var err error
 				scriptPath, err = expandPath(scriptPath)
 				return err
-			}(), horus.WithOp(op), horus.WithMessage("expanding script path"),
+			}(),
+			horus.WithOp(op),
+			horus.WithMessage("expanding script path"),
 		)
 
-		// 7) Ensure ~/.lilith/logs exists
+		// 9) Ensure ~/.lilith/logs exists
 		home, err := domovoi.FindHome()
-		horus.CheckErr(err)
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
 		logDir := filepath.Join(home, ".lilith", "logs")
 		horus.CheckErr(
 			domovoi.CreateDir(logDir),
-			horus.WithOp(op), horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
+			horus.WithOp(op),
+			horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		)
 		logPath := filepath.Join(logDir, logName+".log")
 
-		// 8) Build & persist metadata
+		// 10) Build & persist metadata
 		meta := &daemonMeta{
 			Name:       daemonName,
 			Group:      groupName,
@@ -243,16 +268,18 @@ var invokeCmd = &cobra.Command{
 			LogPath:    logPath,
 			InvokedAt:  time.Now(),
 		}
-
 		pid, err := spawnWatcher(meta)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("starting watcher"))
 		meta.PID = pid
 		horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("writing metadata"))
 
-		// 9) Done
+		// 11) Done
 		fmt.Printf(
 			"%s invoked daemon %q (group=%q) with PID %d\n",
-			chalk.Green.Color("OK:"), daemonName, groupName, pid,
+			chalk.Green.Color("OK:"),
+			daemonName,
+			groupName,
+			pid,
 		)
 	},
 }
@@ -270,7 +297,7 @@ func init() {
 	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension)")
 
 	if err := invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames); err != nil {
-		horus.CheckErr(err, horus.WithOp("invoke.init"), horus.WithMessage("flag completion failed to register"))
+		horus.CheckErr(err, horus.WithOp("invoke.init"), horus.WithMessage("registering config completion"))
 	}
 }
 
