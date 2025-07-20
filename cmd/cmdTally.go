@@ -25,6 +25,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/ttacon/chalk"
@@ -38,16 +39,18 @@ var tallyCmd = &cobra.Command{
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` tally lists all daemons you have invoked, shows their group, PID, time they were started, and whether they’re still running.`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` lists all daemons you have invoked, shows their group, PID, time they were started, and whether they’re still running`,
+	Example: chalk.White.Color("lilith") + " " +
+		chalk.Bold.TextStyle(chalk.White.Color("tally")),
 
-	Example: chalk.White.Color("lilith") + " " + chalk.Bold.TextStyle(chalk.White.Color("tally")),
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.tally"
 
 		// 1) Read the daemon directory
 		dir := getDaemonDir()
-		entries, err := os.ReadDir(dir)
+		entries, err := domovoi.ReadDir(dir)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
 		// 2) Print header
@@ -66,7 +69,7 @@ var tallyCmd = &cobra.Command{
 			// 4) Load metadata
 			meta, err := loadMeta(name)
 			if err != nil {
-				// skip entries we can't parse
+				// skip entries that fail to parse
 				horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
 				continue
 			}
@@ -90,6 +93,8 @@ var tallyCmd = &cobra.Command{
 		}
 	},
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
 	rootCmd.AddCommand(tallyCmd)
