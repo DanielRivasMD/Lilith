@@ -84,6 +84,8 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 	return out, cobra.ShellCompDirectiveNoFileComp
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // expandPath replaces a leading "~" with $HOME and then does os.ExpandEnv.
 func expandPath(p string) (string, error) {
 	if strings.HasPrefix(p, "~"+string(filepath.Separator)) {
@@ -105,35 +107,35 @@ var invokeCmd = &cobra.Command{
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` invoke reads a named workflow from your ~/.lilith/config/*.toml files, spawns a background watcher process for the specified directory, and executes the configured script on each change.  Metadata is persisted so you can later inspect or summon the daemon.`,
-
+` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` invoke reads a named workflow from your ~/.lilith/config/*.toml files, spawns a background watcher process for the specified directory, and executes the configured script on each change. Metadata is persisted so you can later inspect or summon the daemon.`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
-		chalk.Italic.TextStyle("--config") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
-
+		chalk.Italic.TextStyle(chalk.White.Color("--config")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n\n" +
 		chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
-		chalk.Italic.TextStyle("--name") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
-		chalk.Italic.TextStyle("--watch") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("~/src/helix")) + " " +
-		chalk.Italic.TextStyle("--script") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix.sh")) + " " +
-		chalk.Italic.TextStyle("--log") + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
+		chalk.Italic.TextStyle(chalk.White.Color("--name")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
+		chalk.Italic.TextStyle(chalk.White.Color("--watch")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("~/src/helix")) + " " +
+		chalk.Italic.TextStyle(chalk.White.Color("--script")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix.sh")) + " " +
+		chalk.Italic.TextStyle(chalk.White.Color("--log")) + " " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		const op = "lilith.invoke.pre"
+
 		// 1) Load every TOML in ~/.lilith/config
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return err
-		}
+		home, err := domovoi.FindHome()
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
 		cfgDir := filepath.Join(home, ".lilith", "config")
+
 		var (
 			foundV      *viper.Viper
 			cfgFileUsed string
 		)
 
-		fis, err := os.ReadDir(cfgDir)
-		if err != nil {
-			return err
-		}
+		fis, err := domovoi.ReadDir(cfgDir)
+		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading config dir"))
+
 		for _, fi := range fis {
 			if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
 				continue
@@ -178,23 +180,27 @@ var invokeCmd = &cobra.Command{
 
 		return nil
 	},
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.invoke"
 
 		// 5) Validate
-		// (name now always set after PreRunE)
 		if watchDir == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--watch` is required"),
 				horus.WithOp(op), horus.WithMessage("provide a directory to watch"),
 			)
 		}
+
 		if scriptPath == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--script` is required"),
 				horus.WithOp(op), horus.WithMessage("provide a script to run"),
 			)
 		}
+
 		if logName == "" {
 			horus.CheckErr(
 				fmt.Errorf("`--log` is required"),
@@ -203,17 +209,24 @@ var invokeCmd = &cobra.Command{
 		}
 
 		// 6) Expand env vars / tilde
-		var err error
-		watchDir, err = expandPath(watchDir)
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("expanding watch path"))
-
-		scriptPath, err = expandPath(scriptPath)
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("expanding script path"))
+		horus.CheckErr(
+			func() error {
+				var err error
+				watchDir, err = expandPath(watchDir)
+				return err
+			}(), horus.WithOp(op), horus.WithMessage("expanding watch path"),
+		)
+		horus.CheckErr(
+			func() error {
+				var err error
+				scriptPath, err = expandPath(scriptPath)
+				return err
+			}(), horus.WithOp(op), horus.WithMessage("expanding script path"),
+		)
 
 		// 7) Ensure ~/.lilith/logs exists
-		home, err := os.UserHomeDir()
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
-
+		home, err := domovoi.FindHome()
+		horus.CheckErr(err)
 		logDir := filepath.Join(home, ".lilith", "logs")
 		horus.CheckErr(
 			domovoi.CreateDir(logDir),
@@ -256,7 +269,9 @@ func init() {
 	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change")
 	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension)")
 
-	invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames)
+	if err := invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames); err != nil {
+		horus.CheckErr(err, horus.WithOp("invoke.init"), horus.WithMessage("flag completion failed to register"))
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
