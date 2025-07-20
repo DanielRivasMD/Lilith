@@ -36,7 +36,6 @@ var (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// summonCmd
 var summonCmd = &cobra.Command{
 	Use:   "summon " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
 	Short: "View logs for a daemon",
