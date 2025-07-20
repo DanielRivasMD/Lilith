@@ -29,16 +29,17 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// rekindleCmd
 var rekindleCmd = &cobra.Command{
-	Use:   "rekindle [name]",
+	Use:   "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
 	Short: "Restart a stopped daemon",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.White.Color("lilith")) + ` rekindle restarts a stopped watcher daemon using its saved metadata.`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` restarts a stopped watcher daemon using its saved metadata`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-		chalk.Cyan.Color("helix"),
+		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
