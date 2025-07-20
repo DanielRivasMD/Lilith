@@ -29,7 +29,6 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// rekindleCmd
 var rekindleCmd = &cobra.Command{
 	Use:   "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
 	Short: "Restart a stopped daemon",
