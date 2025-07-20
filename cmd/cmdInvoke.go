@@ -20,7 +20,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -46,60 +45,6 @@ var (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys.
-func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveDefault
-	}
-	cfgDir := filepath.Join(home, ".lilith", "config")
-	fis, err := os.ReadDir(cfgDir)
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveDefault
-	}
-
-	seen := map[string]struct{}{}
-	for _, fi := range fis {
-		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
-			continue
-		}
-		path := filepath.Join(cfgDir, fi.Name())
-		v := viper.New()
-		v.SetConfigFile(path)
-		if err := v.ReadInConfig(); err != nil {
-			continue
-		}
-		for wf := range v.GetStringMap("workflows") {
-			if strings.HasPrefix(wf, toComplete) {
-				seen[wf] = struct{}{}
-			}
-		}
-	}
-
-	var out []string
-	for wf := range seen {
-		out = append(out, wf)
-	}
-	return out, cobra.ShellCompDirectiveNoFileComp
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// expandPath replaces a leading "~" with $HOME and then does os.ExpandEnv.
-func expandPath(p string) (string, error) {
-	if strings.HasPrefix(p, "~"+string(filepath.Separator)) {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		p = filepath.Join(home, p[2:]) // drop the "~/" and re-join
-	}
-	return os.ExpandEnv(p), nil
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// invokeCmd starts a watcher using settings from ~/.lilith/config/*.toml
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Start a new watcher daemon",
