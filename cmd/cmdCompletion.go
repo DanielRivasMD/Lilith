@@ -30,7 +30,7 @@ var ()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// completionCmd represents the "completion" command which generates shell completion scripts.
+// completionCmd represents the "completion" command which generates shell completion scripts
 var completionCmd = &cobra.Command{
 	Use:    "completion [bash|zsh|fish|powershell]",
 	Hidden: true,
@@ -100,7 +100,7 @@ PowerShell:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// init registers the completion command with the root command.
+// init registers the completion command with the root command
 func init() {
 	rootCmd.AddCommand(completionCmd)
 }
