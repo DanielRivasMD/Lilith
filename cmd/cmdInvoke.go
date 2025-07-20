@@ -128,7 +128,7 @@ var invokeCmd = &cobra.Command{
 		const op = "lilith.invoke.pre"
 
 		// 1) Find home and read config dir
-		home, err := domovoi.FindHome()
+		home, err := domovoi.FindHome(verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
 		cfgDir := filepath.Join(home, ".lilith", "config")
 
@@ -137,7 +137,7 @@ var invokeCmd = &cobra.Command{
 			foundV      *viper.Viper
 			cfgFileUsed string
 		)
-		fis, err := domovoi.ReadDir(cfgDir)
+		fis, err := domovoi.ReadDir(cfgDir, verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading config dir"))
 
 		for _, fi := range fis {
@@ -249,11 +249,11 @@ var invokeCmd = &cobra.Command{
 		)
 
 		// 9) Ensure ~/.lilith/logs exists
-		home, err := domovoi.FindHome()
+		home, err := domovoi.FindHome(verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
 		logDir := filepath.Join(home, ".lilith", "logs")
 		horus.CheckErr(
-			domovoi.CreateDir(logDir),
+			domovoi.CreateDir(logDir, verbose),
 			horus.WithOp(op),
 			horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		)
