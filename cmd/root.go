@@ -33,14 +33,13 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// verbose toggles extra diagnostic output across all commands.
 var (
 	verbose bool
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// daemonMeta holds persistent info about a watcher process.
+// daemonMeta holds persistent info about a watcher process
 type daemonMeta struct {
 	Name       string    `json:"name"`
 	Group      string    `json:"group"`
@@ -110,7 +109,7 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	return pid, nil
 }
 
-// bindFlag copies a Viper value into a flag variable if the flag wasn’t set.
+// bindFlag copies a Viper value into a flag variable if the flag was not set
 func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
 	if !cmd.Flags().Changed(flagName) && cfg.IsSet(flagName) {
 		*dest = cfg.GetString(flagName)
@@ -120,19 +119,17 @@ func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Vipe
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// rootCmd
 var rootCmd = &cobra.Command{
 	Use: "lilith",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) + chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.White.Color("lilith") + `, manage background watcher daemon
+` + chalk.Blue.Color("lilith") + `, manage background watcher daemon
 `,
-	Example: chalk.White.Color("lilith") + " help",
+	Example: chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("help")),
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Execute runs rootCmd
 func Execute() {
 	horus.CheckErr(rootCmd.Execute())
 }
@@ -140,8 +137,7 @@ func Execute() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
-	rootCmd.PersistentFlags().
-		BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostic output")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostic output")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

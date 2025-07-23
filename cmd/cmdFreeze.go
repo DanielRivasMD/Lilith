@@ -31,12 +31,12 @@ import (
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var freezeCmd = &cobra.Command{
-	Use:   "freeze [name]",
+	Use:   "freeze " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
 	Short: "Pause a daemon",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` freeze sends SIGSTOP to a running daemon, pausing its execution until you explicitly resume it via OS tools.`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` send SIGSTOP to an alive daemon, pausing its execution until you explicitly resume it via OS tools.`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),

@@ -34,11 +34,11 @@ import (
 
 var slayCmd = &cobra.Command{
 	Use:   "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "Stop and clean up daemon",
+	Short: "Stop & clean up daemon",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` gracefully stops a running daemon, removes its metadata file and its log file, allowing you to start fresh later`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` gracefully stop an alive daemon, remove its metadata file and its log file, allowing to invoke fresh later`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("slay")) + " " +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),

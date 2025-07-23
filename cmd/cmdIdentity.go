@@ -25,20 +25,14 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Global declarations
 var ()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var identityCmd = &cobra.Command{
 	Use:   "identity",
-	Short: "Reveal Lilith’s mythic origin",
-	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` identity summons the first woman of legend—Lilith. Across millennia she has stood as a symbol of independence, mystery, and the night’s whisper.`,
-	Example: chalk.White.Color("lilith") + " " +
-		chalk.Bold.TextStyle(chalk.White.Color("identity")),
+	Aliases: []string{"id"},
+	Short: `Reveal Lilith’s mythic origin`,
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	Run: func(cmd *cobra.Command, args []string) {
@@ -52,7 +46,6 @@ var identityCmd = &cobra.Command{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// execute prior main
 func init() {
 	rootCmd.AddCommand(identityCmd)
 }

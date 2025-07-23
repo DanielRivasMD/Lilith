@@ -33,7 +33,6 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// invocation flags + derived values
 var (
 	daemonName string // instance name, defaults to configName
 	configName string // workflow key
@@ -51,7 +50,7 @@ var invokeCmd = &cobra.Command{
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` reads a named workflow from your ~/.lilith/config/*.toml files, spawns a background watcher process for the specified directory, and executes the configured script on each change. Metadata is persisted so you can later inspect or summon the daemon`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` read a named workflow from ~/.lilith/config/*.toml files, spawn a background watcher process for the specified directory, and execute the configured script on each change. Metadata is persisted for inspection or summoning the daemon`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
 		chalk.Italic.TextStyle(chalk.White.Color("--config")) + " " +

@@ -31,11 +31,11 @@ import (
 
 var rekindleCmd = &cobra.Command{
 	Use:   "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "Restart a stopped daemon",
+	Short: "Restart a dead daemon",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` restarts a stopped watcher daemon using its saved metadata`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` restart a dead watcher daemon using its saved metadata`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")),

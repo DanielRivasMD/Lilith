@@ -38,11 +38,11 @@ var (
 
 var summonCmd = &cobra.Command{
 	Use:   "summon " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "View logs for a daemon",
+	Short: "View daemon logs",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` displays your daemon's log file. Pass --follow to stream updates in real time`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` display your daemon's log file. Pass --follow to stream updates in real time`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("summon")) + " " +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +

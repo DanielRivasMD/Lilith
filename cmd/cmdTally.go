@@ -35,11 +35,11 @@ import (
 
 var tallyCmd = &cobra.Command{
 	Use:   "tally",
-	Short: "List all daemons started by Lilith, with invocation time",
+	Short: "List daemons",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
 		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` tally lists all daemons you have invoked, shows their group, PID, time they were started, and whether they’re running, paused, or stopped.`,
+` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` list all daemons invoked, show their group, PID, started, and their status`,
 	Example: chalk.White.Color("lilith") + " " +
 		chalk.Bold.TextStyle(chalk.White.Color("tally")),
 
