@@ -100,6 +100,8 @@ var invokeCmd = &cobra.Command{
 				break
 			}
 		}
+
+		// TODO: let `horus` watch over this error
 		if foundV == nil {
 			return fmt.Errorf("workflow %q not found in %s/*.toml", configName, cfgDir)
 		}

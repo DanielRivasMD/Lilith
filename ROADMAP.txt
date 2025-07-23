@@ -1,3 +1,12 @@
 - add tests
 - make release v1.0.0
 - add readme
+- add an all-wrapper across all cmds
+
+==================================================
+cmd/cmdInvoke.go
+  line 104    TODO   let `horus` watch over this error
+cmd/root.go
+  line 61     TODO   error handler => `horus`
+  line 85     TODO   error handler => `horus`
+==================================================

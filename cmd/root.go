@@ -58,6 +58,7 @@ func getDaemonDir() string {
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) error {
 	dir := getDaemonDir()
+	// TODO: error handler => `horus`
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
@@ -81,6 +82,7 @@ func loadMeta(name string) (*daemonMeta, error) {
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
 func spawnWatcher(meta *daemonMeta) (int, error) {
+	// TODO: error handler => `horus`
 	if err := os.MkdirAll(filepath.Dir(meta.LogPath), 0755); err != nil {
 		return 0, err
 	}
