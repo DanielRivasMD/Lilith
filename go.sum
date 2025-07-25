@@ -12,6 +12,10 @@ github.com/DanielRivasMD/domovoi v0.0.0-20250720110654-0a49c87c9db6 h1:x1meNhbA0
 github.com/DanielRivasMD/domovoi v0.0.0-20250720110654-0a49c87c9db6/go.mod h1:A+G3Z0BTecntlot/13Yy1AYgnbD2hmyZ8Q9CURuDtog=
 github.com/DanielRivasMD/domovoi v0.0.0-20250720111118-ab5676b21552 h1:BVOYsLTeF9qyqdOWC4fPKH6i5+jACIo7SuovpNpBWWU=
 github.com/DanielRivasMD/domovoi v0.0.0-20250720111118-ab5676b21552/go.mod h1:A+G3Z0BTecntlot/13Yy1AYgnbD2hmyZ8Q9CURuDtog=
+github.com/DanielRivasMD/domovoi v0.0.0-20250722183845-36175cc1001f h1:3syAXgbtpTkUWfozBjPR3vzwU5w2yGxgbRmfGH19kiY=
+github.com/DanielRivasMD/domovoi v0.0.0-20250722183845-36175cc1001f/go.mod h1:A+G3Z0BTecntlot/13Yy1AYgnbD2hmyZ8Q9CURuDtog=
+github.com/DanielRivasMD/domovoi v0.0.0-20250725134400-c2176f7d121c h1:vkx02Vk3Edvc9lYX+yfv8C/GImoVxnKMq8WUaBDYrnE=
+github.com/DanielRivasMD/domovoi v0.0.0-20250725134400-c2176f7d121c/go.mod h1:A+G3Z0BTecntlot/13Yy1AYgnbD2hmyZ8Q9CURuDtog=
 github.com/DanielRivasMD/horus v0.0.0-20250720074121-f8b5256376f9 h1:zcqSW7RaQ3aDSHNXLnEwc+fD0qGS3Pjd+ovLmsOZRbk=
 github.com/DanielRivasMD/horus v0.0.0-20250720074121-f8b5256376f9/go.mod h1:BisGQ8GHkm7XjzTnXRhGznkg9wFaCHiIQXroK3vhKu8=
 github.com/DanielRivasMD/horus v1.0.0 h1:NFSFxWKxM0VM5UB503YZz1mj3ewjau4UeMuDv0AtQ+E=
