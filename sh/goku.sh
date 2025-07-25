@@ -32,10 +32,9 @@ mbombo forge --path "${frag}" --out "${karabiner}/karabiner.edn" \
   --files "../.profile.tmp" \
   --files "profile/profile.edn" \
   --files "../.main.tmp" \
-  --files "apps/alacritty.edn" \
   --files "apps/browser.edn" \
+  --files "apps/finder.edn" \
   --files "apps/mail.edn" \
-  --files "apps/zellij.edn" \
   --files "apps/zoom.edn" \
   --files "double/keypad.edn" \
   --files "double/lcmd.edn" \
