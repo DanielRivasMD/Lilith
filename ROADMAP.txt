@@ -2,6 +2,7 @@
 - make release v1.0.0
 - add readme
 - add an all-wrapper across all cmds
+- fix a bug that duplicate runs & produces downstream errors
 
 ==================================================
 cmd/cmdInvoke.go
