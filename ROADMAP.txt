@@ -1,9 +1,7 @@
-- add a lock for avoid double launching tasks
+- add error handling
+- homogenize cmd logics
 - add tests
 - make release v1.0.0
-- add readme
-- add an all-wrapper across all cmds
-- fix a bug that duplicate runs & produces downstream errors
 
 ==================================================
 cmd/cmdInvoke.go
