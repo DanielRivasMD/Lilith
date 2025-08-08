@@ -1,3 +1,4 @@
+- add a lock for avoid double launching tasks
 - add tests
 - make release v1.0.0
 - add readme
