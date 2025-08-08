@@ -19,6 +19,7 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"syscall"
@@ -43,26 +44,40 @@ var freezeCmd = &cobra.Command{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Args:              cobra.ExactArgs(1),
+	Args:              cobra.MaximumNArgs(1),
 	ValidArgsFunction: completeDaemonNames,
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Run: func(cmd *cobra.Command, args []string) {
 		const op = "lilith.freeze"
-		name := args[0]
 
-		// 1) Load metadata
-		meta, err := loadMeta(name)
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
+		group, _ := cmd.Flags().GetString("group")
+		all, _ := cmd.Flags().GetBool("all")
 
-		// 2) Find and pause process
-		proc, err := os.FindProcess(meta.PID)
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("finding process"))
-		horus.CheckErr(proc.Signal(syscall.SIGSTOP), horus.WithOp(op), horus.WithMessage("sending SIGSTOP"))
+		switch {
+		case all:
+			freezeAllDaemons()
+			return
+		case group != "":
+			freezeGroupDaemons(group)
+			return
+		default:
+			// Single daemon freeze
+			name := args[0]
 
-		// 3) Confirmation
-		fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), name)
+			// 1) Load metadata
+			meta, err := loadMeta(name)
+			horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
+
+			// 2) Find and pause process
+			proc, err := os.FindProcess(meta.PID)
+			horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("finding process"))
+			horus.CheckErr(proc.Signal(syscall.SIGSTOP), horus.WithOp(op), horus.WithMessage("sending SIGSTOP"))
+
+			// 3) Confirmation
+			fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), name)
+		}
 	},
 }
 
@@ -70,6 +85,59 @@ var freezeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(freezeCmd)
+
+	freezeCmd.Flags().String("group", "", "Freeze all daemons belonging to a specific group")
+	freezeCmd.Flags().Bool("all", false, "Freeze all running daemons")
+
+	_ = freezeCmd.RegisterFlagCompletionFunc("group", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return availableGroups(), cobra.ShellCompDirectiveDefault
+	})
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func freezeGroupDaemons(group string) {
+	files := mustListDaemonMetaFiles()
+	for _, path := range files {
+		if matchesGroup(path, group) {
+			meta := mustLoadMeta(path)
+			_ = sendSignal(meta.PID, syscall.SIGSTOP)
+			fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+		}
+	}
+}
+
+func freezeAllDaemons() {
+	files := mustListDaemonMetaFiles()
+	for _, path := range files {
+		meta := mustLoadMeta(path)
+		_ = sendSignal(meta.PID, syscall.SIGSTOP)
+		fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+	}
+}
+
+func mustLoadMeta(path string) daemonMeta {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading metadata from %s: %v\n", path, err)
+		os.Exit(1)
+	}
+
+	var meta daemonMeta
+	if err := json.Unmarshal(data, &meta); err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing JSON in %s: %v\n", path, err)
+		os.Exit(1)
+	}
+
+	return meta
+}
+
+func sendSignal(pid int, sig syscall.Signal) error {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("could not find process %d: %w", pid, err)
+	}
+	return proc.Signal(sig)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
