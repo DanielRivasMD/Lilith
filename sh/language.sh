@@ -12,6 +12,7 @@ mbombo forge --path "${languages}" --out "${helix}/languages.toml" \
   --files "docker.toml" \
   --files "git.toml" \
   --files "go.toml" \
+  --files "html.toml" \
   --files "json.toml" \
   --files "julia.toml" \
   --files "markdown.toml" \
