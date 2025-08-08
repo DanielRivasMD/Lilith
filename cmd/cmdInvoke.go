@@ -20,8 +20,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/DanielRivasMD/domovoi"
@@ -214,6 +216,21 @@ var invokeCmd = &cobra.Command{
 			LogPath:    logPath,
 			InvokedAt:  time.Now(),
 		}
+
+		for _, path := range mustListDaemonMetaFiles() {
+			existing := mustLoadMeta(path)
+			if existing.WatchDir == watchDir && isDaemonActive(&existing) {
+				horus.CheckErr(
+					horus.NewCategorizedHerror(op, "validation", "duplicate daemon running", nil, map[string]any{
+						"conflict": existing.Name,
+						"group":    existing.Group,
+						"pid":      existing.PID,
+						"watchDir": existing.WatchDir,
+					}),
+				)
+			}
+		}
+
 		pid, err := spawnWatcher(meta)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("starting watcher"))
 		meta.PID = pid
@@ -245,6 +262,21 @@ func init() {
 	if err := invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames); err != nil {
 		horus.CheckErr(err, horus.WithOp("invoke.init"), horus.WithMessage("registering config completion"))
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func isDaemonActive(meta *daemonMeta) bool {
+	if meta.PID <= 0 {
+		return false
+	}
+	proc, err := os.FindProcess(meta.PID)
+	if err != nil {
+		return false
+	}
+	// This works on Unix-like systems: send signal 0
+	err = proc.Signal(syscall.Signal(0))
+	return err == nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
