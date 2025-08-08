@@ -69,9 +69,14 @@ var slayCmd = &cobra.Command{
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
+	rootCmd.AddCommand(slayCmd)
+
 	slayCmd.Flags().BoolVar(&slayAll, "all", false, "Slay all daemons")
 	slayCmd.Flags().StringVar(&slayGroup, "group", "", "Slay all daemons in a specific group")
-	rootCmd.AddCommand(slayCmd)
+
+	_ = slayCmd.RegisterFlagCompletionFunc("group", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return availableGroups(), cobra.ShellCompDirectiveDefault
+	})
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +176,36 @@ func matchesGroup(metaPath, expectedGroup string) bool {
 	}
 
 	return meta.Group == expectedGroup
+}
+
+func availableGroups() []string {
+	files, err := filepath.Glob("/Users/drivas/.lilith/daemon/*.json")
+	if err != nil {
+		return nil
+	}
+
+	groups := map[string]bool{}
+	for _, path := range files {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		var meta struct {
+			Group string `json:"group"`
+		}
+		if err := json.Unmarshal(data, &meta); err != nil {
+			continue
+		}
+		if meta.Group != "" {
+			groups[meta.Group] = true
+		}
+	}
+
+	var result []string
+	for g := range groups {
+		result = append(result, g)
+	}
+	return result
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
