@@ -1,5 +1,5 @@
 [workflows.helix]
-watch  = "~/.archive/ex-situ/helix/modes"
+watch = "~/.archive/ex-situ/helix/modes"
 script = "~/.lilith/sh/helix.sh"
 
 [workflows.language]
@@ -7,5 +7,9 @@ watch = "~/.archive/ex-situ/helix/languages"
 script = "~/.lilith/sh/language.sh"
 
 [workflows.goku]
-watch  = "~/.saiyajin/frag"
+watch = "~/.saiyajin/frag"
 script = "~/.lilith/sh/goku.sh"
+
+[workflows.alacritty]
+watch = "~/.config/alacritty/alacritty.toml"
+script = "~/.lilith/sh/alacritty.sh"
