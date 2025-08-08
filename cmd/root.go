@@ -87,6 +87,7 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 		return 0, err
 	}
 
+	// TODO: exec cmd => domovoi?
 	cmd := exec.Command("watchexec",
 		"--watch", meta.WatchDir,
 		"--",
@@ -125,7 +126,8 @@ var rootCmd = &cobra.Command{
 	Use: "lilith",
 	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) + chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
 
-` + chalk.Blue.Color("lilith") + `, manage background watcher daemon
+` +
+		`manage background watcher daemon
 `,
 	Example: chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("help")),
 }
