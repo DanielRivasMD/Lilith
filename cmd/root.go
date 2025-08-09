@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -94,11 +95,8 @@ func saveMeta(meta *daemonMeta) error {
 	const op = "daemon.saveMeta"
 
 	dir := getDaemonDir()
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return horus.NewCategorizedHerror(
-			op, "env_error", "creating daemon directory", err,
-			map[string]any{"dir": dir, "name": meta.Name},
-		)
+	if err := domovoi.CreateDir(dir, false); err != nil {
+		return horus.Wrap(err, op, "creating daemon directory")
 	}
 
 	data, err := json.MarshalIndent(meta, "", "  ")
@@ -149,11 +147,8 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	const op = "daemon.spawnWatcher"
 	logDir := filepath.Dir(meta.LogPath)
 
-	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return 0, horus.NewCategorizedHerror(
-			op, "env_error", "creating log directory", err,
-			map[string]any{"logDir": logDir},
-		)
+	if err := domovoi.CreateDir(logDir, false); err != nil {
+		return 0, horus.Wrap(err, op, "creating log directory")
 	}
 
 	cmd := exec.Command("watchexec",
@@ -182,9 +177,7 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	pid := cmd.Process.Pid
 
 	if err := cmd.Process.Release(); err != nil {
-		return pid, horus.Wrap(
-			err, op, "releasing process handle",
-		)
+		return pid, horus.Wrap(err, op, "releasing process handle")
 	}
 
 	return pid, nil
@@ -220,21 +213,22 @@ func mustExpand(val, label string) string {
 	return expanded
 }
 
-// expandPath replaces a leading "~" with $HOME and then does os.ExpandEnv.
+// expandPath replaces a leading "~" with $HOME (via domovoi.FindHome) and then does os.ExpandEnv.
 func expandPath(p string) (string, error) {
-	if strings.HasPrefix(p, "~"+string(filepath.Separator)) {
-		home, err := os.UserHomeDir()
+	prefix := "~" + string(filepath.Separator)
+	if strings.HasPrefix(p, prefix) {
+		home, err := domovoi.FindHome(false)
 		if err != nil {
-			return "", err
+			return "", err // caller (mustExpand) adds op/category via horus.CheckErr
 		}
-		p = filepath.Join(home, p[2:]) // drop the "~/" and re-join
+		p = filepath.Join(home, p[len(prefix):]) // drop the "~/" and re-join
 	}
 	return os.ExpandEnv(p), nil
 }
 
 // completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys.
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	home, err := os.UserHomeDir()
+	home, err := domovoi.FindHome(false)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
@@ -340,7 +334,8 @@ func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string
 }
 
 func availableGroups() []string {
-	files, err := filepath.Glob("/Users/drivas/.lilith/daemon/*.json")
+	dir := getDaemonDir()
+	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	if err != nil {
 		return nil
 	}
