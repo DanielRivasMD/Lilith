@@ -30,66 +30,73 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+var summonCmd = &cobra.Command{
+	Use:     "summon " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
+	Short:   "View daemon logs",
+	Long:    helpSummon,
+	Example: exampleSummon,
+
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeDaemonNames,
+
+	Run: runSummon,
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 var (
 	follow bool
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var summonCmd = &cobra.Command{
-	Use:   "summon " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "View daemon logs",
-	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` display your daemon's log file. Pass --follow to stream updates in real time`,
-	Example: chalk.White.Color("lilith") + " " +
-		chalk.Bold.TextStyle(chalk.White.Color("summon")) + " " +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
-		chalk.Italic.TextStyle(chalk.White.Color("--follow")),
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: completeDaemonNames,
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Run: func(cmd *cobra.Command, args []string) {
-		const op = "lilith.summon"
-		name := args[0]
-
-		meta, err := loadMeta(name)
-		horus.CheckErr(err,
-			horus.WithOp(op),
-			horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)),
-		)
-
-		if follow {
-			horus.CheckErr(
-				domovoi.ExecCmd("tail", "-f", meta.LogPath),
-				horus.WithOp(op),
-				horus.WithMessage("streaming log"),
-			)
-		} else {
-			pager := os.Getenv("PAGER")
-			if pager == "" {
-				pager = "less"
-			}
-			horus.CheckErr(
-				domovoi.ExecCmd(pager, "--paging", "always", meta.LogPath),
-				horus.WithOp(op),
-				horus.WithMessage("paging log"),
-			)
-		}
-	},
+func init() {
+	rootCmd.AddCommand(summonCmd)
+	summonCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Continuously watch the log file")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.AddCommand(summonCmd)
-	summonCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Continuously watch the log file")
+var helpSummon = chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
+
+` +
+	` display your daemon's log file. Pass --follow to stream updates in real time`
+
+var exampleSummon = chalk.White.Color("lilith") + " " +
+	chalk.Bold.TextStyle(chalk.White.Color("summon")) + " " +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
+	chalk.Italic.TextStyle(chalk.White.Color("--follow"))
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func runSummon(cmd *cobra.Command, args []string) {
+	const op = "lilith.summon"
+	name := args[0]
+
+	meta, err := loadMeta(name)
+	horus.CheckErr(err,
+		horus.WithOp(op),
+		horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)),
+	)
+
+	if follow {
+		horus.CheckErr(
+			domovoi.ExecCmd("tail", "-f", meta.LogPath),
+			horus.WithOp(op),
+			horus.WithMessage("streaming log"),
+		)
+	} else {
+		pager := os.Getenv("PAGER")
+		if pager == "" {
+			pager = "less"
+		}
+		horus.CheckErr(
+			domovoi.ExecCmd(pager, "--paging", "always", meta.LogPath),
+			horus.WithOp(op),
+			horus.WithMessage("paging log"),
+		)
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
