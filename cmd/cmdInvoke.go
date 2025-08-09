@@ -40,19 +40,19 @@ var invokeCmd = &cobra.Command{
 	Long:    helpInvoke,
 	Example: exampleInvoke,
 
-	PreRunE: preInvoke,
-	Run:     runInvoke,
+	PreRunE: PreInvoke,
+	Run:     RunInvoke,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	configName string // workflow key
-	daemonName string // instance name, defaults to configName
-	watchDir   string
-	scriptPath string
-	logName    string
-	groupName  string // derived from TOML filename
+	ConfigName string // workflow key
+	DaemonName string // instance name, defaults to configName
+	WatchDir   string
+	ScriptPath string
+	LogName    string
+	GroupName  string // derived from TOML filename
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,12 +60,12 @@ var (
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
-	invokeCmd.Flags().StringVarP(&configName, "config", "c", "", "Workflow to apply")
-	invokeCmd.Flags().StringVarP(&daemonName, "name", "n", "", "Unique daemon name (defaults to --config)")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides TOML)")
-	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch")
-	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change")
-	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension)")
+	invokeCmd.Flags().StringVarP(&ConfigName, "config", "c", "", "Workflow to apply")
+	invokeCmd.Flags().StringVarP(&DaemonName, "name", "n", "", "Unique daemon name (defaults to --config)")
+	invokeCmd.Flags().StringVarP(&GroupName, "group", "g", "", "Watcher group name (overrides TOML)")
+	invokeCmd.Flags().StringVarP(&WatchDir, "watch", "w", "", "Directory to watch")
+	invokeCmd.Flags().StringVarP(&ScriptPath, "script", "s", "", "Script to execute on change")
+	invokeCmd.Flags().StringVarP(&LogName, "log", "l", "", "Name for log file (no `.log` extension)")
 
 	horus.CheckErr(invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames), horus.WithOp("invoke.init"), horus.WithMessage("registering config completion"))
 }
@@ -94,10 +94,10 @@ var exampleInvoke = chalk.White.Color("lilith") + " " +
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func preInvoke(cmd *cobra.Command, args []string) error {
+func PreInvoke(cmd *cobra.Command, args []string) error {
 	const op = "lilith.invoke.pre"
 
-	home, err := findHomeFn(verbose)
+	home, err := FindHomeFn(verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	cfgDir := filepath.Join(home, ".lilith", "config")
 
@@ -105,7 +105,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 		foundV      *viper.Viper
 		cfgFileUsed string
 	)
-	fis, err := readDirFn(cfgDir, verbose)
+	fis, err := ReadDirFn(cfgDir, verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 
 	for _, fi := range fis {
@@ -118,7 +118,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 		if err := v.ReadInConfig(); err != nil {
 			continue
 		}
-		if v.IsSet("workflows." + configName) {
+		if v.IsSet("workflows." + ConfigName) {
 			foundV = v
 			cfgFileUsed = path
 			break
@@ -127,17 +127,17 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 
 	if foundV == nil {
 		horus.CheckErr(
-			fmt.Errorf("workflow %q not found in %s/*.toml", configName, cfgDir),
+			fmt.Errorf("workflow %q not found in %s/*.toml", ConfigName, cfgDir),
 			horus.WithOp(op),
 			horus.WithMessage("could not find named workflow in config directory"),
 			horus.WithCategory("config_error"),
 		)
 	}
 
-	if daemonName == "" {
-		daemonName = configName
+	if DaemonName == "" {
+		DaemonName = ConfigName
 		horus.CheckErr(
-			cmd.Flags().Set("name", daemonName),
+			cmd.Flags().Set("name", DaemonName),
 			horus.WithOp(op),
 			horus.WithMessage("setting default --name from config"),
 			horus.WithCategory("config_error"),
@@ -145,22 +145,22 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 	}
 
 	base := filepath.Base(cfgFileUsed)
-	groupName = strings.TrimSuffix(base, filepath.Ext(base))
+	GroupName = strings.TrimSuffix(base, filepath.Ext(base))
 	horus.CheckErr(
-		cmd.Flags().Set("group", groupName),
+		cmd.Flags().Set("group", GroupName),
 		horus.WithOp(op),
 		horus.WithMessage("setting default --group from TOML filename"),
 		horus.WithCategory("config_error"),
 	)
 
-	wf := foundV.Sub("workflows." + configName)
-	BindFlag(cmd, "watch", &watchDir, wf)
-	BindFlag(cmd, "script", &scriptPath, wf)
+	wf := foundV.Sub("workflows." + ConfigName)
+	BindFlag(cmd, "watch", &WatchDir, wf)
+	BindFlag(cmd, "script", &ScriptPath, wf)
 
 	if !cmd.Flags().Changed("log") {
-		logName = configName
+		LogName = ConfigName
 		horus.CheckErr(
-			cmd.Flags().Set("log", logName),
+			cmd.Flags().Set("log", LogName),
 			horus.WithOp(op),
 			horus.WithMessage("setting default --log from workflow key"),
 			horus.WithCategory("config_error"),
@@ -172,57 +172,57 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func runInvoke(cmd *cobra.Command, args []string) {
+func RunInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
 	horus.CheckEmpty(
-		watchDir,
+		WatchDir,
 		"`--watch` is required",
 		horus.WithOp(op),
 		horus.WithMessage("provide a directory to watch"),
 		horus.WithCategory("spawn_error"),
 	)
 	horus.CheckEmpty(
-		scriptPath,
+		ScriptPath,
 		"`--script` is required",
 		horus.WithOp(op),
 		horus.WithMessage("provide a script to run"),
 		horus.WithCategory("spawn_error"),
 	)
 	horus.CheckEmpty(
-		logName,
+		LogName,
 		"`--log` is required",
 		horus.WithOp(op),
 		horus.WithMessage("provide a log name"),
 		horus.WithCategory("spawn_error"),
 	)
 
-	watchDir = mustExpand(watchDir, "--watch")
-	scriptPath = mustExpand(scriptPath, "--script")
+	WatchDir = mustExpand(WatchDir, "--watch")
+	ScriptPath = mustExpand(ScriptPath, "--script")
 
-	home, err := findHomeFn(verbose)
+	home, err := FindHomeFn(verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	logDir := filepath.Join(home, ".lilith", "logs")
 	horus.CheckErr(
-		createDirFn(logDir, verbose),
+		CreateDirFn(logDir, verbose),
 		horus.WithOp(op),
 		horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		horus.WithCategory("env_error"),
 	)
-	logPath := filepath.Join(logDir, logName+".log")
+	logPath := filepath.Join(logDir, LogName+".log")
 
 	meta := &DaemonMeta{
-		Name:       daemonName,
-		Group:      groupName,
-		WatchDir:   watchDir,
-		ScriptPath: scriptPath,
+		Name:       DaemonName,
+		Group:      GroupName,
+		WatchDir:   WatchDir,
+		ScriptPath: ScriptPath,
 		LogPath:    logPath,
-		InvokedAt:  nowFn(),
+		InvokedAt:  NowFn(),
 	}
 
-	for _, path := range listMetaFilesFn() {
-		existing := loadMetaFn(path)
-		if existing.WatchDir == watchDir && isDaemonActiveFn(&existing) {
+	for _, path := range ListMetaFilesFn() {
+		existing := LoadMetaFn(path)
+		if existing.WatchDir == WatchDir && IsDaemonActiveFn(&existing) {
 			horus.CheckErr(
 				fmt.Errorf("daemon already running"),
 				horus.WithMessage(existing.Name),
@@ -234,16 +234,16 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	pid, err := spawnWatcherFn(meta)
+	pid, err := SpawnWatcherFn(meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
 	meta.PID = pid
 
-	horus.CheckErr(saveMetaFn(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
+	horus.CheckErr(SaveMetaFn(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
 
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",
-		chalk.Green.Color(daemonName),
-		chalk.Green.Color(groupName),
+		chalk.Green.Color(DaemonName),
+		chalk.Green.Color(GroupName),
 		chalk.Green.Color(strconv.Itoa(pid)),
 	)
 }
@@ -252,16 +252,16 @@ func runInvoke(cmd *cobra.Command, args []string) {
 
 // seams for testing (default to real funcs)
 var (
-	spawnWatcherFn   = spawnWatcher
-	saveMetaFn       = SaveMeta
-	listMetaFilesFn  = MustListDaemonMetaFiles
-	loadMetaFn       = mustLoadMeta
-	isDaemonActiveFn = isDaemonActive
+	SpawnWatcherFn   = spawnWatcher
+	SaveMetaFn       = SaveMeta
+	ListMetaFilesFn  = MustListDaemonMetaFiles
+	LoadMetaFn       = mustLoadMeta
+	IsDaemonActiveFn = isDaemonActive
 	expandPathFn     = ExpandPath
-	findHomeFn       = domovoi.FindHome
-	createDirFn      = domovoi.CreateDir
-	readDirFn        = domovoi.ReadDir
-	nowFn            = time.Now
+	FindHomeFn       = domovoi.FindHome
+	CreateDirFn      = domovoi.CreateDir
+	ReadDirFn        = domovoi.ReadDir
+	NowFn            = time.Now
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
