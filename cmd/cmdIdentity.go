@@ -25,29 +25,29 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var ()
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 var identityCmd = &cobra.Command{
-	Use:   "identity",
+	Use:     "identity",
 	Aliases: []string{"id"},
-	Short: `Reveal Lilith’s mythic origin`,
+	Hidden:  true,
+	Short:   `Reveal Lilith’s mythic origin`,
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(chalk.Magenta.Color("Lilith:"))
-		fmt.Println("  • In ancient Mesopotamia she appears as a wind spirit, free and untamed.")
-		fmt.Println("  • In early Jewish lore she is Adam’s first wife, who walked away rather than submit.")
-		fmt.Println("  • Through medieval tales she became a demon of the night—yet also a feminist icon.")
-		fmt.Println("  • Today she embodies autonomy, the power of the untold story, and the strength of dusk.")
-	},
+	Run: runIdentity,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
 	rootCmd.AddCommand(identityCmd)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func runIdentity(cmd *cobra.Command, args []string) {
+	fmt.Println(chalk.Magenta.Color("Lilith:"))
+	fmt.Println("  • In ancient Mesopotamia she appears as a wind spirit, free and untamed.")
+	fmt.Println("  • In early Jewish lore she is Adam’s first wife, who walked away rather than submit.")
+	fmt.Println("  • Through medieval tales she became a demon of the night—yet also a feminist icon.")
+	fmt.Println("  • Today she embodies autonomy, the power of the untold story, and the strength of dusk.")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
