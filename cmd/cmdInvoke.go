@@ -19,13 +19,10 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/DanielRivasMD/domovoi"
@@ -39,7 +36,7 @@ import (
 
 var invokeCmd = &cobra.Command{
 	Use:     "invoke",
-	Short:   "Start a new watcher daemon",
+	Short:   "Start daemon",
 	Long:    helpInvoke,
 	Example: exampleInvoke,
 
@@ -100,17 +97,15 @@ var exampleInvoke = chalk.White.Color("lilith") + " " +
 func preInvoke(cmd *cobra.Command, args []string) error {
 	const op = "lilith.invoke.pre"
 
-	// 1) Find home and read config dir
-	home, err := domovoi.FindHome(verbose)
+	home, err := findHomeFn(verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	cfgDir := filepath.Join(home, ".lilith", "config")
 
-	// 2) Load matching TOML
 	var (
 		foundV      *viper.Viper
 		cfgFileUsed string
 	)
-	fis, err := domovoi.ReadDir(cfgDir, verbose)
+	fis, err := readDirFn(cfgDir, verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 
 	for _, fi := range fis {
@@ -130,7 +125,6 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// 3) Handle missing workflow with horus
 	if foundV == nil {
 		horus.CheckErr(
 			fmt.Errorf("workflow %q not found in %s/*.toml", configName, cfgDir),
@@ -140,47 +134,37 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	// 4) Default daemonName ← configName if none provided
 	if daemonName == "" {
 		daemonName = configName
-		if err := cmd.Flags().Set("name", daemonName); err != nil {
-			horus.CheckErr(
-				err,
-				horus.WithOp(op),
-				horus.WithMessage("setting default --name from config"),
-				horus.WithCategory("config_error"),
-			)
-		}
-	}
-
-	// 5) Derive groupName from TOML filename
-	base := filepath.Base(cfgFileUsed)                       // e.g. "forge.toml"
-	groupName = strings.TrimSuffix(base, filepath.Ext(base)) // e.g. "forge"
-	if err := cmd.Flags().Set("group", groupName); err != nil {
 		horus.CheckErr(
-			err,
+			cmd.Flags().Set("name", daemonName),
 			horus.WithOp(op),
-			horus.WithMessage("setting default --group from TOML filename"),
+			horus.WithMessage("setting default --name from config"),
 			horus.WithCategory("config_error"),
 		)
 	}
 
-	// 6) Bind watch & script flags
+	base := filepath.Base(cfgFileUsed)
+	groupName = strings.TrimSuffix(base, filepath.Ext(base))
+	horus.CheckErr(
+		cmd.Flags().Set("group", groupName),
+		horus.WithOp(op),
+		horus.WithMessage("setting default --group from TOML filename"),
+		horus.WithCategory("config_error"),
+	)
+
 	wf := foundV.Sub("workflows." + configName)
 	bindFlag(cmd, "watch", &watchDir, wf)
 	bindFlag(cmd, "script", &scriptPath, wf)
 
-	// 7) Auto‐assign logName from workflow key
 	if !cmd.Flags().Changed("log") {
 		logName = configName
-		if err := cmd.Flags().Set("log", logName); err != nil {
-			horus.CheckErr(
-				err,
-				horus.WithOp(op),
-				horus.WithMessage("setting default --log from workflow key"),
-				horus.WithCategory("config_error"),
-			)
-		}
+		horus.CheckErr(
+			cmd.Flags().Set("log", logName),
+			horus.WithOp(op),
+			horus.WithMessage("setting default --log from workflow key"),
+			horus.WithCategory("config_error"),
+		)
 	}
 
 	return nil
@@ -191,7 +175,6 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
-	// 7) Validate required flags
 	horus.CheckEmpty(
 		watchDir,
 		"`--watch` is required",
@@ -214,52 +197,49 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		horus.WithCategory("spawn_error"),
 	)
 
-	// 8) Expand env vars / tilde
 	watchDir = mustExpand(watchDir, "--watch")
 	scriptPath = mustExpand(scriptPath, "--script")
 
-	// 9) Ensure ~/.lilith/logs exists
-	home, err := domovoi.FindHome(verbose)
+	home, err := findHomeFn(verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	logDir := filepath.Join(home, ".lilith", "logs")
 	horus.CheckErr(
-		domovoi.CreateDir(logDir, verbose),
+		createDirFn(logDir, verbose),
 		horus.WithOp(op),
 		horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		horus.WithCategory("env_error"),
 	)
 	logPath := filepath.Join(logDir, logName+".log")
 
-	// 10) Build & persist metadata
 	meta := &daemonMeta{
 		Name:       daemonName,
 		Group:      groupName,
 		WatchDir:   watchDir,
 		ScriptPath: scriptPath,
 		LogPath:    logPath,
-		InvokedAt:  time.Now(),
+		InvokedAt:  nowFn(),
 	}
 
-	for _, path := range mustListDaemonMetaFiles() {
-		existing := mustLoadMeta(path)
-		if existing.WatchDir == watchDir && isDaemonActive(&existing) {
+	for _, path := range listMetaFilesFn() {
+		existing := loadMetaFn(path)
+		if existing.WatchDir == watchDir && isDaemonActiveFn(&existing) {
 			horus.CheckErr(
 				fmt.Errorf("daemon already running"),
-				horus.WithMessage( existing.Name),
+				horus.WithMessage(existing.Name),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
 					return "daemon " + chalk.Red.Color(he.Message) + " already running"
 				}),
-			) // unreachable
+			)
 		}
 	}
 
-	pid, err := spawnWatcher(meta)
+	pid, err := spawnWatcherFn(meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
 	meta.PID = pid
-	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
 
-	// 11) Done
+	horus.CheckErr(saveMetaFn(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
+
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",
 		chalk.Green.Color(daemonName),
@@ -270,26 +250,18 @@ func runInvoke(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func isDaemonActive(meta *daemonMeta) bool {
-	if meta.PID <= 0 {
-		return false
-	}
-	proc, err := os.FindProcess(meta.PID)
-	if err != nil {
-		return false
-	}
-	// Unix-like: signal 0 checks existence; EPERM implies it's running but not signalable.
-	if err := proc.Signal(syscall.Signal(0)); err != nil {
-		return errors.Is(err, syscall.EPERM)
-	}
-	return true
-}
-
-func mustExpand(val, label string) string {
-	const op = "expand path"
-	expanded, err := expandPath(val)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
-	return expanded
-}
+// seams for testing (default to real funcs)
+var (
+	spawnWatcherFn   = spawnWatcher
+	saveMetaFn       = saveMeta
+	listMetaFilesFn  = mustListDaemonMetaFiles
+	loadMetaFn       = mustLoadMeta
+	isDaemonActiveFn = isDaemonActive
+	expandPathFn     = expandPath
+	findHomeFn       = domovoi.FindHome
+	createDirFn      = domovoi.CreateDir
+	readDirFn        = domovoi.ReadDir
+	nowFn            = time.Now
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
