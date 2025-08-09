@@ -101,7 +101,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 
 	// 1) Find home and read config dir
 	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	cfgDir := filepath.Join(home, ".lilith", "config")
 
 	// 2) Load matching TOML
@@ -110,7 +110,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 		cfgFileUsed string
 	)
 	fis, err := domovoi.ReadDir(cfgDir, verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading config dir"))
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 
 	for _, fi := range fis {
 		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
@@ -135,7 +135,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 			fmt.Errorf("workflow %q not found in %s/*.toml", configName, cfgDir),
 			horus.WithOp(op),
 			horus.WithMessage("could not find named workflow in config directory"),
-			horus.WithCategory("user_error"), // or "config_error" depending on how you classify it
+			horus.WithCategory("config_error"),
 		)
 	}
 
@@ -147,6 +147,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 				err,
 				horus.WithOp(op),
 				horus.WithMessage("setting default --name from config"),
+				horus.WithCategory("config_error"),
 			)
 		}
 	}
@@ -159,6 +160,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 			err,
 			horus.WithOp(op),
 			horus.WithMessage("setting default --group from TOML filename"),
+			horus.WithCategory("config_error"),
 		)
 	}
 
@@ -175,6 +177,7 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 				err,
 				horus.WithOp(op),
 				horus.WithMessage("setting default --log from workflow key"),
+				horus.WithCategory("config_error"),
 			)
 		}
 	}
@@ -193,18 +196,21 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		"`--watch` is required",
 		horus.WithOp(op),
 		horus.WithMessage("provide a directory to watch"),
+		horus.WithCategory("spawn_error"),
 	)
 	horus.CheckEmpty(
 		scriptPath,
 		"`--script` is required",
 		horus.WithOp(op),
 		horus.WithMessage("provide a script to run"),
+		horus.WithCategory("spawn_error"),
 	)
 	horus.CheckEmpty(
 		logName,
 		"`--log` is required",
 		horus.WithOp(op),
 		horus.WithMessage("provide a log name"),
+		horus.WithCategory("spawn_error"),
 	)
 
 	// 8) Expand env vars / tilde
@@ -213,12 +219,13 @@ func runInvoke(cmd *cobra.Command, args []string) {
 
 	// 9) Ensure ~/.lilith/logs exists
 	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("getting home directory"))
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	logDir := filepath.Join(home, ".lilith", "logs")
 	horus.CheckErr(
 		domovoi.CreateDir(logDir, verbose),
 		horus.WithOp(op),
 		horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
+		horus.WithCategory("env_error"),
 	)
 	logPath := filepath.Join(logDir, logName+".log")
 
@@ -241,9 +248,9 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	}
 
 	pid, err := spawnWatcher(meta)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("starting watcher"))
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
 	meta.PID = pid
-	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("writing metadata"))
+	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
 
 	// 11) Done
 	fmt.Printf(
@@ -275,7 +282,7 @@ func isDaemonActive(meta *daemonMeta) bool {
 func mustExpand(val, label string) string {
 	const op = "expand path"
 	expanded, err := expandPath(val)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
 	return expanded
 }
 
@@ -288,8 +295,8 @@ func exitAlreadyRunning(name string) {
 	horus.CheckErr(
 		fmt.Errorf("daemon already running"),
 		horus.WithOp("invoke"),
-		horus.WithCategory("already_running"),
-		horus.WithMessage(fmt.Sprintf("✘ daemon %q is already running", name)),
+		horus.WithMessage(fmt.Sprintf("daemon %q is already running", name)),
+		horus.WithCategory("spawn_error"),
 		horus.WithExitCode(2),
 		horus.WithFormatter(OneLineRedFormatter),
 	)
