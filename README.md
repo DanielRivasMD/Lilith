@@ -1,9 +1,9 @@
-# Lilith
+# Lilith, master of daemons
 
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 
 ## Overview
-`lilith`, master of daemons
+`lilith`
 
 
 ## Features
