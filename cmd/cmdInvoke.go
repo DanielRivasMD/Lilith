@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -242,8 +243,14 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	for _, path := range mustListDaemonMetaFiles() {
 		existing := mustLoadMeta(path)
 		if existing.WatchDir == watchDir && isDaemonActive(&existing) {
-			exitAlreadyRunning(existing.Name)
-			// unreachable
+			horus.CheckErr(
+				fmt.Errorf("daemon already running"),
+				horus.WithMessage( existing.Name),
+				horus.WithExitCode(2),
+				horus.WithFormatter(func(he *horus.Herror) string {
+					return "daemon " + chalk.Red.Color(he.Message) + " already running"
+				}),
+			) // unreachable
 		}
 	}
 
@@ -254,11 +261,10 @@ func runInvoke(cmd *cobra.Command, args []string) {
 
 	// 11) Done
 	fmt.Printf(
-		"%s invoked daemon %q (group=%q) with PID %d\n",
-		chalk.Green.Color("OK:"),
-		daemonName,
-		groupName,
-		pid,
+		"invoked daemon %s group %s PID %s\n",
+		chalk.Green.Color(daemonName),
+		chalk.Green.Color(groupName),
+		chalk.Green.Color(strconv.Itoa(pid)),
 	)
 }
 
@@ -284,22 +290,6 @@ func mustExpand(val, label string) string {
 	expanded, err := expandPath(val)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
 	return expanded
-}
-
-// Formatter and helper
-var OneLineRedFormatter horus.FormatterFunc = func(he *horus.Herror) string {
-	return chalk.Red.Color(he.Message)
-}
-
-func exitAlreadyRunning(name string) {
-	horus.CheckErr(
-		fmt.Errorf("daemon already running"),
-		horus.WithOp("invoke"),
-		horus.WithMessage(fmt.Sprintf("daemon %q is already running", name)),
-		horus.WithCategory("spawn_error"),
-		horus.WithExitCode(2),
-		horus.WithFormatter(OneLineRedFormatter),
-	)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
