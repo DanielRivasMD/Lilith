@@ -39,7 +39,7 @@ var tallyCmd = &cobra.Command{
 	Long:    helpTally,
 	Example: exampleTally,
 
-	Run: runTally,
+	Run: RunTally,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ var exampleTally = chalk.White.Color("lilith") + " " +
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func runTally(cmd *cobra.Command, args []string) {
+func RunTally(cmd *cobra.Command, args []string) {
 	const op = "lilith.tally"
 
 	// 1) Read the daemon directory
