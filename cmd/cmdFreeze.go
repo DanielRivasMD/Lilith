@@ -55,15 +55,20 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpFreeze = chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` +
-	` send SIGSTOP to an alive daemon, pausing its execution until you explicitly resume it via OS tools`
+var helpFreeze = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
+	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\npause daemon execution using SIGSTOP, until resumed manually"))
 
 var exampleFreeze = chalk.White.Color("lilith") + " " +
 	chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix"))
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
+	chalk.White.Color("lilith") + " " +
+	chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
+	chalk.Italic.TextStyle(chalk.White.Color("--group")) + " " +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<forge>")) + "\n" +
+	chalk.White.Color("lilith") + " " +
+	chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
+	chalk.Italic.TextStyle(chalk.White.Color("--all"))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

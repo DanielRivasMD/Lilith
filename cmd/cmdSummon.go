@@ -57,11 +57,9 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpSummon = chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` +
-	` display your daemon's log file. Pass --follow to stream updates in real time`
+var helpSummon = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
+	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\ndisplay a daemon's log output - pass --follow to stream in real time"))
 
 var exampleSummon = chalk.White.Color("lilith") + " " +
 	chalk.Bold.TextStyle(chalk.White.Color("summon")) + " " +

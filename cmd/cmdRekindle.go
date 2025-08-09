@@ -62,24 +62,20 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpRekindle = chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` +
-	` restart one or many dead watcher daemons using their saved metadata`
+var helpRekindle = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
+	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\nrestart daemons in limbo using persisted metadata"))
 
 var exampleRekindle = chalk.White.Color("lilith") + " " +
 	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + `
-` +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
 	chalk.White.Color("lilith") + " " +
 	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-	chalk.Italic.TextStyle("--group") + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<editors>")) + `
-` +
+	chalk.Italic.TextStyle(chalk.White.Color("--group")) + " " +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<forge>")) + "\n" +
 	chalk.White.Color("lilith") + " " +
 	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-	chalk.Italic.TextStyle("--all")
+	chalk.Italic.TextStyle(chalk.White.Color("--all"))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

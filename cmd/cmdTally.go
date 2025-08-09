@@ -50,10 +50,9 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpTally = chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` + chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` list all daemons invoked, show their group, PID, started, and their status`
+var helpTally = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
+	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\nlist all daemons invoked, showing group, PID, start time, and current status"))
 
 var exampleTally = chalk.White.Color("lilith") + " " +
 	chalk.Bold.TextStyle(chalk.White.Color("tally"))
