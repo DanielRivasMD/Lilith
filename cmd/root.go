@@ -86,7 +86,7 @@ type DaemonMeta struct {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // GetDaemonDir returns ~/.lilith/daemon
-func GetDaemonDir() string {
+var GetDaemonDir = func() string {
 	return filepath.Join(os.Getenv("HOME"), ".lilith", "daemon")
 }
 
