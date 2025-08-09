@@ -19,7 +19,6 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -33,38 +32,25 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	slayAll   bool
-	slayGroup string
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 var slayCmd = &cobra.Command{
 	Use:   "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "Stop & clean up one or more daemons",
-	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
+	Short: "Stop & clean up daemons",
+	Long:  helpSlay,
 
-` +
-		chalk.Blue.Color(chalk.Italic.TextStyle("lilith")) + ` gracefully stop one or many alive daemons, remove their metadata files and logs, allowing fresh invocation later
-`,
-	Example: chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("slay")) + ` ` +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + `
-` + chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("slay")) + ` ` +
-		chalk.Italic.TextStyle("--all") + `
-` + chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("slay")) + ` ` +
-		chalk.Italic.TextStyle("--group") + ` ` + chalk.Dim.TextStyle(chalk.Italic.TextStyle("<editors>")),
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
+	Example: exampleSlay,
 
 	Args:              cobra.MaximumNArgs(1),
 	ValidArgsFunction: completeDaemonNames,
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	Run: runSlay,
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var (
+	slayAll   bool
+	slayGroup string
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,10 +60,21 @@ func init() {
 	slayCmd.Flags().BoolVar(&slayAll, "all", false, "Slay all daemons")
 	slayCmd.Flags().StringVar(&slayGroup, "group", "", "Slay all daemons in a specific group")
 
-	_ = slayCmd.RegisterFlagCompletionFunc("group", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return availableGroups(), cobra.ShellCompDirectiveDefault
-	})
+	horus.CheckErr(slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("slay.init"), horus.WithMessage("registering config completion"))
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var helpSlay = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
+	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\ngracefully stop one or many alive daemons, remove their metadata files and logs, allowing fresh invocation later"))
+
+var exampleSlay = chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("slay")) + ` ` +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + `
+` + chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("slay")) + ` ` +
+	chalk.Italic.TextStyle("--all") + `
+` + chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("slay")) + ` ` +
+	chalk.Italic.TextStyle("--group") + ` ` + chalk.Dim.TextStyle(chalk.Italic.TextStyle("<editors>"))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -145,67 +142,6 @@ func slayGroupDaemons(group string) {
 			slaySingleDaemon(name)
 		}
 	}
-}
-
-func mustListDaemonMetaFiles() []string {
-	dir := getDaemonDir()
-	matches, err := filepath.Glob(filepath.Join(dir, "*.json"))
-	horus.CheckErr(err, horus.WithOp("daemon.list"))
-	return matches
-}
-
-func nameFrom(path string) string {
-	return filepath.Base(path[:len(path)-len(".json")])
-}
-
-func matchesGroup(metaPath, expectedGroup string) bool {
-	// Try to load JSON metadata
-	data, err := os.ReadFile(metaPath)
-	if err != nil {
-		// optionally log or ignore
-		return false
-	}
-
-	var meta struct {
-		Group string `json:"group"`
-	}
-
-	if err := json.Unmarshal(data, &meta); err != nil {
-		// if unmarshal fails, ignore this file
-		return false
-	}
-
-	return meta.Group == expectedGroup
-}
-
-func availableGroups() []string {
-	files, err := filepath.Glob("/Users/drivas/.lilith/daemon/*.json")
-	if err != nil {
-		return nil
-	}
-
-	groups := map[string]bool{}
-	for _, path := range files {
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		var meta struct {
-			Group string `json:"group"`
-		}
-		if err := json.Unmarshal(data, &meta); err != nil {
-			continue
-		}
-		if meta.Group != "" {
-			groups[meta.Group] = true
-		}
-	}
-
-	var result []string
-	for g := range groups {
-		result = append(result, g)
-	}
-	return result
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
