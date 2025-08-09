@@ -91,58 +91,102 @@ func getDaemonDir() string {
 
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) error {
+	const op = "daemon.saveMeta"
+
 	dir := getDaemonDir()
-	// TODO: error handler => `horus`
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+		return horus.NewCategorizedHerror(
+			op, "env_error", "creating daemon directory", err,
+			map[string]any{"dir": dir, "name": meta.Name},
+		)
 	}
+
 	data, err := json.MarshalIndent(meta, "", "  ")
 	if err != nil {
-		return err
+		return horus.NewCategorizedHerror(
+			op, "encode_error", "marshaling metadata", err,
+			map[string]any{"name": meta.Name},
+		)
 	}
-	return os.WriteFile(filepath.Join(dir, meta.Name+".json"), data, 0644)
+
+	path := filepath.Join(dir, meta.Name+".json")
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return horus.NewCategorizedHerror(
+			op, "env_error", "writing metadata file", err,
+			map[string]any{"path": path},
+		)
+	}
+
+	return nil
 }
 
 // loadMeta reads ~/.lilith/daemon/<name>.json
 func loadMeta(name string) (*daemonMeta, error) {
+	const op = "daemon.loadMeta"
 	path := filepath.Join(getDaemonDir(), name+".json")
+
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, horus.NewCategorizedHerror(
+			op, "env_error", "reading metadata file", err,
+			map[string]any{"path": path, "name": name},
+		)
 	}
+
 	var m daemonMeta
-	return &m, json.Unmarshal(data, &m)
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, horus.NewCategorizedHerror(
+			op, "decode_error", "unmarshaling metadata", err,
+			map[string]any{"path": path, "name": name},
+		)
+	}
+
+	return &m, nil
 }
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
 func spawnWatcher(meta *daemonMeta) (int, error) {
-	// TODO: error handler => `horus`
-	if err := os.MkdirAll(filepath.Dir(meta.LogPath), 0755); err != nil {
-		return 0, err
+	const op = "daemon.spawnWatcher"
+	logDir := filepath.Dir(meta.LogPath)
+
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return 0, horus.NewCategorizedHerror(
+			op, "env_error", "creating log directory", err,
+			map[string]any{"logDir": logDir},
+		)
 	}
 
-	// TODO: exec cmd => domovoi?
 	cmd := exec.Command("watchexec",
 		"--watch", meta.WatchDir,
 		"--",
 		"bash", meta.ScriptPath,
 	)
+
 	f, err := os.OpenFile(meta.LogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return 0, err
+		return 0, horus.NewCategorizedHerror(
+			op, "env_error", "opening log file", err,
+			map[string]any{"logPath": meta.LogPath},
+		)
 	}
 	cmd.Stdout = f
 	cmd.Stderr = f
 
 	if err := cmd.Start(); err != nil {
-		f.Close()
-		return 0, err
+		_ = f.Close()
+		return 0, horus.NewCategorizedHerror(
+			op, "spawn_error", "starting watcher process", err,
+			map[string]any{"watch": meta.WatchDir, "script": meta.ScriptPath},
+		)
 	}
 	pid := cmd.Process.Pid
 
 	if err := cmd.Process.Release(); err != nil {
-		return pid, err
+		return pid, horus.Wrap(
+			err, op, "releasing process handle",
+		)
 	}
+
 	return pid, nil
 }
 
