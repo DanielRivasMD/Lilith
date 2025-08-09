@@ -30,69 +30,24 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	rekindleGroup string
-	rekindleAll   bool
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 var rekindleCmd = &cobra.Command{
-	Use:   "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "Restart a dead daemon",
-	Long: chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
-
-` +
-		chalk.Italic.TextStyle(chalk.Blue.Color("lilith")) + ` restart one or many dead watcher daemons using their saved metadata
-`,
-	Example: chalk.White.Color("lilith") + " " +
-		chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + `
-` +
-		chalk.White.Color("lilith") + " " +
-		chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-		chalk.Italic.TextStyle("--group") + " " +
-		chalk.Dim.TextStyle(chalk.Italic.TextStyle("<editors>")) + `
-` +
-		chalk.White.Color("lilith") + " " +
-		chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-		chalk.Italic.TextStyle("--all"),
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
+	Use:     "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
+	Short:   "Resurrect daemon in limbo",
+	Long:    helpRekindle,
+	Example: exampleRekindle,
 
 	Args:              cobra.MaximumNArgs(1),
 	ValidArgsFunction: completeDaemonNames,
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Run: func(cmd *cobra.Command, args []string) {
-		const op = "lilith.rekindle"
-
-		switch {
-		case rekindleAll:
-			rekindleAllDaemons()
-			return
-
-		case rekindleGroup != "":
-			rekindleGroupDaemons(rekindleGroup)
-			return
-
-		case len(args) == 1:
-			name := args[0]
-			meta := mustLoadMeta(filepath.Join(getDaemonDir(), name))
-			pid := mustSpawnWatcher(meta)
-			meta.PID = pid
-			meta.InvokedAt = time.Now()
-			horus.CheckErr(saveMeta(&meta), horus.WithOp(op), horus.WithMessage("updating metadata"))
-			fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), name, pid)
-			return
-
-		default:
-			horus.CheckErr(horus.NewCategorizedHerror(op, "validation", "missing daemon name or flag", nil, nil))
-		}
-	},
+	Run: runRekindle,
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var (
+	rekindleGroup string
+	rekindleAll   bool
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -102,9 +57,57 @@ func init() {
 	rekindleCmd.Flags().BoolVar(&rekindleAll, "all", false, "Rekindle all dead daemons")
 	rekindleCmd.Flags().StringVar(&rekindleGroup, "group", "", "Rekindle all daemons in a specific group")
 
-	_ = rekindleCmd.RegisterFlagCompletionFunc("group", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return availableGroups(), cobra.ShellCompDirectiveDefault
-	})
+	horus.CheckErr(rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var helpRekindle = chalk.Green.Color(chalk.Bold.TextStyle("Daniel Rivas ")) +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) + `
+
+` +
+	` restart one or many dead watcher daemons using their saved metadata`
+
+var exampleRekindle = chalk.White.Color("lilith") + " " +
+	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + `
+` +
+	chalk.White.Color("lilith") + " " +
+	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
+	chalk.Italic.TextStyle("--group") + " " +
+	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<editors>")) + `
+` +
+	chalk.White.Color("lilith") + " " +
+	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
+	chalk.Italic.TextStyle("--all")
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func runRekindle(cmd *cobra.Command, args []string) {
+	const op = "lilith.rekindle"
+
+	switch {
+	case rekindleAll:
+		rekindleAllDaemons()
+		return
+
+	case rekindleGroup != "":
+		rekindleGroupDaemons(rekindleGroup)
+		return
+
+	case len(args) == 1:
+		name := args[0]
+		meta := mustLoadMeta(filepath.Join(getDaemonDir(), name))
+		pid := mustSpawnWatcher(meta)
+		meta.PID = pid
+		meta.InvokedAt = time.Now()
+		horus.CheckErr(saveMeta(&meta), horus.WithOp(op), horus.WithMessage("updating metadata"))
+		fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), name, pid)
+		return
+
+	default:
+		horus.CheckErr(horus.NewCategorizedHerror(op, "validation", "missing daemon name or flag", nil, nil))
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,13 +134,6 @@ func rekindleGroupDaemons(group string) {
 			fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), meta.Name, pid)
 		}
 	}
-}
-
-func mustSpawnWatcher(meta daemonMeta) int {
-	const op = "lilith.mustSpawnWatcher"
-	pid, err := spawnWatcher(&meta)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("spawning %q", meta.Name)))
-	return pid
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
