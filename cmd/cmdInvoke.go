@@ -154,8 +154,8 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 	)
 
 	wf := foundV.Sub("workflows." + configName)
-	bindFlag(cmd, "watch", &watchDir, wf)
-	bindFlag(cmd, "script", &scriptPath, wf)
+	BindFlag(cmd, "watch", &watchDir, wf)
+	BindFlag(cmd, "script", &scriptPath, wf)
 
 	if !cmd.Flags().Changed("log") {
 		logName = configName
@@ -211,7 +211,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	)
 	logPath := filepath.Join(logDir, logName+".log")
 
-	meta := &daemonMeta{
+	meta := &DaemonMeta{
 		Name:       daemonName,
 		Group:      groupName,
 		WatchDir:   watchDir,
@@ -253,11 +253,11 @@ func runInvoke(cmd *cobra.Command, args []string) {
 // seams for testing (default to real funcs)
 var (
 	spawnWatcherFn   = spawnWatcher
-	saveMetaFn       = saveMeta
-	listMetaFilesFn  = mustListDaemonMetaFiles
+	saveMetaFn       = SaveMeta
+	listMetaFilesFn  = MustListDaemonMetaFiles
 	loadMetaFn       = mustLoadMeta
 	isDaemonActiveFn = isDaemonActive
-	expandPathFn     = expandPath
+	expandPathFn     = ExpandPath
 	findHomeFn       = domovoi.FindHome
 	createDirFn      = domovoi.CreateDir
 	readDirFn        = domovoi.ReadDir

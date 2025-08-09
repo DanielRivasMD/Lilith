@@ -109,7 +109,7 @@ func slaySingleDaemon(name string) {
 	const op = "lilith.slay"
 
 	// 1) Load metadata
-	meta, err := loadMeta(name)
+	meta, err := LoadMeta(name)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
 
 	// 2) Signal the process to terminate
@@ -118,7 +118,7 @@ func slaySingleDaemon(name string) {
 	horus.CheckErr(proc.Signal(syscall.SIGTERM), horus.WithOp(op), horus.WithMessage("sending SIGTERM"))
 
 	// 3) Remove the metadata JSON file
-	metaFile := filepath.Join(getDaemonDir(), name+".json")
+	metaFile := filepath.Join(GetDaemonDir(), name+".json")
 	_, err = domovoi.RemoveFile(metaFile, verbose)(metaFile)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("removing metadata file"))
 
@@ -131,7 +131,7 @@ func slaySingleDaemon(name string) {
 }
 
 func slayAllDaemons() {
-	files := mustListDaemonMetaFiles()
+	files := MustListDaemonMetaFiles()
 	for _, file := range files {
 		name := nameFrom(file)
 		slaySingleDaemon(name)
@@ -139,7 +139,7 @@ func slayAllDaemons() {
 }
 
 func slayGroupDaemons(group string) {
-	files := mustListDaemonMetaFiles()
+	files := MustListDaemonMetaFiles()
 	for _, metaPath := range files {
 		if matchesGroup(metaPath, group) {
 			name := nameFrom(metaPath)

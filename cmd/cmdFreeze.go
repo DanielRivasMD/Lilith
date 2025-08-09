@@ -90,7 +90,7 @@ func runFreeze(cmd *cobra.Command, args []string) {
 		name := args[0]
 
 		// 1) Load metadata
-		meta, err := loadMeta(name)
+		meta, err := LoadMeta(name)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
 
 		// 2) Find and pause process
@@ -106,7 +106,7 @@ func runFreeze(cmd *cobra.Command, args []string) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func freezeGroupDaemons(group string) {
-	files := mustListDaemonMetaFiles()
+	files := MustListDaemonMetaFiles()
 	for _, path := range files {
 		if matchesGroup(path, group) {
 			meta := mustLoadMeta(path)
@@ -117,7 +117,7 @@ func freezeGroupDaemons(group string) {
 }
 
 func freezeAllDaemons() {
-	files := mustListDaemonMetaFiles()
+	files := MustListDaemonMetaFiles()
 	for _, path := range files {
 		meta := mustLoadMeta(path)
 		_ = sendSignal(meta.PID, syscall.SIGSTOP)

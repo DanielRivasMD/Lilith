@@ -72,7 +72,7 @@ func runSummon(cmd *cobra.Command, args []string) {
 	const op = "lilith.summon"
 	name := args[0]
 
-	meta, err := loadMeta(name)
+	meta, err := LoadMeta(name)
 	horus.CheckErr(err,
 		horus.WithOp(op),
 		horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)),

@@ -72,8 +72,8 @@ var exampleRoot = chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// daemonMeta holds persistent info about process
-type daemonMeta struct {
+// DaemonMeta holds persistent info about process
+type DaemonMeta struct {
 	Name       string    `json:"name"`
 	Group      string    `json:"group"`
 	WatchDir   string    `json:"watchDir"`
@@ -85,16 +85,16 @@ type daemonMeta struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// getDaemonDir returns ~/.lilith/daemon
-func getDaemonDir() string {
+// GetDaemonDir returns ~/.lilith/daemon
+func GetDaemonDir() string {
 	return filepath.Join(os.Getenv("HOME"), ".lilith", "daemon")
 }
 
-// saveMeta writes meta to ~/.lilith/daemon/<name>.json
-func saveMeta(meta *daemonMeta) error {
+// SaveMeta writes meta to ~/.lilith/daemon/<name>.json
+func SaveMeta(meta *DaemonMeta) error {
 	const op = "daemon.saveMeta"
 
-	dir := getDaemonDir()
+	dir := GetDaemonDir()
 	if err := domovoi.CreateDir(dir, false); err != nil {
 		return horus.Wrap(err, op, "creating daemon directory")
 	}
@@ -118,10 +118,10 @@ func saveMeta(meta *daemonMeta) error {
 	return nil
 }
 
-// loadMeta reads ~/.lilith/daemon/<name>.json
-func loadMeta(name string) (*daemonMeta, error) {
+// LoadMeta reads ~/.lilith/daemon/<name>.json
+func LoadMeta(name string) (*DaemonMeta, error) {
 	const op = "daemon.loadMeta"
-	path := filepath.Join(getDaemonDir(), name+".json")
+	path := filepath.Join(GetDaemonDir(), name+".json")
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -131,7 +131,7 @@ func loadMeta(name string) (*daemonMeta, error) {
 		)
 	}
 
-	var m daemonMeta
+	var m DaemonMeta
 	if err := json.Unmarshal(data, &m); err != nil {
 		return nil, horus.NewCategorizedHerror(
 			op, "decode_error", "unmarshaling metadata", err,
@@ -143,7 +143,7 @@ func loadMeta(name string) (*daemonMeta, error) {
 }
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
-func spawnWatcher(meta *daemonMeta) (int, error) {
+func spawnWatcher(meta *DaemonMeta) (int, error) {
 	const op = "daemon.spawnWatcher"
 	logDir := filepath.Dir(meta.LogPath)
 
@@ -183,8 +183,8 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	return pid, nil
 }
 
-// bindFlag copies a Viper value into a flag variable if the flag was not set
-func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
+// BindFlag copies a Viper value into a flag variable if the flag was not set
+func BindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
 	const op = "cli.bindFlag"
 
 	// Only override if flag not manually set and config has value
@@ -213,8 +213,8 @@ func mustExpand(val, label string) string {
 	return expanded
 }
 
-// expandPath replaces a leading "~" with $HOME (via domovoi.FindHome) and then does os.ExpandEnv.
-func expandPath(p string) (string, error) {
+// ExpandPath replaces a leading "~" with $HOME (via domovoi.FindHome) and then does os.ExpandEnv.
+func ExpandPath(p string) (string, error) {
 	prefix := "~" + string(filepath.Separator)
 	if strings.HasPrefix(p, prefix) {
 		home, err := domovoi.FindHome(false)
@@ -265,7 +265,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 
 // completeDaemonNames offers tab‐completion based on ~/.lilith/daemons/*.json
 func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	dir := getDaemonDir()
+	dir := GetDaemonDir()
 	fis, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
@@ -284,7 +284,7 @@ func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) (
 	return out, cobra.ShellCompDirectiveNoFileComp
 }
 
-func isDaemonActive(meta *daemonMeta) bool {
+func isDaemonActive(meta *DaemonMeta) bool {
 	if meta.PID <= 0 {
 		return false
 	}
@@ -298,8 +298,8 @@ func isDaemonActive(meta *daemonMeta) bool {
 	return true
 }
 
-func mustListDaemonMetaFiles() []string {
-	dir := getDaemonDir()
+func MustListDaemonMetaFiles() []string {
+	dir := GetDaemonDir()
 	matches, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	horus.CheckErr(err, horus.WithOp("daemon.list"))
 	return matches
@@ -334,7 +334,7 @@ func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string
 }
 
 func availableGroups() []string {
-	dir := getDaemonDir()
+	dir := GetDaemonDir()
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	if err != nil {
 		return nil
@@ -364,14 +364,14 @@ func availableGroups() []string {
 	return result
 }
 
-func mustLoadMeta(path string) daemonMeta {
+func mustLoadMeta(path string) DaemonMeta {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading metadata from %s: %v\n", path, err)
 		os.Exit(1)
 	}
 
-	var meta daemonMeta
+	var meta DaemonMeta
 	if err := json.Unmarshal(data, &meta); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing JSON in %s: %v\n", path, err)
 		os.Exit(1)
@@ -388,7 +388,7 @@ func sendSignal(pid int, sig syscall.Signal) error {
 	return proc.Signal(sig)
 }
 
-func mustSpawnWatcher(meta daemonMeta) int {
+func mustSpawnWatcher(meta DaemonMeta) int {
 	const op = "lilith.mustSpawnWatcher"
 	pid, err := spawnWatcher(&meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("spawning %q", meta.Name)))
