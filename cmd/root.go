@@ -68,7 +68,7 @@ var helpRoot = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
 	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
 	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\nmaster of daemons"))
 
-var exampleRoot = chalk.White.Color("lilith") + ` ` + chalk.Bold.TextStyle(chalk.White.Color("help"))
+var exampleRoot = chalk.White.Color("lilith") + " " + chalk.Bold.TextStyle(chalk.White.Color("help"))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
