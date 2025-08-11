@@ -5,7 +5,7 @@
 # home
 export home="${HOME}"
 export config="${home}/.config"
-export archive="${home}/.archive"
+export dotfiles="${home}/Factorem/dotfiles"
 
 ####################################################################################################
 # goku
@@ -23,7 +23,7 @@ export fsimple="${frag}/simple"
 # helix
 ####################################################################################################
 
-export helix="${archive}/ex-situ/helix"
+export helix="${dotfiles}/ex-situ/helix"
 export moded="${helix}/modes"
 export languages="${helix}/languages"
 
