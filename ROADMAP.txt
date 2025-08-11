@@ -1,1 +1,8 @@
 - make release v1.0.0
+- add a command to generate config
+
+==================================================
+README.md
+  line 35     TODO   add instructions for installing local directory & mock config-workflow file
+  line 36     TODO   explain how logic works
+==================================================
