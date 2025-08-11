@@ -109,7 +109,7 @@ func slaySingleDaemon(name string) {
 	const op = "lilith.slay"
 
 	// 1) Load metadata
-	meta, err := LoadMeta(name)
+	meta, err := LoadMetaFn(name)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
 
 	// 2) Signal the process to terminate
@@ -131,7 +131,7 @@ func slaySingleDaemon(name string) {
 }
 
 func slayAllDaemons() {
-	files := MustListDaemonMetaFiles()
+	files := MustListDaemonMetaFilesFn()
 	for _, file := range files {
 		name := nameFrom(file)
 		slaySingleDaemon(name)
@@ -139,9 +139,9 @@ func slayAllDaemons() {
 }
 
 func slayGroupDaemons(group string) {
-	files := MustListDaemonMetaFiles()
+	files := MustListDaemonMetaFilesFn()
 	for _, metaPath := range files {
-		if matchesGroup(metaPath, group) {
+		if MatchesGroupFn(metaPath, group) {
 			name := nameFrom(metaPath)
 			slaySingleDaemon(name)
 		}

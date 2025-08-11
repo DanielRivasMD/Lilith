@@ -23,9 +23,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -220,9 +218,9 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 		InvokedAt:  NowFn(),
 	}
 
-	for _, path := range ListMetaFilesFn() {
-		existing := LoadMetaFn(path)
-		if existing.WatchDir == WatchDir && IsDaemonActiveFn(&existing) {
+	for _, path := range MustListDaemonMetaFilesFn() {
+		existing := MustLoadMetaFn(path)
+		if existing.WatchDir == WatchDir && IsDaemonActiveFn(existing) {
 			horus.CheckErr(
 				fmt.Errorf("daemon already running"),
 				horus.WithMessage(existing.Name),
@@ -247,21 +245,5 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 		chalk.Green.Color(strconv.Itoa(pid)),
 	)
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// seams for testing (default to real funcs)
-var (
-	SpawnWatcherFn   = spawnWatcher
-	SaveMetaFn       = SaveMeta
-	ListMetaFilesFn  = MustListDaemonMetaFiles
-	LoadMetaFn       = mustLoadMeta
-	IsDaemonActiveFn = isDaemonActive
-	expandPathFn     = ExpandPath
-	FindHomeFn       = domovoi.FindHome
-	CreateDirFn      = domovoi.CreateDir
-	ReadDirFn        = domovoi.ReadDir
-	NowFn            = time.Now
-)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
