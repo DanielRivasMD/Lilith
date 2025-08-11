@@ -90,8 +90,8 @@ var GetDaemonDir = func() string {
 	return filepath.Join(os.Getenv("HOME"), ".lilith", "daemon")
 }
 
-// SaveMeta writes meta to ~/.lilith/daemon/<name>.json
-func SaveMeta(meta *DaemonMeta) error {
+// saveMeta writes meta to ~/.lilith/daemon/<name>.json
+func saveMeta(meta *DaemonMeta) error {
 	const op = "daemon.saveMeta"
 
 	dir := GetDaemonDir()
@@ -118,8 +118,8 @@ func SaveMeta(meta *DaemonMeta) error {
 	return nil
 }
 
-// LoadMeta reads ~/.lilith/daemon/<name>.json
-func LoadMeta(name string) (*DaemonMeta, error) {
+// loadMeta reads ~/.lilith/daemon/<name>.json
+func loadMeta(name string) (*DaemonMeta, error) {
 	const op = "daemon.loadMeta"
 	path := filepath.Join(GetDaemonDir(), name+".json")
 
@@ -208,13 +208,13 @@ func BindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Vipe
 
 func mustExpand(val, label string) string {
 	const op = "expand.path"
-	expanded, err := expandPathFn(val)
+	expanded, err := ExpandPathFn(val)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
 	return expanded
 }
 
-// ExpandPath replaces a leading "~" with $HOME (via domovoi.FindHome) and then does os.ExpandEnv.
-func ExpandPath(p string) (string, error) {
+// expandPath replaces a leading "~" with $HOME (via domovoi.FindHome) and then does os.ExpandEnv.
+func expandPath(p string) (string, error) {
 	prefix := "~" + string(filepath.Separator)
 	if strings.HasPrefix(p, prefix) {
 		home, err := domovoi.FindHome(false)
@@ -298,7 +298,7 @@ func isDaemonActive(meta *DaemonMeta) bool {
 	return true
 }
 
-func MustListDaemonMetaFiles() []string {
+func mustListDaemonMetaFiles() []string {
 	dir := GetDaemonDir()
 	matches, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	horus.CheckErr(err, horus.WithOp("daemon.list"))
@@ -364,7 +364,7 @@ func availableGroups() []string {
 	return result
 }
 
-func mustLoadMeta(path string) DaemonMeta {
+func mustLoadMeta(path string) *DaemonMeta {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading metadata from %s: %v\n", path, err)
@@ -377,7 +377,7 @@ func mustLoadMeta(path string) DaemonMeta {
 		os.Exit(1)
 	}
 
-	return meta
+	return &meta
 }
 
 func sendSignal(pid int, sig syscall.Signal) error {
@@ -390,9 +390,28 @@ func sendSignal(pid int, sig syscall.Signal) error {
 
 func mustSpawnWatcher(meta DaemonMeta) int {
 	const op = "lilith.mustSpawnWatcher"
-	pid, err := spawnWatcher(&meta)
+	pid, err := SpawnWatcherFn(&meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("spawning %q", meta.Name)))
 	return pid
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// seams for testing (default to real funcs)
+var (
+	SpawnWatcherFn            = spawnWatcher
+	SaveMetaFn                = saveMeta
+	LoadMetaFn                = loadMeta
+	IsDaemonActiveFn          = isDaemonActive
+	ExpandPathFn              = expandPath
+	FindHomeFn                = domovoi.FindHome
+	CreateDirFn               = domovoi.CreateDir
+	ReadDirFn                 = domovoi.ReadDir
+	NowFn                     = time.Now
+	MustListDaemonMetaFilesFn = mustListDaemonMetaFiles
+	MatchesGroupFn            = matchesGroup
+	SendSignalFn              = sendSignal
+	MustLoadMetaFn            = mustLoadMeta
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
