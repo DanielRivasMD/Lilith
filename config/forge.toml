@@ -1,9 +1,9 @@
 [workflows.helix]
-watch = "~/.archive/ex-situ/helix/modes"
+watch = "~/Factorem/dotfiles/ex-situ/helix/modes"
 script = "~/.lilith/sh/helix.sh"
 
 [workflows.language]
-watch = "~/.archive/ex-situ/helix/languages"
+watch = "~/Factorem/dotfiles/ex-situ/helix/languages"
 script = "~/.lilith/sh/language.sh"
 
 [workflows.goku]
