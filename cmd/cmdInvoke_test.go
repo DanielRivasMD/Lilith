@@ -32,7 +32,7 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func setupMocks(t *testing.T) string {
+func setupInvokeMocks(t *testing.T) string {
 	mockHome := t.TempDir()
 	configDir := filepath.Join(mockHome, ".lilith", "config")
 
@@ -41,7 +41,7 @@ func setupMocks(t *testing.T) string {
 		t.Fatalf("failed to create mock config directory: %v", err)
 	}
 
-	// 👇 Write a fake TOML config with a workflow named "test"
+	// Write a fake TOML config with a workflow named "test"
 	mockConfig := `
 [workflows.test]
 script = "run.sh"
@@ -65,12 +65,14 @@ watch = "~/mock"
 		return mockHome, nil
 	}
 
-	// The rest stays the same…
+	// The rest stays the same
 	cmd.CreateDirFn = func(_ string, _ bool) error { return nil }
 	cmd.SpawnWatcherFn = func(_ *cmd.DaemonMeta) (int, error) { return 9999, nil }
 	cmd.SaveMetaFn = func(_ *cmd.DaemonMeta) error { return nil }
-	cmd.ListMetaFilesFn = func() []string { return []string{} }
-	cmd.LoadMetaFn = func(_ string) cmd.DaemonMeta { return cmd.DaemonMeta{} }
+	cmd.MustListDaemonMetaFilesFn = func() []string { return []string{} }
+	cmd.LoadMetaFn = func(_ string) (*cmd.DaemonMeta, error) {
+		return &cmd.DaemonMeta{}, nil
+	}
 	cmd.IsDaemonActiveFn = func(_ *cmd.DaemonMeta) bool { return false }
 	cmd.NowFn = func() time.Time {
 		return time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -80,7 +82,7 @@ watch = "~/mock"
 }
 
 func TestPreInvoke_ConfigExists(t *testing.T) {
-	setupMocks(t)
+	setupInvokeMocks(t)
 
 	v := viper.New()
 	v.Set("workflows.test.script", "run.sh")
@@ -101,7 +103,7 @@ func TestPreInvoke_ConfigExists(t *testing.T) {
 }
 
 func TestRunInvoke_Success(t *testing.T) {
-	setupMocks(t)
+	setupInvokeMocks(t)
 
 	cmd.WatchDir = "~/mock"
 	cmd.ScriptPath = "run.sh"
