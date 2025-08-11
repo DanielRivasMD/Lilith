@@ -85,9 +85,15 @@ type DaemonMeta struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+var home = func() string {
+	home, err := domovoi.FindHome(verbose)
+	horus.CheckErr(err)
+	return home
+}()
+
 // GetDaemonDir returns ~/.lilith/daemon
 var GetDaemonDir = func() string {
-	return filepath.Join(os.Getenv("HOME"), ".lilith", "daemon")
+	return filepath.Join(home, ".lilith", "daemon")
 }
 
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
