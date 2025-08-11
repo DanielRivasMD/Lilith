@@ -208,7 +208,7 @@ func BindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Vipe
 
 func mustExpand(val, label string) string {
 	const op = "expand.path"
-	expanded, err := ExpandPathFn(val)
+	expanded, err := expandPath(val)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
 	return expanded
 }
@@ -390,28 +390,9 @@ func sendSignal(pid int, sig syscall.Signal) error {
 
 func mustSpawnWatcher(meta DaemonMeta) int {
 	const op = "lilith.mustSpawnWatcher"
-	pid, err := SpawnWatcherFn(&meta)
+	pid, err := spawnWatcher(&meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("spawning %q", meta.Name)))
 	return pid
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// seams for testing (default to real funcs)
-var (
-	SpawnWatcherFn            = spawnWatcher
-	SaveMetaFn                = saveMeta
-	LoadMetaFn                = loadMeta
-	IsDaemonActiveFn          = isDaemonActive
-	ExpandPathFn              = expandPath
-	FindHomeFn                = domovoi.FindHome
-	CreateDirFn               = domovoi.CreateDir
-	ReadDirFn                 = domovoi.ReadDir
-	NowFn                     = time.Now
-	MustListDaemonMetaFilesFn = mustListDaemonMetaFiles
-	MatchesGroupFn            = matchesGroup
-	SendSignalFn              = sendSignal
-	MustLoadMetaFn            = mustLoadMeta
-)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

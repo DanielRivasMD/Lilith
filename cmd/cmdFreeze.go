@@ -90,7 +90,7 @@ func RunFreeze(cmd *cobra.Command, args []string) {
 		name := args[0]
 
 		// 1) Load metadata
-		meta, err := LoadMetaFn(name)
+		meta, err := loadMeta(name)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
 
 		// 2) Find and pause process
@@ -106,21 +106,21 @@ func RunFreeze(cmd *cobra.Command, args []string) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func freezeGroupDaemons(group string) {
-	files := MustListDaemonMetaFilesFn()
+	files := mustListDaemonMetaFiles()
 	for _, path := range files {
-		if MatchesGroupFn(path, group) {
-			meta := MustLoadMetaFn(path)
-			_ = SendSignalFn(meta.PID, syscall.SIGSTOP)
+		if matchesGroup(path, group) {
+			meta := mustLoadMeta(path)
+			_ = sendSignal(meta.PID, syscall.SIGSTOP)
 			fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
 		}
 	}
 }
 
 func freezeAllDaemons() {
-	files := MustListDaemonMetaFilesFn()
+	files := mustListDaemonMetaFiles()
 	for _, path := range files {
-		meta := MustLoadMetaFn(path)
-		_ = SendSignalFn(meta.PID, syscall.SIGSTOP)
+		meta := mustLoadMeta(path)
+		_ = sendSignal(meta.PID, syscall.SIGSTOP)
 		fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
 	}
 }

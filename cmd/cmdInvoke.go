@@ -23,7 +23,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -95,7 +97,7 @@ var exampleInvoke = chalk.White.Color("lilith") + " " +
 func PreInvoke(cmd *cobra.Command, args []string) error {
 	const op = "lilith.invoke.pre"
 
-	home, err := FindHomeFn(verbose)
+	home, err := domovoi.FindHome(verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	cfgDir := filepath.Join(home, ".lilith", "config")
 
@@ -103,7 +105,7 @@ func PreInvoke(cmd *cobra.Command, args []string) error {
 		foundV      *viper.Viper
 		cfgFileUsed string
 	)
-	fis, err := ReadDirFn(cfgDir, verbose)
+	fis, err := domovoi.ReadDir(cfgDir, verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 
 	for _, fi := range fis {
@@ -198,11 +200,11 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 	WatchDir = mustExpand(WatchDir, "--watch")
 	ScriptPath = mustExpand(ScriptPath, "--script")
 
-	home, err := FindHomeFn(verbose)
+	home, err := domovoi.FindHome(verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	logDir := filepath.Join(home, ".lilith", "logs")
 	horus.CheckErr(
-		CreateDirFn(logDir, verbose),
+		domovoi.CreateDir(logDir, verbose),
 		horus.WithOp(op),
 		horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
 		horus.WithCategory("env_error"),
@@ -215,12 +217,12 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 		WatchDir:   WatchDir,
 		ScriptPath: ScriptPath,
 		LogPath:    logPath,
-		InvokedAt:  NowFn(),
+		InvokedAt:  time.Now(),
 	}
 
-	for _, path := range MustListDaemonMetaFilesFn() {
-		existing := MustLoadMetaFn(path)
-		if existing.WatchDir == WatchDir && IsDaemonActiveFn(existing) {
+	for _, path := range mustListDaemonMetaFiles() {
+		existing := mustLoadMeta(path)
+		if existing.WatchDir == WatchDir && isDaemonActive(existing) {
 			horus.CheckErr(
 				fmt.Errorf("daemon already running"),
 				horus.WithMessage(existing.Name),
@@ -232,11 +234,11 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	pid, err := SpawnWatcherFn(meta)
+	pid, err := spawnWatcher(meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
 	meta.PID = pid
 
-	horus.CheckErr(SaveMetaFn(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
+	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
 
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",

@@ -81,7 +81,7 @@ func RunTally(cmd *cobra.Command, args []string) {
 		name := strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
 
 		// 4) Load metadata
-		meta, err := LoadMetaFn(name)
+		meta, err := loadMeta(name)
 		if err != nil {
 			// skip entries that fail to parse
 			horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
