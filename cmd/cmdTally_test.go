@@ -29,15 +29,6 @@ import (
 	"github.com/DanielRivasMD/Lilith/cmd"
 )
 
-type dummyEntry struct {
-	name string
-}
-
-func (d dummyEntry) Name() string               { return d.name }
-func (d dummyEntry) IsDir() bool                { return false }
-func (d dummyEntry) Type() os.FileMode          { return 0 }
-func (d dummyEntry) Info() (os.FileInfo, error) { return nil, nil }
-
 func Test_runTally_basic(t *testing.T) {
 	// Setup dummy daemon directory
 	tmp := t.TempDir()
