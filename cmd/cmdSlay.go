@@ -19,9 +19,11 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 
 	"github.com/DanielRivasMD/domovoi"
@@ -105,29 +107,62 @@ func runSlay(cmd *cobra.Command, args []string) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func slaySingleDaemon(name string) {
-
 	const op = "lilith.slay"
 
 	// 1) Load metadata
 	meta, err := loadMeta(name)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
 
-	// 2) Signal the process to terminate
-	proc, err := os.FindProcess(meta.PID)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("finding process"))
-	horus.CheckErr(proc.Signal(syscall.SIGTERM), horus.WithOp(op), horus.WithMessage("sending SIGTERM"))
+	// 2) Try terminating the process, but proceed if it’s already gone
+	horus.CheckErr(terminate(meta.PID), horus.WithOp(op), horus.WithMessage(fmt.Sprintf("terminating PID %d", meta.PID)))
 
 	// 3) Remove the metadata JSON file
 	metaFile := filepath.Join(GetDaemonDir(), name+".json")
-	_, err = domovoi.RemoveFile(metaFile, verbose)(metaFile)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("removing metadata file"))
+	horus.CheckErr(
+		func() error {
+			_, err := domovoi.RemoveFile(metaFile, verbose)(metaFile)
+			return err
+		}(),
+		horus.WithOp(op),
+		horus.WithMessage("removing metadata file"),
+	)
 
 	// 4) Remove the log file
-	_, err = domovoi.RemoveFile(meta.LogPath, verbose)(meta.LogPath)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("removing log file"))
+	horus.CheckErr(
+		func() error {
+			_, err := domovoi.RemoveFile(meta.LogPath, verbose)(meta.LogPath)
+			return err
+		}(),
+		horus.WithOp(op),
+		horus.WithMessage("removing log file"),
+	)
 
 	// 5) Final confirmation
 	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), name)
+}
+
+// terminate sends SIGTERM to pid. Returns nil if the process is already gone.
+func terminate(pid int) error {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("find process %d: %w", pid, err)
+	}
+
+	if err := proc.Signal(syscall.SIGTERM); err != nil {
+		// On Unix: ESRCH == “no such process”
+		// os.ErrProcessDone == “process already finished”
+		// On Windows: Signal isn't really supported, so ignore all errors
+		switch {
+		case errors.Is(err, syscall.ESRCH),
+			errors.Is(err, os.ErrProcessDone),
+			runtime.GOOS == "windows":
+			return nil
+		default:
+			return fmt.Errorf("signal SIGTERM to %d: %w", pid, err)
+		}
+	}
+
+	return nil
 }
 
 func slayAllDaemons() {
