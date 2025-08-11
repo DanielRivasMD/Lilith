@@ -47,10 +47,10 @@ func TestSaveAndLoadMeta(t *testing.T) {
 	dir := cmd.GetDaemonDir()
 	_ = os.Remove(filepath.Join(dir, meta.Name+".json")) // cleanup
 
-	err := cmd.SaveMeta(meta)
+	err := cmd.SaveMetaFn(meta)
 	assert.NoError(t, err)
 
-	read, err := cmd.LoadMeta("testd")
+	read, err := cmd.LoadMetaFn("testd")
 	assert.NoError(t, err)
 	assert.Equal(t, meta.Name, read.Name)
 }
@@ -60,7 +60,7 @@ func TestExpandPath(t *testing.T) {
 	assert.NoError(t, err)
 
 	path := "~/dummy"
-	expanded, err := cmd.ExpandPath(path)
+	expanded, err := cmd.ExpandPathFn(path)
 	assert.NoError(t, err)
 	assert.True(t, filepath.HasPrefix(expanded, home))
 }
@@ -78,7 +78,7 @@ func TestBindFlag(t *testing.T) {
 }
 
 func TestMustListDaemonMetaFiles(t *testing.T) {
-	files := cmd.MustListDaemonMetaFiles()
+	files := cmd.MustListDaemonMetaFilesFn()
 	assert.NotNil(t, files)
 }
 
