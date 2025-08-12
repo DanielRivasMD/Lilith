@@ -35,10 +35,9 @@ import (
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var slayCmd = &cobra.Command{
-	Use:   "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short: "Stop & clean up daemons",
-	Long:  helpSlay,
-
+	Use:     "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
+	Short:   "Stop & clean up daemons",
+	Long:    helpSlay,
 	Example: exampleSlay,
 
 	Args:              cobra.MaximumNArgs(1),
@@ -62,7 +61,11 @@ func init() {
 	slayCmd.Flags().BoolVar(&slayAll, "all", false, "Slay all daemons")
 	slayCmd.Flags().StringVar(&slayGroup, "group", "", "Slay all daemons in a specific group")
 
-	horus.CheckErr(slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("slay.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(
+		slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups),
+		horus.WithOp("slay.init"),
+		horus.WithMessage("registering config completion"),
+	)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,16 +93,20 @@ func runSlay(cmd *cobra.Command, args []string) {
 	switch {
 	case slayAll:
 		slayAllDaemons()
-
 	case slayGroup != "":
 		slayGroupDaemons(slayGroup)
-
 	case len(args) == 1:
 		slaySingleDaemon(args[0])
-
 	default:
+		// TODO: refactor error message as one liner
 		horus.CheckErr(
-			horus.NewCategorizedHerror(op, "validation", "must provide a daemon name or --all / --group", nil, nil),
+			horus.NewCategorizedHerror(
+				op,
+				"validation",
+				"must provide a daemon name or --all / --group",
+				nil,
+				nil,
+			),
 		)
 	}
 }
@@ -111,10 +118,18 @@ func slaySingleDaemon(name string) {
 
 	// 1) Load metadata
 	meta, err := loadMeta(name)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)),
+	)
 
 	// 2) Try terminating the process, but proceed if it’s already gone
-	horus.CheckErr(terminate(meta.PID), horus.WithOp(op), horus.WithMessage(fmt.Sprintf("terminating PID %d", meta.PID)))
+	horus.CheckErr(
+		terminate(meta.PID),
+		horus.WithOp(op),
+		horus.WithMessage(fmt.Sprintf("terminating PID %d", meta.PID)),
+	)
 
 	// 3) Remove the metadata JSON file
 	metaFile := filepath.Join(GetDaemonDir(), name+".json")
@@ -141,6 +156,8 @@ func slaySingleDaemon(name string) {
 	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), name)
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // terminate sends SIGTERM to pid. Returns nil if the process is already gone.
 func terminate(pid int) error {
 	proc, err := os.FindProcess(pid)
@@ -164,6 +181,8 @@ func terminate(pid int) error {
 
 	return nil
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func slayAllDaemons() {
 	files := mustListDaemonMetaFiles()
