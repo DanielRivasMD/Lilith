@@ -98,7 +98,12 @@ func PreInvoke(cmd *cobra.Command, args []string) error {
 	const op = "lilith.invoke.pre"
 
 	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("getting home directory"),
+	)
 	cfgDir := filepath.Join(home, ".lilith", "config")
 
 	var (
@@ -106,7 +111,12 @@ func PreInvoke(cmd *cobra.Command, args []string) error {
 		cfgFileUsed string
 	)
 	fis, err := domovoi.ReadDir(cfgDir, verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("reading config dir"),
+	)
 
 	for _, fi := range fis {
 		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
@@ -235,10 +245,20 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 	}
 
 	pid, err := spawnWatcher(meta)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("starting watcher"),
+	)
 	meta.PID = pid
 
-	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
+	horus.CheckErr(
+		saveMeta(meta),
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("writing metadata"),
+	)
 
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",
@@ -246,6 +266,7 @@ func RunInvoke(cmd *cobra.Command, args []string) {
 		chalk.Green.Color(GroupName),
 		chalk.Green.Color(strconv.Itoa(pid)),
 	)
+	// BUG: cannot execute daemons passed on the command line
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
