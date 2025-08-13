@@ -70,20 +70,18 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpSlay = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\ngracefully stop alive daemons, removing their metadata and logs to allow clean reinvocation"))
+var helpSlay = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"Gracefully stop alive daemons, removing their metadata and logs to allow clean reinvocation",
+)
 
-var exampleSlay = chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("slay")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("slay")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--group")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<forge>")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("slay")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--all"))
+var exampleSlay = formatExample(
+	"lilith",
+	[]string{"slay", "helix"},
+	[]string{"slay", "--group", "<forge>"},
+	[]string{"slay", "--all"},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
