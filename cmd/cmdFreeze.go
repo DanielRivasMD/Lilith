@@ -55,20 +55,18 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpFreeze = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\npause daemon execution using SIGSTOP, until resumed manually"))
+var helpFreeze = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"Pause daemon execution using SIGSTOP, until resumed manually",
+)
 
-var exampleFreeze = chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--group")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<forge>")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("freeze")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--all"))
+var exampleFreeze = formatExample(
+	"lilith",
+	[]string{"freeze", "helix"},
+	[]string{"freeze", "--group", "<forge>"},
+	[]string{"freeze", "--all"},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
