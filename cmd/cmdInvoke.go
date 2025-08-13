@@ -72,25 +72,23 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpInvoke = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\nspawn daemon process for the specified directory & execute the configured script on change"+
-		"\nmetadata is persistent for summoning the daemon"))
+var helpInvoke = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"Spawn daemon process for the specified directory & execute the configured script on change\n"+
+		"Metadata is persistent for summoning the daemon",
+)
 
-var exampleInvoke = chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--config")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("invoke")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--name")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--watch")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("~/src/helix")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--script")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix.sh")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--log")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix"))
+var exampleInvoke = formatExample(
+	"lilith",
+	[]string{"invoke", "--config", "helix"},
+	[]string{
+		"invoke", "--name", "helix",
+		"--watch", "~/src/helix",
+		"--script", "helix.sh",
+		"--log", "helix",
+	},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
