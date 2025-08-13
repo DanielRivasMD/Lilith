@@ -62,20 +62,18 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpRekindle = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\nrestart daemons in limbo using persisted metadata"))
+var helpRekindle = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"Restart daemons in limbo using persisted metadata",
+)
 
-var exampleRekindle = chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--group")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<forge>")) + "\n" +
-	chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("rekindle")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--all"))
+var exampleRekindle = formatExample(
+	"lilith",
+	[]string{"rekindle", "helix"},
+	[]string{"rekindle", "--group", "<forge>"},
+	[]string{"rekindle", "--all"},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
