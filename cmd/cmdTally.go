@@ -50,12 +50,16 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpTally = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\nlist all daemons invoked, showing group, PID, start time, and current status"))
+var helpTally = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"List all daemons invoked, showing group, PID, start time, and current status",
+)
 
-var exampleTally = chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("tally"))
+var exampleTally = formatExample(
+	"lilith",
+	[]string{"tally"},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
