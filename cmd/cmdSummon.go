@@ -57,14 +57,17 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpSummon = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\ndisplay a daemon's log output - pass --follow to stream in real time"))
+var helpSummon = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"Display daemon log output\n" +
+	"Pass --follow to stream in real time",
+)
 
-var exampleSummon = chalk.White.Color("lilith") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("summon")) + " " +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("helix")) + " " +
-	chalk.Italic.TextStyle(chalk.White.Color("--follow"))
+var exampleSummon = formatExample(
+	"lilith",
+	[]string{"summon", "helix", "--follow"},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
