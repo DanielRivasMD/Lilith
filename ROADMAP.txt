@@ -1,8 +1,11 @@
 - make release v1.0.0
-- add a command to generate config
 
 ==================================================
 README.md
-  line 35     TODO   add instructions for installing local directory & mock config-workflow file
-  line 36     TODO   explain how logic works
+  line 70     TODO   add instructions for installing local directory & mock config-workflow file
+  line 71     TODO   explain how logic works
+cmd/cmdInvoke.go
+  line 269    BUG    cannot execute daemons passed on the command line
+cmd/cmdSlay.go
+  line 101    TODO   refactor error message as one liner
 ==================================================
