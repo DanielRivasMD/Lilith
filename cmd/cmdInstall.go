@@ -56,12 +56,16 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpInstall = chalk.Bold.TextStyle(chalk.Green.Color("Daniel Rivas ")) +
-	chalk.Dim.TextStyle(chalk.Italic.TextStyle("<danielrivasmd@gmail.com>")) +
-	chalk.Dim.TextStyle(chalk.Cyan.Color("\n\n"))
+var helpInstall = formatHelp(
+	"Daniel Rivas ",
+	"<danielrivasmd@gmail.com>",
+	"",
+)
 
-var exampleInstall = chalk.White.Color("") + " " +
-	chalk.Bold.TextStyle(chalk.White.Color("install")) + " "
+var exampleInstall = formatExample(
+	"lilith",
+	[]string{"install"},
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
