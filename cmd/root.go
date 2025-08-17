@@ -33,7 +33,6 @@ import (
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,77 +63,8 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpRoot = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"Master of daemons",
-)
-var exampleRoot = formatExample(
-	"lilith",
-	[]string{"help"},
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// formatHelp produces the “help” header + description.
-//
-//	author: name, e.g. "Daniel Rivas"
-//	email:  email, e.g. "danielrivasmd@gmail.com"
-//	desc:   the multi‐line description, "\n"-separated.
-func formatHelp(author, email, desc string) string {
-	header := chalk.Bold.TextStyle(
-		chalk.Green.Color(author+" "),
-	) +
-		chalk.Dim.TextStyle(
-			chalk.Italic.TextStyle("<"+email+">"),
-		)
-
-	// prefix two newlines to your desc, chalk it cyan + dim it
-	body := "\n\n" + desc
-	return header + chalk.Dim.TextStyle(chalk.Cyan.Color(body))
-}
-
-// formatExample builds a multi‐line example block
-// each usage is a slice of “tokens”: [ command, flagOrArg, flagOrArg, ... ].
-//
-//	app:    your binary name, e.g. "lilith"
-//	usages: one or more usages—each becomes its own line.
-func formatExample(app string, usages ...[]string) string {
-	var b strings.Builder
-
-	for i, usage := range usages {
-		if len(usage) == 0 {
-			continue
-		}
-
-		// first token is the subcommand
-		b.WriteString(
-			chalk.White.Color(app) + " " +
-				chalk.White.Color(chalk.Bold.TextStyle(usage[0])),
-		)
-
-		// remaining tokens are either flags (--foo) or args
-		for _, tok := range usage[1:] {
-			switch {
-			case strings.HasPrefix(tok, "--"):
-				b.WriteString(" " + chalk.Italic.TextStyle(chalk.White.Color(tok)))
-			default:
-				b.WriteString(" " + chalk.Dim.TextStyle(chalk.Italic.TextStyle(tok)))
-			}
-		}
-
-		if i < len(usages)-1 {
-			b.WriteRune('\n')
-		}
-	}
-
-	return b.String()
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// DaemonMeta holds persistent info about process
-type DaemonMeta struct {
+// daemonMeta holds persistent info about process
+type daemonMeta struct {
 	Name       string    `json:"name"`
 	Group      string    `json:"group"`
 	WatchDir   string    `json:"watchDir"`
@@ -152,16 +82,16 @@ var home = func() string {
 	return home
 }()
 
-// GetDaemonDir returns ~/.lilith/daemon
-var GetDaemonDir = func() string {
+// getDaemonDir returns ~/.lilith/daemon
+var getDaemonDir = func() string {
 	return filepath.Join(home, ".lilith", "daemon")
 }
 
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
-func saveMeta(meta *DaemonMeta) error {
+func saveMeta(meta *daemonMeta) error {
 	const op = "daemon.saveMeta"
 
-	dir := GetDaemonDir()
+	dir := getDaemonDir()
 	if err := domovoi.CreateDir(dir, false); err != nil {
 		return horus.Wrap(err, op, "creating daemon directory")
 	}
@@ -186,9 +116,9 @@ func saveMeta(meta *DaemonMeta) error {
 }
 
 // loadMeta reads ~/.lilith/daemon/<name>.json
-func loadMeta(name string) (*DaemonMeta, error) {
+func loadMeta(name string) (*daemonMeta, error) {
 	const op = "daemon.loadMeta"
-	path := filepath.Join(GetDaemonDir(), name+".json")
+	path := filepath.Join(getDaemonDir(), name+".json")
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -198,7 +128,7 @@ func loadMeta(name string) (*DaemonMeta, error) {
 		)
 	}
 
-	var m DaemonMeta
+	var m daemonMeta
 	if err := json.Unmarshal(data, &m); err != nil {
 		return nil, horus.NewCategorizedHerror(
 			op, "decode_error", "unmarshaling metadata", err,
@@ -210,7 +140,7 @@ func loadMeta(name string) (*DaemonMeta, error) {
 }
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
-func spawnWatcher(meta *DaemonMeta) (int, error) {
+func spawnWatcher(meta *daemonMeta) (int, error) {
 	const op = "daemon.spawnWatcher"
 	logDir := filepath.Dir(meta.LogPath)
 
@@ -250,8 +180,8 @@ func spawnWatcher(meta *DaemonMeta) (int, error) {
 	return pid, nil
 }
 
-// BindFlag copies a Viper value into a flag variable if the flag was not set
-func BindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
+// bindFlag copies a Viper value into a flag variable if the flag was not set
+func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
 	const op = "cli.bindFlag"
 
 	// Only override if flag not manually set and config has value
@@ -332,7 +262,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 
 // completeDaemonNames offers tab‐completion based on ~/.lilith/daemons/*.json
 func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	dir := GetDaemonDir()
+	dir := getDaemonDir()
 	fis, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
@@ -351,7 +281,7 @@ func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) (
 	return out, cobra.ShellCompDirectiveNoFileComp
 }
 
-func isDaemonActive(meta *DaemonMeta) bool {
+func isDaemonActive(meta *daemonMeta) bool {
 	if meta.PID <= 0 {
 		return false
 	}
@@ -366,7 +296,7 @@ func isDaemonActive(meta *DaemonMeta) bool {
 }
 
 func mustListDaemonMetaFiles() []string {
-	dir := GetDaemonDir()
+	dir := getDaemonDir()
 	matches, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	horus.CheckErr(err, horus.WithOp("daemon.list"))
 	return matches
@@ -401,7 +331,7 @@ func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string
 }
 
 func availableGroups() []string {
-	dir := GetDaemonDir()
+	dir := getDaemonDir()
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	if err != nil {
 		return nil
@@ -431,14 +361,14 @@ func availableGroups() []string {
 	return result
 }
 
-func mustLoadMeta(path string) *DaemonMeta {
+func mustLoadMeta(path string) *daemonMeta {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading metadata from %s: %v\n", path, err)
 		os.Exit(1)
 	}
 
-	var meta DaemonMeta
+	var meta daemonMeta
 	if err := json.Unmarshal(data, &meta); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing JSON in %s: %v\n", path, err)
 		os.Exit(1)
@@ -455,7 +385,7 @@ func sendSignal(pid int, sig syscall.Signal) error {
 	return proc.Signal(sig)
 }
 
-func mustSpawnWatcher(meta DaemonMeta) int {
+func mustSpawnWatcher(meta daemonMeta) int {
 	const op = "lilith.mustSpawnWatcher"
 	pid, err := spawnWatcher(&meta)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("spawning %q", meta.Name)))
