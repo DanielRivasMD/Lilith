@@ -34,38 +34,20 @@ import (
 var installCmd = &cobra.Command{
 	Use:     "install",
 	Hidden:  true,
-	Short:   "",
 	Long:    helpInstall,
 	Example: exampleInstall,
 
-	ValidArgs: []string{"full", "config", "dirs"},
 	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	ValidArgs: []string{"full", "config", "dirs"},
 
 	Run: runInstall,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var ()
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func init() {
 	rootCmd.AddCommand(installCmd)
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-var helpInstall = formatHelp(
-	"Daniel Rivas ",
-	"<danielrivasmd@gmail.com>",
-	"",
-)
-
-var exampleInstall = formatExample(
-	"lilith",
-	[]string{"install"},
-)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
