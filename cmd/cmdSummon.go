@@ -57,20 +57,6 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpSummon = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"Display daemon log output\n" +
-	"Pass --follow to stream in real time",
-)
-
-var exampleSummon = formatExample(
-	"lilith",
-	[]string{"summon", "helix", "--follow"},
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func runSummon(cmd *cobra.Command, args []string) {
 	const op = "lilith.summon"
 	name := args[0]
