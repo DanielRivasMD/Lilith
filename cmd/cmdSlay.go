@@ -70,21 +70,6 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpSlay = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"Gracefully stop alive daemons, removing their metadata and logs to allow clean reinvocation",
-)
-
-var exampleSlay = formatExample(
-	"lilith",
-	[]string{"slay", "helix"},
-	[]string{"slay", "--group", "<forge>"},
-	[]string{"slay", "--all"},
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func runSlay(cmd *cobra.Command, args []string) {
 	const op = "lilith.slay"
 
@@ -130,7 +115,7 @@ func slaySingleDaemon(name string) {
 	)
 
 	// 3) Remove the metadata JSON file
-	metaFile := filepath.Join(GetDaemonDir(), name+".json")
+	metaFile := filepath.Join(getDaemonDir(), name+".json")
 	horus.CheckErr(
 		func() error {
 			_, err := domovoi.RemoveFile(metaFile, verbose)(metaFile)
