@@ -62,21 +62,6 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpRekindle = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"Restart daemons in limbo using persisted metadata",
-)
-
-var exampleRekindle = formatExample(
-	"lilith",
-	[]string{"rekindle", "helix"},
-	[]string{"rekindle", "--group", "<forge>"},
-	[]string{"rekindle", "--all"},
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func runRekindle(cmd *cobra.Command, args []string) {
 	const op = "lilith.rekindle"
 
@@ -91,7 +76,7 @@ func runRekindle(cmd *cobra.Command, args []string) {
 
 	case len(args) == 1:
 		name := args[0]
-		meta := mustLoadMeta(filepath.Join(GetDaemonDir(), name))
+		meta := mustLoadMeta(filepath.Join(getDaemonDir(), name))
 		pid := mustSpawnWatcher(*meta)
 		meta.PID = pid
 		meta.InvokedAt = time.Now()
