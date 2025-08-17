@@ -39,7 +39,7 @@ var tallyCmd = &cobra.Command{
 	Long:    helpTally,
 	Example: exampleTally,
 
-	Run: RunTally,
+	Run: runTally,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,24 +50,11 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpTally = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"List all daemons invoked, showing group, PID, start time, and current status",
-)
-
-var exampleTally = formatExample(
-	"lilith",
-	[]string{"tally"},
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func RunTally(cmd *cobra.Command, args []string) {
+func runTally(cmd *cobra.Command, args []string) {
 	const op = "lilith.tally"
 
 	// 1) Read the daemon directory
-	dir := GetDaemonDir()
+	dir := getDaemonDir()
 	entries, err := domovoi.ReadDir(dir, verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
