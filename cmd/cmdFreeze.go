@@ -39,7 +39,7 @@ var freezeCmd = &cobra.Command{
 	Args:              cobra.MaximumNArgs(1),
 	ValidArgsFunction: completeDaemonNames,
 
-	Run: RunFreeze,
+	Run: runFreeze,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,22 +55,7 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var helpFreeze = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"Pause daemon execution using SIGSTOP, until resumed manually",
-)
-
-var exampleFreeze = formatExample(
-	"lilith",
-	[]string{"freeze", "helix"},
-	[]string{"freeze", "--group", "<forge>"},
-	[]string{"freeze", "--all"},
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func RunFreeze(cmd *cobra.Command, args []string) {
+func runFreeze(cmd *cobra.Command, args []string) {
 	const op = "lilith.freeze"
 
 	group, _ := cmd.Flags().GetString("group")
