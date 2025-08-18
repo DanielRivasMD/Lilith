@@ -41,14 +41,10 @@ mbombo forge --path "${frag}" --out "${karabiner}/karabiner.edn" \
   --files "double/lctl.edn" \
   --files "mode/q.edn" \
   --files "mode/w.edn" \
-  --files "mode/e.edn" \
-  --files "mode/r.edn" \
-  --files "mode/a.edn" \
-  --files "mode/s.edn" \
-  --files "mode/d.edn" \
+  --files "mode/j.edn" \
+  --files "mode/k.edn" \
   --files "mode/z.edn" \
   --files "mode/x.edn" \
-  --files "mode/c.edn" \
   --files "mode/mouse.edn" \
   --files "mode/obracket.edn" \
   --files "mode/cbracket.edn" \
