@@ -10,6 +10,7 @@ mbombo forge --path "${languages}" --out "${helix}/languages.toml" \
   --files "awk.toml" \
   --files "bash.toml" \
   --files "docker.toml" \
+  --files "clojure.toml" \
   --files "git.toml" \
   --files "go.toml" \
   --files "html.toml" \
