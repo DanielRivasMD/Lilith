@@ -58,7 +58,7 @@ var exampleRoot = formatExample(
 
 var exampleInvoke = formatExample(
 	"lilith",
-	[]string{"invoke", "--config", "helix"},
+	[]string{"invoke", "helix"},
 	[]string{
 		"invoke", "--name", "helix",
 		"--watch", "~/src/helix",

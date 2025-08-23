@@ -35,10 +35,13 @@ import (
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var invokeCmd = &cobra.Command{
-	Use:     "invoke",
+	Use:     "invoke " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("<config>")),
 	Short:   "Start daemon",
 	Long:    helpInvoke,
 	Example: exampleInvoke,
+
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeWorkflowNames,
 
 	PreRunE: preInvoke,
 	Run:     runInvoke,
@@ -60,20 +63,18 @@ var (
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
-	invokeCmd.Flags().StringVarP(&configName, "config", "c", "", "Workflow to apply")
 	invokeCmd.Flags().StringVarP(&daemonName, "name", "n", "", "Unique daemon name (defaults to --config)")
 	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides TOML)")
 	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch")
 	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change")
 	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension)")
-
-	horus.CheckErr(invokeCmd.RegisterFlagCompletionFunc("config", completeWorkflowNames), horus.WithOp("invoke.init"), horus.WithMessage("registering config completion"))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func preInvoke(cmd *cobra.Command, args []string) error {
 	const op = "lilith.invoke.pre"
+	configName = args[0]
 
 	home, err := domovoi.FindHome(verbose)
 	horus.CheckErr(
