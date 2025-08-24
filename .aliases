@@ -5,5 +5,3 @@
 ---
 ji: 
   command: just install
-jt: 
-  command: just test
