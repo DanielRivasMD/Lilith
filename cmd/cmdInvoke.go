@@ -190,7 +190,12 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	scriptPath = mustExpand(scriptPath, "--script")
 
 	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("getting home directory"),
+	)
 	logDir := filepath.Join(home, ".lilith", "logs")
 	horus.CheckErr(
 		domovoi.CreateDir(logDir, verbose),
@@ -213,7 +218,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		existing := mustLoadMeta(path)
 		if existing.WatchDir == watchDir && isDaemonActive(existing) {
 			horus.CheckErr(
-				fmt.Errorf("daemon already running"),
+				fmt.Errorf(""),
 				horus.WithMessage(existing.Name),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
