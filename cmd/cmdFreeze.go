@@ -50,7 +50,11 @@ func init() {
 	freezeCmd.Flags().String("group", "", "Freeze all daemons belonging to a specific group")
 	freezeCmd.Flags().Bool("all", false, "Freeze all running daemons")
 
-	horus.CheckErr(freezeCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("freeze.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(
+		freezeCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups),
+		horus.WithOp("freeze.init"),
+		horus.WithMessage("registering config completion"),
+	)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

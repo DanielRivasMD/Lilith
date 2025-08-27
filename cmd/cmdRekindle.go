@@ -57,7 +57,11 @@ func init() {
 	rekindleCmd.Flags().BoolVar(&rekindleAll, "all", false, "Rekindle all dead daemons")
 	rekindleCmd.Flags().StringVar(&rekindleGroup, "group", "", "Rekindle all daemons in a specific group")
 
-	horus.CheckErr(rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(
+		rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups),
+		horus.WithOp("rekindle.init"),
+		horus.WithMessage("registering config completion"),
+	)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
