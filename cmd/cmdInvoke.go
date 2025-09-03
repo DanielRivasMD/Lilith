@@ -72,6 +72,7 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: refactor as non-error pre-run
 func preInvoke(cmd *cobra.Command, args []string) error {
 	const op = "lilith.invoke.pre"
 	configName = args[0]
