@@ -60,7 +60,7 @@ var exampleInvoke = formatExample(
 	"lilith",
 	[]string{"invoke", "helix"},
 	[]string{
-		"invoke", "--name", "helix",
+		"invoke", "--daemon", "helix",
 		"--watch", "~/src/helix",
 		"--script", "helix.sh",
 		"--log", "helix",
