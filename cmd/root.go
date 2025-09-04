@@ -33,6 +33,7 @@ import (
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +76,10 @@ type daemonMeta struct {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func errorFmt(er string) string {
+	return chalk.Bold.TextStyle(chalk.Red.Color(er))
+}
 
 var home = func() string {
 	home, err := domovoi.FindHome(verbose)
