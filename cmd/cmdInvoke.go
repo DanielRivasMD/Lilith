@@ -64,11 +64,11 @@ var (
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
-	invokeCmd.Flags().StringVarP(&daemonName, "daemon", "d", "", "Daemon instance name (defaults to config key)")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides TOML)")
-	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch (required in manual mode)")
-	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change (required in manual mode)")
-	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension; required in manual mode)")
+	invokeCmd.Flags().StringVarP(&daemonName, "daemon", "", "", "Daemon instance name (defaults to config key)")
+	invokeCmd.Flags().StringVarP(&groupName, "group", "", "default", "Watcher group name (overrides TOML). Default value: `default`")
+	invokeCmd.Flags().StringVarP(&watchDir, "watch", "", "", "Directory to watch (required in manual mode)")
+	invokeCmd.Flags().StringVarP(&scriptPath, "script", "", "", "Script to execute on change (required in manual mode)")
+	invokeCmd.Flags().StringVarP(&logName, "log", "", "", "Name for log file (no `.log` extension; required in manual mode)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
