@@ -5,8 +5,13 @@ README.md
   line 70     TODO   add instructions for installing local directory & mock config-workflow file
   line 71     TODO   explain how logic works
 cmd/cmdInvoke.go
-  line 77     BUG    add safe check for array
-  line 252    BUG    cannot execute daemons passed on the command line
+  line 64     TODO   add an flag to `dump` an example of commented config
+  line 77     TODO   rework pre-run for setting up enviroment & config variables
+  line 185    FIX    uneeded => mustExpand & expandPath
 cmd/cmdSlay.go
   line 84     TODO   refactor error message as one liner
+cmd/root.go
+  line 84     TODO   update error categories
+  line 91     TODO   potential set config variables in root
+  line 190    TODO   rework from string to generic
 ==================================================

@@ -81,12 +81,14 @@ func errorFmt(er string) string {
 	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 }
 
+// TODO: update error categories
 var home = func() string {
 	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err)
+	horus.CheckErr(err, horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	return home
 }()
 
+// TODO: potential set config variables in root
 // getDaemonDir returns ~/.lilith/daemon
 var getDaemonDir = func() string {
 	return filepath.Join(home, ".lilith", "daemon")
@@ -185,6 +187,7 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	return pid, nil
 }
 
+// TODO: rework from string to generic
 // bindFlag copies a Viper value into a flag variable if the flag was not set
 func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
 	const op = "cli.bindFlag"

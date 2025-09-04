@@ -61,6 +61,7 @@ var (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: add an flag to `dump` an example of commented config
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
@@ -73,11 +74,10 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: rework pre-run for setting up enviroment & config variables
 func preInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke.pre"
 
-	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
 	cfgDir := filepath.Join(home, ".lilith", "config")
 
 	for _, sub := range []string{"config", "logs", "meta", "daemons"} {
@@ -174,6 +174,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		)
 
 	}
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,6 +182,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
+	// FIX: uneeded => mustExpand & expandPath
 	watchDir = mustExpand(watchDir, "--watch")
 	scriptPath = mustExpand(scriptPath, "--script")
 
@@ -211,20 +213,10 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	}
 
 	pid, err := spawnWatcher(meta)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("env_error"),
-		horus.WithMessage("starting watcher"),
-	)
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
 	meta.PID = pid
 
-	horus.CheckErr(
-		saveMeta(meta),
-		horus.WithOp(op),
-		horus.WithCategory("env_error"),
-		horus.WithMessage("writing metadata"),
-	)
+	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
 
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",
