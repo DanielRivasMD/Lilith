@@ -76,14 +76,25 @@ func init() {
 func preInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke.pre"
 
+	home, err := domovoi.FindHome(verbose)
+	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
+	cfgDir := filepath.Join(home, ".lilith", "config")
+
+	for _, sub := range []string{"config", "logs", "meta", "daemons"} {
+		horus.CheckErr(
+			domovoi.EnsureDirExist(filepath.Join(cfgDir, sub), verbose),
+			horus.WithOp(op),
+			horus.WithMessage("creating "+sub),
+		)
+	}
+
 	if len(args) == 1 {
 		// CONFIG MODE: pull everything from TOML
+		if verbose {
+			fmt.Println("Running on Config mode...")
+		}
 		configName = args[0]
 
-		home, err := domovoi.FindHome(verbose)
-		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
-
-		cfgDir := filepath.Join(home, ".lilith", "config")
 		fis, err := domovoi.ReadDir(cfgDir, verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 
@@ -133,23 +144,26 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			logName = configName
 			horus.CheckErr(cmd.Flags().Set("log", logName), horus.WithOp(op), horus.WithMessage("setting default --log"))
 		}
-	} else {
 
+	} else {
 		// MANUAL MODE: require explicit flags
+		if verbose {
+			fmt.Println("Running on Manual mode...")
+		}
 
 		horus.CheckEmpty(
 			watchDir,
-			"`--watch` is required",
-			horus.WithOp(op),
-			horus.WithMessage("provide a directory to watch"),
-			horus.WithCategory("spawn_error"),
+			"",
+			horus.WithMessage("`--watch` is required"),
+			horus.WithExitCode(2),
+			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }),
 		)
 		horus.CheckEmpty(
 			scriptPath,
-			"`--script` is required",
-			horus.WithOp(op),
-			horus.WithMessage("provide a script to run"),
-			horus.WithCategory("spawn_error"),
+			"",
+			horus.WithMessage("`--script` is required"),
+			horus.WithExitCode(2),
+			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }),
 		)
 		horus.CheckEmpty(
 			logName,
