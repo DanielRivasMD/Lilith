@@ -41,7 +41,7 @@ var invokeCmd = &cobra.Command{
 	Long:    helpInvoke,
 	Example: exampleInvoke,
 
-	Args:              cobra.ArbitraryArgs,
+	Args:              cobra.MaximumNArgs(1),
 	ValidArgsFunction: completeWorkflowNames,
 
 	PreRun: preInvoke,
@@ -64,11 +64,11 @@ var (
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
-	invokeCmd.Flags().StringVarP(&daemonName, "daemon", "", "", "Daemon instance name (defaults to config key)")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "", "", "Watcher group name (overrides TOML)")
-	invokeCmd.Flags().StringVarP(&watchDir, "watch", "", "", "Directory to watch (required in manual mode)")
-	invokeCmd.Flags().StringVarP(&scriptPath, "script", "", "", "Script to execute on change (required in manual mode)")
-	invokeCmd.Flags().StringVarP(&logName, "log", "", "", "Name for log file (no `.log` extension; required in manual mode)")
+	invokeCmd.Flags().StringVarP(&daemonName, "daemon", "d", "", "Daemon instance name (defaults to config key)")
+	invokeCmd.Flags().StringVarP(&groupName, "group", "g", "", "Watcher group name (overrides TOML)")
+	invokeCmd.Flags().StringVarP(&watchDir, "watch", "w", "", "Directory to watch (required in manual mode)")
+	invokeCmd.Flags().StringVarP(&scriptPath, "script", "s", "", "Script to execute on change (required in manual mode)")
+	invokeCmd.Flags().StringVarP(&logName, "log", "l", "", "Name for log file (no `.log` extension; required in manual mode)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,8 +76,67 @@ func init() {
 func preInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke.pre"
 
-	if len(args) == 0 {
+	if len(args) == 1 {
+		// CONFIG MODE: pull everything from TOML
+		configName = args[0]
+
+		home, err := domovoi.FindHome(verbose)
+		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
+
+		cfgDir := filepath.Join(home, ".lilith", "config")
+		fis, err := domovoi.ReadDir(cfgDir, verbose)
+		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
+
+		// discover matching workflow file
+		var foundV *viper.Viper
+		var cfgFileUsed string
+		for _, fi := range fis {
+			if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
+				continue
+			}
+			path := filepath.Join(cfgDir, fi.Name())
+			v := viper.New()
+			v.SetConfigFile(path)
+			if err := v.ReadInConfig(); err != nil {
+				continue
+			}
+			if v.IsSet("workflows." + configName) {
+				foundV = v
+				cfgFileUsed = path
+				break
+			}
+		}
+		if foundV == nil {
+			horus.CheckErr(
+				errors.New(""),
+				horus.WithMessage(fmt.Sprintf("workflow %s not found", configName)),
+				horus.WithFormatter(func(he *horus.Herror) string { return errorFmt(he.Message) }),
+			)
+		}
+
+		// defaults
+		if daemonName == "" {
+			daemonName = configName
+			horus.CheckErr(cmd.Flags().Set("daemon", daemonName), horus.WithOp(op), horus.WithMessage("setting default --daemon"))
+		}
+		base := filepath.Base(cfgFileUsed)
+		groupName = strings.TrimSuffix(base, filepath.Ext(base))
+		horus.CheckErr(cmd.Flags().Set("group", groupName), horus.WithOp(op), horus.WithMessage("setting default --group"))
+
+		// bind watch & script from TOML
+		wf := foundV.Sub("workflows." + configName)
+		bindFlag(cmd, "watch", &watchDir, wf)
+		bindFlag(cmd, "script", &scriptPath, wf)
+
+		// log default
+		if !cmd.Flags().Changed("log") {
+			logName = configName
+			horus.CheckErr(cmd.Flags().Set("log", logName), horus.WithOp(op), horus.WithMessage("setting default --log"))
+		}
+	} else {
+
 		// MANUAL MODE: require explicit flags
+
 		horus.CheckEmpty(
 			watchDir,
 			"`--watch` is required",
@@ -97,68 +156,10 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			"",
 			horus.WithMessage("`--log` is required"),
 			horus.WithExitCode(2),
-			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }))
-	} else {
+			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }),
+		)
 
-		for _, configName := range args {
-			// CONFIG MODE: pull everything from TOML
-
-			home, err := domovoi.FindHome(verbose)
-			horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
-
-			cfgDir := filepath.Join(home, ".lilith", "config")
-			fis, err := domovoi.ReadDir(cfgDir, verbose)
-			horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
-
-			// discover matching workflow file
-			var foundV *viper.Viper
-			var cfgFileUsed string
-			for _, fi := range fis {
-				if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
-					continue
-				}
-				path := filepath.Join(cfgDir, fi.Name())
-				v := viper.New()
-				v.SetConfigFile(path)
-				if err := v.ReadInConfig(); err != nil {
-					continue
-				}
-				if v.IsSet("workflows." + configName) {
-					foundV = v
-					cfgFileUsed = path
-					break
-				}
-			}
-			if foundV == nil {
-				horus.CheckErr(
-					errors.New(""),
-					horus.WithMessage(fmt.Sprintf("workflow %s not found", configName)),
-					horus.WithFormatter(func(he *horus.Herror) string { return errorFmt(he.Message) }),
-				)
-			}
-
-			// defaults
-			if daemonName == "" {
-				daemonName = configName
-				horus.CheckErr(cmd.Flags().Set("daemon", daemonName), horus.WithOp(op), horus.WithMessage("setting default --daemon"))
-			}
-			base := filepath.Base(cfgFileUsed)
-			groupName = strings.TrimSuffix(base, filepath.Ext(base))
-			horus.CheckErr(cmd.Flags().Set("group", groupName), horus.WithOp(op), horus.WithMessage("setting default --group"))
-
-			// bind watch & script from TOML
-			wf := foundV.Sub("workflows." + configName)
-			bindFlag(cmd, "watch", &watchDir, wf)
-			bindFlag(cmd, "script", &scriptPath, wf)
-
-			// log default
-			if !cmd.Flags().Changed("log") {
-				logName = configName
-				horus.CheckErr(cmd.Flags().Set("log", logName), horus.WithOp(op), horus.WithMessage("setting default --log"))
-			}
-		}
 	}
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
