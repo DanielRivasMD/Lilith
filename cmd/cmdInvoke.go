@@ -184,20 +184,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	watchDir = mustExpand(watchDir, "--watch")
 	scriptPath = mustExpand(scriptPath, "--script")
 
-	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("env_error"),
-		horus.WithMessage("getting home directory"),
-	)
 	logDir := filepath.Join(home, ".lilith", "logs")
-	horus.CheckErr(
-		domovoi.CreateDir(logDir, verbose),
-		horus.WithOp(op),
-		horus.WithMessage(fmt.Sprintf("creating %q", logDir)),
-		horus.WithCategory("env_error"),
-	)
 	logPath := filepath.Join(logDir, logName+".log")
 
 	meta := &daemonMeta{
@@ -217,7 +204,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 				horus.WithMessage(existing.Name),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
-					return "daemon " + chalk.Red.Color(he.Message) + " already running"
+					return "daemon " + errorFmt(he.Message) + " already running"
 				}),
 			)
 		}
@@ -245,7 +232,6 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		chalk.Green.Color(groupName),
 		chalk.Green.Color(strconv.Itoa(pid)),
 	)
-	// BUG: cannot execute daemons passed on the command line
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
