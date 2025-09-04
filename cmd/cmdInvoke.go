@@ -43,8 +43,8 @@ var invokeCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeWorkflowNames,
 
-	PreRunE: preInvoke,
-	Run:     runInvoke,
+	PreRun: preInvoke,
+	Run:    runInvoke,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +72,7 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// TODO: refactor as non-error pre-run
-func preInvoke(cmd *cobra.Command, args []string) error {
+func preInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke.pre"
 	// BUG: add safe check for array
 	configName = args[0]
@@ -157,8 +156,6 @@ func preInvoke(cmd *cobra.Command, args []string) error {
 			horus.WithCategory("config_error"),
 		)
 	}
-
-	return nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
