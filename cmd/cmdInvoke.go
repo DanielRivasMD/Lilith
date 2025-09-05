@@ -123,8 +123,8 @@ func preInvoke(cmd *cobra.Command, args []string) {
 
 		// bind watch & script from TOML
 		wf := foundV.Sub("workflows." + configName)
-		bindString(cmd, "watch", &watchPath, wf)
-		bindString(cmd, "script", &scriptPath, wf)
+		bindFlag(cmd, "watch", wf)
+		bindFlag(cmd, "script", wf)
 
 		// group default
 		if !cmd.Flags().Changed("group") {

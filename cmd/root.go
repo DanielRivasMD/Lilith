@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -102,51 +103,50 @@ func errorFmt(er string) string {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// bindFlag will take a pointer dest *T, pull the T out of cfg if
-// the flag was not changed and cfg has that key, store it in *dest
-// and then call cmd.Flags().Set(flagName, fmt.Sprint(val)) so that
-// cobra/pflag also knows about it
-//
-//	getVal is typically v.GetString, v.GetInt, v.GetBool, etc
-func bindFlag[T any](
-	cmd *cobra.Command,
-	flagName string,
-	dest *T,
-	cfg *viper.Viper,
-	getVal func(*viper.Viper, string) T,
-) {
-	const op = "viper.bindFlag"
-
+func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
+	const op = "cli.bindFlag"
 	flags := cmd.Flags()
+
+	// only bind if not manually set & config has key
 	if flags.Changed(flagName) || !cfg.IsSet(flagName) {
 		return
 	}
 
-	val := getVal(cfg, flagName)
-	*dest = val
+	f := flags.Lookup(flagName)
+	if f == nil {
+		// no such flag
+		return
+	}
 
-	str := fmt.Sprint(val)
-	if err := flags.Set(flagName, str); err != nil {
+	// build string representation based on flag declared type
+	var raw string
+	switch f.Value.Type() {
+	case "string":
+		raw = cfg.GetString(flagName)
+	case "int":
+		raw = strconv.Itoa(cfg.GetInt(flagName))
+	case "bool":
+		raw = strconv.FormatBool(cfg.GetBool(flagName))
+	default:
+		// fallback: just use the string getter
+		raw = cfg.GetString(flagName)
+	}
+
+	// set flag value
+	if err := flags.Set(flagName, raw); err != nil {
 		horus.CheckErr(
 			horus.NewCategorizedHerror(
 				op,
-				"viper_error",
+				"config_error",
 				fmt.Sprintf("setting %q from config", flagName),
 				err,
-				map[string]any{"flag": flagName, "value": str},
+				map[string]any{
+					"flag":  flagName,
+					"value": raw,
+				},
 			),
 		)
 	}
-}
-
-func bindString(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
-	bindFlag(cmd, flagName, dest, cfg, (*viper.Viper).GetString)
-}
-func bindInt(cmd *cobra.Command, flagName string, dest *int, cfg *viper.Viper) {
-	bindFlag(cmd, flagName, dest, cfg, (*viper.Viper).GetInt)
-}
-func bindBool(cmd *cobra.Command, flagName string, dest *bool, cfg *viper.Viper) {
-	bindFlag(cmd, flagName, dest, cfg, (*viper.Viper).GetBool)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
