@@ -280,10 +280,6 @@ func listDaemonMetaFiles() []string {
 	return daemonMatches
 }
 
-func getDaemonName(path string) string {
-	return filepath.Base(path[:len(path)-len(".json")])
-}
-
 func matchDaemonGroup(metaPath, expectedGroup string) bool {
 	// Try to load JSON metadata
 	data, err := os.ReadFile(metaPath)
