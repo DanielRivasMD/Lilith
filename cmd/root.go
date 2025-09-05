@@ -159,7 +159,7 @@ func saveMeta(meta *daemonMeta) {
 		horus.CheckErr(
 			err,
 			horus.WithOp(op),
-			horus.WithCategory("env_error"),
+			horus.WithCategory("io_error"),
 			horus.WithMessage("creating daemon directory"),
 			horus.WithDetails(map[string]any{
 				"dir": daemonDir,
@@ -184,7 +184,7 @@ func saveMeta(meta *daemonMeta) {
 	horus.CheckErr(
 		os.WriteFile(path, data, 0o644),
 		horus.WithOp(op),
-		horus.WithCategory("env_error"),
+		horus.WithCategory("io_error"),
 		horus.WithMessage("writing metadata file"),
 		horus.WithDetails(map[string]any{
 			"path": path,
@@ -202,7 +202,7 @@ func loadMeta(name string) *daemonMeta {
 	horus.CheckErr(
 		err,
 		horus.WithOp(op),
-		horus.WithCategory("env_error"),
+		horus.WithCategory("io_error"),
 		horus.WithMessage("reading metadata file"),
 		horus.WithDetails(map[string]any{
 			"path": path,
@@ -272,6 +272,7 @@ func listDaemonMetaFiles() []string {
 	horus.CheckErr(
 		err,
 		horus.WithOp(op),
+		horus.WithCategory("daemon_error"),
 		horus.WithMessage("listing daemon metadata files"),
 		horus.WithDetails(map[string]any{
 			"pattern": daemonPattern,
@@ -312,7 +313,7 @@ func spawnWatcher(meta *daemonMeta) int {
 
 	// ensure the log directory exists
 	horus.CheckErr(
-		domovoi.CreateDir(logDir, verbose),
+		domovoi.CreateDir(meta.LogPath, verbose),
 		horus.WithOp(op),
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("creating log directory"),
@@ -361,8 +362,6 @@ func spawnWatcher(meta *daemonMeta) int {
 		}),
 	)
 
-	pid := cmd.Process.Pid
-
 	// detach from parent
 	horus.CheckErr(
 		cmd.Process.Release(),
@@ -370,11 +369,11 @@ func spawnWatcher(meta *daemonMeta) int {
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("releasing watcher process"),
 		horus.WithDetails(map[string]any{
-			"pid": pid,
+			"pid": cmd.Process.Pid,
 		}),
 	)
 
-	return pid
+	return cmd.Process.Pid
 }
 
 // sendDaemonSignal finds the process and sends it the given signal
