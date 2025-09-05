@@ -80,4 +80,11 @@ var helpRekindle = formatHelp(
 	"Restart daemons in limbo using persisted metadata",
 )
 
+var helpDumpConfig = formatHelp(
+	"Daniel Rivas",
+	"danielrivasmd@gmail.com",
+	"Generate a commented example of a Lilith TOML config.\n"+
+		"Defines required fields under [workflows.<name>] and shows optional settings.",
+)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
