@@ -127,27 +127,35 @@ func saveMeta(meta *daemonMeta) error {
 }
 
 // loadMeta reads ~/.lilith/daemon/<name>.json
-func loadMeta(name string) (*daemonMeta, error) {
+func loadMeta(name string) *daemonMeta {
 	const op = "daemon.loadMeta"
-	path := filepath.Join(getDaemonDir(), name+".json")
+	path := filepath.Join(daemonDir, name+".json")
 
 	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, horus.NewCategorizedHerror(
-			op, "env_error", "reading metadata file", err,
-			map[string]any{"path": path, "name": name},
-		)
-	}
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("reading metadata file"),
+		horus.WithDetails(map[string]any{
+			"path": path,
+			"name": name,
+		}),
+	)
 
-	var m daemonMeta
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, horus.NewCategorizedHerror(
-			op, "decode_error", "unmarshaling metadata", err,
-			map[string]any{"path": path, "name": name},
-		)
-	}
+	var meta daemonMeta
+	horus.CheckErr(
+		json.Unmarshal(data, &meta),
+		horus.WithOp(op),
+		horus.WithCategory("decode_error"),
+		horus.WithMessage("unmarshaling metadata"),
+		horus.WithDetails(map[string]any{
+			"path": path,
+			"name": name,
+		}),
+	)
 
-	return &m, nil
+	return &meta
 }
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
