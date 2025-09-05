@@ -56,12 +56,19 @@ var (
 	home    string
 	verbose bool
 )
+var (
+	lilithDir string
+	configDir string
+	logDir    string
+	daemonDir string
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostics")
-	cobra.OnInitialize(initHome)
+	cobra.OnInitialize(initConfigPaths)
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,22 +86,14 @@ type daemonMeta struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	lilithDir = filepath.Join(home, ".lilith")
-	configDir = filepath.Join(lilithDir, "config")
-	logDir    = filepath.Join(lilithDir, "logs")
-	daemonDir = filepath.Join(lilithDir, "daemon")
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func initHome() {
+func initConfigPaths() {
 	var err error
 	home, err = domovoi.FindHome(verbose)
-	horus.CheckErr(err,
-		horus.WithCategory("env_error"),
-		horus.WithMessage("getting home directory"),
-	)
+	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
+	lilithDir = filepath.Join(home, ".lilith")
+	configDir = filepath.Join(lilithDir, "config")
+	logDir = filepath.Join(lilithDir, "logs")
+	daemonDir = filepath.Join(lilithDir, "daemon")
 }
 
 func errorFmt(er string) string {
