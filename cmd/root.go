@@ -222,26 +222,6 @@ func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Vipe
 	}
 }
 
-func mustExpand(val, label string) string {
-	const op = "expand.path"
-	expanded, err := expandPath(val)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage(fmt.Sprintf("expanding %s path", label)))
-	return expanded
-}
-
-// expandPath replaces a leading "~" with $HOME (via domovoi.FindHome) and then does os.ExpandEnv.
-func expandPath(p string) (string, error) {
-	prefix := "~" + string(filepath.Separator)
-	if strings.HasPrefix(p, prefix) {
-		home, err := domovoi.FindHome(false)
-		if err != nil {
-			return "", err // caller (mustExpand) adds op/category via horus.CheckErr
-		}
-		p = filepath.Join(home, p[len(prefix):]) // drop the "~/" and re-join
-	}
-	return os.ExpandEnv(p), nil
-}
-
 // completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys.
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	home, err := domovoi.FindHome(false)
@@ -380,21 +360,6 @@ func availableGroups() []string {
 	return result
 }
 
-func mustLoadMeta(path string) *daemonMeta {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading metadata from %s: %v\n", path, err)
-		os.Exit(1)
-	}
-
-	var meta daemonMeta
-	if err := json.Unmarshal(data, &meta); err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing JSON in %s: %v\n", path, err)
-		os.Exit(1)
-	}
-
-	return &meta
-}
 
 func sendSignal(pid int, sig syscall.Signal) error {
 	proc, err := os.FindProcess(pid)
@@ -402,13 +367,6 @@ func sendSignal(pid int, sig syscall.Signal) error {
 		return fmt.Errorf("could not find process %d: %w", pid, err)
 	}
 	return proc.Signal(sig)
-}
-
-func mustSpawnWatcher(meta daemonMeta) int {
-	const op = "lilith.mustSpawnWatcher"
-	pid, err := spawnWatcher(&meta)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("spawning %q", meta.Name)))
-	return pid
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
