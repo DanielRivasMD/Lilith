@@ -75,23 +75,23 @@ func runFreeze(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func freezeDaemon(name string) {
-	meta := loadMeta(name)
+func freezeDaemon(daemonMeta string) {
+	meta := loadMeta(daemonMeta)
 	sendDaemonSignal(meta.PID, syscall.SIGSTOP)
 	fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
 }
 
 func freezeGroupDaemons(group string) {
-	for _, path := range listDaemonMetaFiles() {
-		if matchDaemonGroup(path, group) {
-			freezeDaemon(path)
+	for _, daemonMeta := range listDaemonMetaFiles() {
+		if matchDaemonGroup(daemonMeta, group) {
+			freezeDaemon(daemonMeta)
 		}
 	}
 }
 
 func freezeAllDaemons() {
-	for _, path := range listDaemonMetaFiles() {
-		freezeDaemon(path)
+	for _, daemonMeta := range listDaemonMetaFiles() {
+		freezeDaemon(daemonMeta)
 	}
 }
 

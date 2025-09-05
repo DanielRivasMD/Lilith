@@ -32,7 +32,7 @@ import (
 
 var slayCmd = &cobra.Command{
 	Use:     "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "Stop & clean up daemons",
+	Short:   "Kill daemon",
 	Long:    helpSlay,
 	Example: exampleSlay,
 

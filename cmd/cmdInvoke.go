@@ -197,6 +197,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		if existingMeta.WatchDir == watchPath && isDaemonActive(existingMeta) {
 			horus.CheckErr(
 				errors.New(""),
+				horus.WithOp(op),
 				horus.WithMessage(existingMeta.Name),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {

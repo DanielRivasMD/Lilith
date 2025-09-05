@@ -378,7 +378,7 @@ func spawnWatcher(meta *daemonMeta) int {
 	return pid
 }
 
-// sendDaemonSignal finds the process and sends it the given signal
+// sendDaemonSignal finds the process & sends signal
 func sendDaemonSignal(pid int, sig syscall.Signal) {
 	const op = "daemon.sendSignal"
 

@@ -31,7 +31,7 @@ import (
 
 var summonCmd = &cobra.Command{
 	Use:     "summon " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "View daemon logs",
+	Short:   "Inspect daemon",
 	Long:    helpSummon,
 	Example: exampleSummon,
 

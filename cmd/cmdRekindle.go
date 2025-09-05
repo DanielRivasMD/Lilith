@@ -81,11 +81,8 @@ func runRekindle(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func rekindleDaemon(name string) {
-	const op = "daemon.rekindle"
-
-	// load the persisted metadata
-	meta := loadMeta(name)
+func rekindleDaemon(daemonMeta string) {
+	meta := loadMeta(daemonMeta)
 
 	// try to find & ping the existing process
 	if proc, err := os.FindProcess(meta.PID); err == nil {
@@ -122,16 +119,16 @@ func rekindleDaemon(name string) {
 }
 
 func rekindleGroupDaemons(group string) {
-	for _, path := range listDaemonMetaFiles() {
-		if matchDaemonGroup(path, group) {
-			rekindleDaemon(path)
+	for _, daemonMeta := range listDaemonMetaFiles() {
+		if matchDaemonGroup(daemonMeta, group) {
+			rekindleDaemon(daemonMeta)
 		}
 	}
 }
 
 func rekindleAllDaemons() {
-	for _, path := range listDaemonMetaFiles() {
-		rekindleDaemon(path)
+	for _, daemonMeta := range listDaemonMetaFiles() {
+		rekindleDaemon(daemonMeta)
 	}
 }
 
