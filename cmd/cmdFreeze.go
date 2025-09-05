@@ -20,7 +20,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"syscall"
 
 	"github.com/DanielRivasMD/horus"
@@ -50,11 +49,7 @@ func init() {
 	freezeCmd.Flags().String("group", "", "Freeze all daemons belonging to a specific group")
 	freezeCmd.Flags().Bool("all", false, "Freeze all running daemons")
 
-	horus.CheckErr(
-		freezeCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups),
-		horus.WithOp("freeze.init"),
-		horus.WithMessage("registering config completion"),
-	)
+	horus.CheckErr(freezeCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("freeze.init"), horus.WithMessage("registering config completion"))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,18 +69,7 @@ func runFreeze(cmd *cobra.Command, args []string) {
 		return
 	default:
 		// Single daemon freeze
-		name := args[0]
-
-		// 1) Load metadata
-		meta := loadMeta(name)
-
-		// 2) Find and pause process
-		proc, err := os.FindProcess(meta.PID)
-		horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("finding process"))
-		horus.CheckErr(proc.Signal(syscall.SIGSTOP), horus.WithOp(op), horus.WithMessage("sending SIGSTOP"))
-
-		// 3) Confirmation
-		fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), name)
+		freezeDaemon(args[0])
 	}
 }
 
@@ -95,9 +79,7 @@ func freezeGroupDaemons(group string) {
 	files := listDaemonMetaFiles()
 	for _, path := range files {
 		if matchDaemonGroup(path, group) {
-			meta := loadMeta(path)
-			sendDaemonSignal(meta.PID, syscall.SIGSTOP)
-			fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+			freezeDaemon(path)
 		}
 	}
 }
@@ -105,10 +87,16 @@ func freezeGroupDaemons(group string) {
 func freezeAllDaemons() {
 	files := listDaemonMetaFiles()
 	for _, path := range files {
-		meta := loadMeta(path)
-		sendDaemonSignal(meta.PID, syscall.SIGSTOP)
-		fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+		freezeDaemon(path)
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func freezeDaemon(name string) {
+	meta := loadMeta(name)
+	sendDaemonSignal(meta.PID, syscall.SIGSTOP)
+	fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
