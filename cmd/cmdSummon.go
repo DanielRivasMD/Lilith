@@ -19,7 +19,6 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/DanielRivasMD/domovoi"
@@ -61,11 +60,7 @@ func runSummon(cmd *cobra.Command, args []string) {
 	const op = "lilith.summon"
 	name := args[0]
 
-	meta, err := loadMeta(name)
-	horus.CheckErr(err,
-		horus.WithOp(op),
-		horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)),
-	)
+	meta := loadMeta(name)
 
 	if follow {
 		horus.CheckErr(
