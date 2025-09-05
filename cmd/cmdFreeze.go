@@ -63,31 +63,13 @@ func runFreeze(cmd *cobra.Command, args []string) {
 	switch {
 	case all:
 		freezeAllDaemons()
-		return
 	case group != "":
 		freezeGroupDaemons(group)
-		return
-	default:
-		// Single daemon freeze
+	case len(args) == 1:
 		freezeDaemon(args[0])
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func freezeGroupDaemons(group string) {
-	files := listDaemonMetaFiles()
-	for _, path := range files {
-		if matchDaemonGroup(path, group) {
-			freezeDaemon(path)
-		}
-	}
-}
-
-func freezeAllDaemons() {
-	files := listDaemonMetaFiles()
-	for _, path := range files {
-		freezeDaemon(path)
+	default:
+		// TODO: one-liner error
+		horus.CheckErr(horus.NewCategorizedHerror(op, "validation", "missing daemon name or flag", nil, nil))
 	}
 }
 
@@ -97,6 +79,20 @@ func freezeDaemon(name string) {
 	meta := loadMeta(name)
 	sendDaemonSignal(meta.PID, syscall.SIGSTOP)
 	fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+}
+
+func freezeGroupDaemons(group string) {
+	for _, path := range listDaemonMetaFiles() {
+		if matchDaemonGroup(path, group) {
+			freezeDaemon(path)
+		}
+	}
+}
+
+func freezeAllDaemons() {
+	for _, path := range listDaemonMetaFiles() {
+		freezeDaemon(path)
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
