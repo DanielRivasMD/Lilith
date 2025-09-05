@@ -74,19 +74,8 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// TODO: rework pre-run for setting up enviroment & config variables
 func preInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke.pre"
-
-	cfgDir := filepath.Join(home, ".lilith", "config")
-
-	for _, sub := range []string{"config", "logs", "meta", "daemons"} {
-		horus.CheckErr(
-			domovoi.EnsureDirExist(filepath.Join(cfgDir, sub), verbose),
-			horus.WithOp(op),
-			horus.WithMessage("creating "+sub),
-		)
-	}
 
 	if len(args) == 1 {
 		// CONFIG MODE: pull everything from TOML
@@ -95,7 +84,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		}
 		configName = args[0]
 
-		fis, err := domovoi.ReadDir(cfgDir, verbose)
+		fis, err := domovoi.ReadDir(configDir, verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 
 		// discover matching workflow file
@@ -105,7 +94,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
 				continue
 			}
-			path := filepath.Join(cfgDir, fi.Name())
+			path := filepath.Join(configDir, fi.Name())
 			v := viper.New()
 			v.SetConfigFile(path)
 			if err := v.ReadInConfig(); err != nil {
@@ -183,10 +172,9 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
 	// FIX: uneeded => mustExpand & expandPath
-	watchDir = mustExpand(watchDir, "--watch")
-	scriptPath = mustExpand(scriptPath, "--script")
+	watchDir = strings.Replace(watchDir, "~", home, 1)
+	scriptPath = strings.Replace(scriptPath, "~", home, 1)
 
-	logDir := filepath.Join(home, ".lilith", "logs")
 	logPath := filepath.Join(logDir, logName+".log")
 
 	meta := &daemonMeta{
@@ -198,8 +186,8 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		InvokedAt:  time.Now(),
 	}
 
-	for _, path := range mustListDaemonMetaFiles() {
-		existing := mustLoadMeta(path)
+	for _, path := range listDaemonMetaFiles() {
+		existing := loadMeta(path)
 		if existing.WatchDir == watchDir && isDaemonActive(existing) {
 			horus.CheckErr(
 				errors.New(""),
@@ -212,17 +200,14 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	pid, err := spawnWatcher(meta)
-	horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("starting watcher"))
-	meta.PID = pid
-
-	horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("writing metadata"))
+	meta.PID = spawnWatcher(meta)
+	saveMeta(meta)
 
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",
 		chalk.Green.Color(daemonName),
 		chalk.Green.Color(groupName),
-		chalk.Green.Color(strconv.Itoa(pid)),
+		chalk.Green.Color(strconv.Itoa(meta.PID)),
 	)
 }
 
