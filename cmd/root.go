@@ -210,6 +210,61 @@ func loadMeta(name string) *daemonMeta {
 	return &meta
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func isDaemonActive(meta *daemonMeta) bool {
+	if meta.PID <= 0 {
+		return false
+	}
+	proc, err := os.FindProcess(meta.PID)
+	if err != nil {
+		return false
+	}
+	if err := proc.Signal(syscall.Signal(0)); err != nil {
+		return errors.Is(err, syscall.EPERM)
+	}
+	return true
+}
+
+func listDaemonMetaFiles() []string {
+	op := "daemon.list"
+	daemonPattern := filepath.Join(daemonDir, "*.json")
+	matches, err := filepath.Glob(daemonPattern)
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithMessage("listing daemon metadata files"),
+		horus.WithDetails(map[string]any{"pattern": daemonPattern}),
+	)
+	return matches
+}
+
+func getDaemonName(path string) string {
+	return filepath.Base(path[:len(path)-len(".json")])
+}
+
+func matchDaemonGroup(metaPath, expectedGroup string) bool {
+	// Try to load JSON metadata
+	data, err := os.ReadFile(metaPath)
+	if err != nil {
+		// optionally log or ignore
+		return false
+	}
+
+	var meta struct {
+		Group string `json:"group"`
+	}
+
+	if err := json.Unmarshal(data, &meta); err != nil {
+		// if unmarshal fails, ignore this file
+		return false
+	}
+
+	return meta.Group == expectedGroup
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // spawnWatcher starts watchexec, redirects logs, returns its PID
 func spawnWatcher(meta *daemonMeta) int {
 	const op = "daemon.spawnWatcher"
@@ -251,10 +306,17 @@ func spawnWatcher(meta *daemonMeta) int {
 	return pid
 }
 
+func sendDaemonSignal(pid int, sig syscall.Signal) {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		fmt.Errorf("could not find process %d: %w", pid, err)
 	}
+	proc.Signal(sig)
 }
 
-// completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	home, err := domovoi.FindHome(false)
 	if err != nil {
@@ -311,65 +373,11 @@ func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) (
 	return out, cobra.ShellCompDirectiveNoFileComp
 }
 
-func isDaemonActive(meta *daemonMeta) bool {
-	if meta.PID <= 0 {
-		return false
-	}
-	proc, err := os.FindProcess(meta.PID)
-	if err != nil {
-		return false
-	}
-	if err := proc.Signal(syscall.Signal(0)); err != nil {
-		return errors.Is(err, syscall.EPERM)
-	}
-	return true
-}
-
-func listDaemonMetaFiles() []string {
-	op := "daemon.list"
-	daemonPattern := filepath.Join(daemonDir, "*.json")
-	matches, err := filepath.Glob(daemonPattern)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithMessage("listing daemon metadata files"),
-		horus.WithDetails(map[string]any{"pattern": daemonPattern}),
-	)
-	return matches
-}
-
-func getDaemonName(path string) string {
-	return filepath.Base(path[:len(path)-len(".json")])
-}
-
-func matchDaemonGroup(metaPath, expectedGroup string) bool {
-	// Try to load JSON metadata
-	data, err := os.ReadFile(metaPath)
-	if err != nil {
-		// optionally log or ignore
-		return false
-	}
-
-	var meta struct {
-		Group string `json:"group"`
-	}
-
-	if err := json.Unmarshal(data, &meta); err != nil {
-		// if unmarshal fails, ignore this file
-		return false
-	}
-
-	return meta.Group == expectedGroup
-}
-
+// completeWorkflowGroups offer tab-completion based on on ~/.lilith/daemons/*.json
 func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return availableGroups(), cobra.ShellCompDirectiveDefault
-}
-
-func availableGroups() []string {
 	files, err := filepath.Glob(filepath.Join(daemonDir, "*.json"))
 	if err != nil {
-		return nil
+		return nil, cobra.ShellCompDirectiveDefault
 	}
 
 	groups := map[string]bool{}
@@ -389,19 +397,11 @@ func availableGroups() []string {
 		}
 	}
 
-	var result []string
+	var availableGroups []string
 	for g := range groups {
-		result = append(result, g)
+		availableGroups = append(availableGroups, g)
 	}
-	return result
-}
-
-func sendDaemonSignal(pid int, sig syscall.Signal) {
-	proc, err := os.FindProcess(pid)
-	if err != nil {
-		fmt.Errorf("could not find process %d: %w", pid, err)
-	}
-	proc.Signal(sig)
+	return availableGroups, cobra.ShellCompDirectiveDefault
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
