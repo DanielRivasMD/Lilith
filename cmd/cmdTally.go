@@ -54,8 +54,7 @@ func runTally(cmd *cobra.Command, args []string) {
 	const op = "lilith.tally"
 
 	// 1) Read the daemon directory
-	dir := getDaemonDir()
-	entries, err := domovoi.ReadDir(dir, verbose)
+	entries, err := domovoi.ReadDir(daemonDir, verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
 	// 2) Print header
@@ -72,12 +71,7 @@ func runTally(cmd *cobra.Command, args []string) {
 		name := strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
 
 		// 4) Load metadata
-		meta, err := loadMeta(name)
-		if err != nil {
-			// skip entries that fail to parse
-			horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("loading metadata for %q", name)))
-			continue
-		}
+		meta := loadMeta(name)
 
 		// 5) Determine process status via `ps` (detect T=stopped/paused)
 		status := chalk.Red.Color("dead")
