@@ -313,7 +313,7 @@ func spawnWatcher(meta *daemonMeta) int {
 
 	// ensure the log directory exists
 	horus.CheckErr(
-		domovoi.CreateDir(meta.LogPath, verbose),
+		domovoi.CreateDir(logDir, verbose),
 		horus.WithOp(op),
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("creating log directory"),
