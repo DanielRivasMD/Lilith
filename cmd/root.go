@@ -81,6 +81,15 @@ type daemonMeta struct {
 
 func errorFmt(er string) string {
 	return chalk.Bold.TextStyle(chalk.Red.Color(er))
+var (
+	lilithDir = filepath.Join(home, ".lilith")
+	configDir = filepath.Join(lilithDir, "config")
+	logDir    = filepath.Join(lilithDir, "logs")
+	daemonDir = filepath.Join(lilithDir, "daemon")
+)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 func initHome() {
 	var err error
 	home, err = domovoi.FindHome(verbose)
