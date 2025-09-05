@@ -154,18 +154,17 @@ func bindBool(cmd *cobra.Command, flagName string, dest *bool, cfg *viper.Viper)
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) {
 	const op = "daemon.saveMeta"
+
 	// ensure the daemon directory exists
-	if err := domovoi.CreateDir(daemonDir, verbose); err != nil {
-		horus.CheckErr(
-			err,
-			horus.WithOp(op),
-			horus.WithCategory("io_error"),
-			horus.WithMessage("creating daemon directory"),
-			horus.WithDetails(map[string]any{
-				"dir": daemonDir,
-			}),
-		)
-	}
+	horus.CheckErr(
+		domovoi.CreateDir(daemonDir, verbose),
+		horus.WithOp(op),
+		horus.WithCategory("io_error"),
+		horus.WithMessage("creating daemon directory"),
+		horus.WithDetails(map[string]any{
+			"dir": daemonDir,
+		}),
+	)
 
 	// marshal the metadata
 	data, err := json.MarshalIndent(meta, "", "  ")
@@ -268,7 +267,7 @@ func isDaemonActive(meta *daemonMeta) bool {
 func listDaemonMetaFiles() []string {
 	op := "daemon.list"
 	daemonPattern := filepath.Join(daemonDir, "*.json")
-	matches, err := filepath.Glob(daemonPattern)
+	daemonMatches, err := filepath.Glob(daemonPattern)
 	horus.CheckErr(
 		err,
 		horus.WithOp(op),
@@ -278,7 +277,7 @@ func listDaemonMetaFiles() []string {
 			"pattern": daemonPattern,
 		}),
 	)
-	return matches
+	return daemonMatches
 }
 
 func getDaemonName(path string) string {
