@@ -195,7 +195,7 @@ func saveMeta(meta *daemonMeta) {
 // loadMeta reads ~/.lilith/daemon/<name>.json
 func loadMeta(name string) *daemonMeta {
 	const op = "daemon.loadMeta"
-	path := filepath.Join(daemonDir, name+".json")
+	path := resolveMetaPath(name)
 
 	// read the file
 	data, err := os.ReadFile(path)
@@ -224,6 +224,29 @@ func loadMeta(name string) *daemonMeta {
 	)
 
 	return &meta
+}
+
+// resolveMetaPath will turn any of these into the correct file to read:
+//
+//	"foo"          → /home/me/.lilith/daemon/foo.json
+//	"foo.json"     → /home/me/.lilith/daemon/foo.json
+//	"/tmp/bar.json" → /tmp/bar.json
+//	"sub/dir/baz"  → sub/dir/baz.json (relative path)
+//
+// check if the literal name exists first, otherwise falls back to daemonDir
+func resolveMetaPath(name string) string {
+	// 1) if the user passed an absolute or relative path that actually exists, use it
+	if fi, err := os.Stat(name); err == nil && !fi.IsDir() {
+		return name
+	}
+
+	// 2) ensure we have a .json extension
+	if filepath.Ext(name) != ".json" {
+		name = name + ".json"
+	}
+
+	// 3) join with the default daemonDir
+	return filepath.Join(daemonDir, name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
