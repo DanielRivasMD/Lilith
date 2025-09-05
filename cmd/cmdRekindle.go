@@ -80,11 +80,11 @@ func runRekindle(cmd *cobra.Command, args []string) {
 
 	case len(args) == 1:
 		name := args[0]
-		meta := mustLoadMeta(filepath.Join(getDaemonDir(), name))
-		pid := mustSpawnWatcher(*meta)
+		meta := loadMeta(filepath.Join(daemonDir, name))
+		pid := spawnWatcher(meta)
 		meta.PID = pid
 		meta.InvokedAt = time.Now()
-		horus.CheckErr(saveMeta(meta), horus.WithOp(op), horus.WithMessage("updating metadata"))
+		saveMeta(meta)
 		fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), name, pid)
 		return
 
@@ -96,24 +96,24 @@ func runRekindle(cmd *cobra.Command, args []string) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func rekindleAllDaemons() {
-	for _, path := range mustListDaemonMetaFiles() {
-		meta := mustLoadMeta(path)
-		pid := mustSpawnWatcher(*meta)
+	for _, path := range listDaemonMetaFiles() {
+		meta := loadMeta(path)
+		pid := spawnWatcher(meta)
 		meta.PID = pid
 		meta.InvokedAt = time.Now()
-		horus.CheckErr(saveMeta(meta))
+		saveMeta(meta)
 		fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), meta.Name, pid)
 	}
 }
 
 func rekindleGroupDaemons(group string) {
-	for _, path := range mustListDaemonMetaFiles() {
-		if matchesGroup(path, group) {
-			meta := mustLoadMeta(path)
-			pid := mustSpawnWatcher(*meta)
+	for _, path := range listDaemonMetaFiles() {
+		if matchDaemonGroup(path, group) {
+			meta := loadMeta(path)
+			pid := spawnWatcher(meta)
 			meta.PID = pid
 			meta.InvokedAt = time.Now()
-			horus.CheckErr(saveMeta(meta))
+			saveMeta(meta)
 			fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), meta.Name, pid)
 		}
 	}
