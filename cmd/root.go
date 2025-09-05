@@ -79,8 +79,6 @@ type daemonMeta struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func errorFmt(er string) string {
-	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 var (
 	lilithDir = filepath.Join(home, ".lilith")
 	configDir = filepath.Join(lilithDir, "config")
@@ -99,12 +97,8 @@ func initHome() {
 	)
 }
 
-// TODO: update error categories
-
-// TODO: potential set config variables in root
-// getDaemonDir returns ~/.lilith/daemon
-var getDaemonDir = func() string {
-	return filepath.Join(home, ".lilith", "daemon")
+func errorFmt(er string) string {
+	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 }
 
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
@@ -123,15 +117,14 @@ func saveMeta(meta *daemonMeta) {
 		)
 	}
 
-	path := filepath.Join(dir, meta.Name+".json")
+	path := filepath.Join(daemonDir, meta.Name+".json")
 	if err := os.WriteFile(path, data, 0644); err != nil {
-		return horus.NewCategorizedHerror(
+		horus.NewCategorizedHerror(
 			op, "env_error", "writing metadata file", err,
 			map[string]any{"path": path},
 		)
 	}
 
-	return nil
 }
 
 // loadMeta reads ~/.lilith/daemon/<name>.json
@@ -167,12 +160,12 @@ func loadMeta(name string) *daemonMeta {
 }
 
 // spawnWatcher starts watchexec, redirects logs, returns its PID
-func spawnWatcher(meta *daemonMeta) (int, error) {
+func spawnWatcher(meta *daemonMeta) int {
 	const op = "daemon.spawnWatcher"
 	logDir := filepath.Dir(meta.LogPath)
 
 	if err := domovoi.CreateDir(logDir, false); err != nil {
-		return 0, horus.Wrap(err, op, "creating log directory")
+		horus.Wrap(err, op, "creating log directory")
 	}
 
 	cmd := exec.Command("watchexec",
@@ -183,7 +176,7 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 
 	f, err := os.OpenFile(meta.LogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return 0, horus.NewCategorizedHerror(
+		horus.NewCategorizedHerror(
 			op, "env_error", "opening log file", err,
 			map[string]any{"logPath": meta.LogPath},
 		)
@@ -193,7 +186,7 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 
 	if err := cmd.Start(); err != nil {
 		_ = f.Close()
-		return 0, horus.NewCategorizedHerror(
+		horus.NewCategorizedHerror(
 			op, "spawn_error", "starting watcher process", err,
 			map[string]any{"watch": meta.WatchDir, "script": meta.ScriptPath},
 		)
@@ -201,10 +194,10 @@ func spawnWatcher(meta *daemonMeta) (int, error) {
 	pid := cmd.Process.Pid
 
 	if err := cmd.Process.Release(); err != nil {
-		return pid, horus.Wrap(err, op, "releasing process handle")
+		return pid
 	}
 
-	return pid, nil
+	return pid
 }
 
 // TODO: rework from string to generic
@@ -270,8 +263,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 
 // completeDaemonNames offers tab‐completion based on ~/.lilith/daemons/*.json
 func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	dir := getDaemonDir()
-	fis, err := os.ReadDir(dir)
+	fis, err := os.ReadDir(daemonDir)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
@@ -303,18 +295,24 @@ func isDaemonActive(meta *daemonMeta) bool {
 	return true
 }
 
-func mustListDaemonMetaFiles() []string {
-	dir := getDaemonDir()
-	matches, err := filepath.Glob(filepath.Join(dir, "*.json"))
-	horus.CheckErr(err, horus.WithOp("daemon.list"))
+func listDaemonMetaFiles() []string {
+	op := "daemon.list"
+	daemonPattern := filepath.Join(daemonDir, "*.json")
+	matches, err := filepath.Glob(daemonPattern)
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithMessage("listing daemon metadata files"),
+		horus.WithDetails(map[string]any{"pattern": daemonPattern}),
+	)
 	return matches
 }
 
-func nameFrom(path string) string {
+func getDaemonName(path string) string {
 	return filepath.Base(path[:len(path)-len(".json")])
 }
 
-func matchesGroup(metaPath, expectedGroup string) bool {
+func matchDaemonGroup(metaPath, expectedGroup string) bool {
 	// Try to load JSON metadata
 	data, err := os.ReadFile(metaPath)
 	if err != nil {
@@ -339,8 +337,7 @@ func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string
 }
 
 func availableGroups() []string {
-	dir := getDaemonDir()
-	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
+	files, err := filepath.Glob(filepath.Join(daemonDir, "*.json"))
 	if err != nil {
 		return nil
 	}
@@ -369,13 +366,12 @@ func availableGroups() []string {
 	return result
 }
 
-
-func sendSignal(pid int, sig syscall.Signal) error {
+func sendDaemonSignal(pid int, sig syscall.Signal) {
 	proc, err := os.FindProcess(pid)
 	if err != nil {
-		return fmt.Errorf("could not find process %d: %w", pid, err)
+		fmt.Errorf("could not find process %d: %w", pid, err)
 	}
-	return proc.Signal(sig)
+	proc.Signal(sig)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
