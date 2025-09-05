@@ -99,17 +99,16 @@ var getDaemonDir = func() string {
 }
 
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
-func saveMeta(meta *daemonMeta) error {
+func saveMeta(meta *daemonMeta) {
 	const op = "daemon.saveMeta"
 
-	dir := getDaemonDir()
-	if err := domovoi.CreateDir(dir, false); err != nil {
-		return horus.Wrap(err, op, "creating daemon directory")
+	if err := domovoi.CreateDir(daemonDir, verbose); err != nil {
+		horus.Wrap(err, op, "creating daemon directory")
 	}
 
 	data, err := json.MarshalIndent(meta, "", "  ")
 	if err != nil {
-		return horus.NewCategorizedHerror(
+		horus.NewCategorizedHerror(
 			op, "encode_error", "marshaling metadata", err,
 			map[string]any{"name": meta.Name},
 		)
