@@ -20,7 +20,8 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
+	"os"
+	"syscall"
 	"time"
 
 	"github.com/DanielRivasMD/horus"
@@ -32,7 +33,7 @@ import (
 
 var rekindleCmd = &cobra.Command{
 	Use:     "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "Resurrect daemon in limbo",
+	Short:   "Resurrect daemon from limbo",
 	Long:    helpRekindle,
 	Example: exampleRekindle,
 
@@ -57,11 +58,7 @@ func init() {
 	rekindleCmd.Flags().BoolVar(&rekindleAll, "all", false, "Rekindle all dead daemons")
 	rekindleCmd.Flags().StringVar(&rekindleGroup, "group", "", "Rekindle all daemons in a specific group")
 
-	horus.CheckErr(
-		rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups),
-		horus.WithOp("rekindle.init"),
-		horus.WithMessage("registering config completion"),
-	)
+	horus.CheckErr(rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,50 +69,69 @@ func runRekindle(cmd *cobra.Command, args []string) {
 	switch {
 	case rekindleAll:
 		rekindleAllDaemons()
-		return
-
 	case rekindleGroup != "":
 		rekindleGroupDaemons(rekindleGroup)
-		return
-
 	case len(args) == 1:
-		name := args[0]
-		meta := loadMeta(filepath.Join(daemonDir, name))
-		pid := spawnWatcher(meta)
-		meta.PID = pid
-		meta.InvokedAt = time.Now()
-		saveMeta(meta)
-		fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), name, pid)
-		return
-
+		rekindleDaemon(args[0])
 	default:
+		// TODO: one-liner error
 		horus.CheckErr(horus.NewCategorizedHerror(op, "validation", "missing daemon name or flag", nil, nil))
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func rekindleAllDaemons() {
-	for _, path := range listDaemonMetaFiles() {
-		meta := loadMeta(path)
-		pid := spawnWatcher(meta)
-		meta.PID = pid
-		meta.InvokedAt = time.Now()
-		saveMeta(meta)
-		fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), meta.Name, pid)
+func rekindleDaemon(name string) {
+	const op = "daemon.rekindle"
+
+	// load the persisted metadata
+	meta := loadMeta(name)
+
+	// try to find & ping the existing process
+	if proc, err := os.FindProcess(meta.PID); err == nil {
+		if err = proc.Signal(syscall.Signal(0)); err == nil {
+			// process alive => send SIGCONT
+			sendDaemonSignal(meta.PID, syscall.SIGCONT)
+
+			// update only timestamp
+			meta.InvokedAt = time.Now()
+			saveMeta(meta)
+
+			fmt.Printf("%s resumed %q PID %d\n",
+				chalk.Green.Color("OK:"),
+				meta.Name,
+				meta.PID,
+			)
+			return
+		}
 	}
+
+	// no existing process => spawn fresh watcher
+	newPID := spawnWatcher(meta)
+
+	// update metadata
+	meta.PID = newPID
+	meta.InvokedAt = time.Now()
+	saveMeta(meta)
+
+	fmt.Printf("%s rekindled %q new PID %d\n",
+		chalk.Green.Color("OK:"),
+		meta.Name,
+		newPID,
+	)
 }
 
 func rekindleGroupDaemons(group string) {
 	for _, path := range listDaemonMetaFiles() {
 		if matchDaemonGroup(path, group) {
-			meta := loadMeta(path)
-			pid := spawnWatcher(meta)
-			meta.PID = pid
-			meta.InvokedAt = time.Now()
-			saveMeta(meta)
-			fmt.Printf("%s rekindled %q with PID %d\n", chalk.Green.Color("OK:"), meta.Name, pid)
+			rekindleDaemon(path)
 		}
+	}
+}
+
+func rekindleAllDaemons() {
+	for _, path := range listDaemonMetaFiles() {
+		rekindleDaemon(path)
 	}
 }
 
