@@ -101,6 +101,57 @@ func errorFmt(er string) string {
 	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// bindFlag will take a pointer dest *T, pull the T out of cfg if
+// the flag was not changed and cfg has that key, store it in *dest
+// and then call cmd.Flags().Set(flagName, fmt.Sprint(val)) so that
+// cobra/pflag also knows about it
+//
+//	getVal is typically v.GetString, v.GetInt, v.GetBool, etc
+func bindFlag[T any](
+	cmd *cobra.Command,
+	flagName string,
+	dest *T,
+	cfg *viper.Viper,
+	getVal func(*viper.Viper, string) T,
+) {
+	const op = "viper.bindFlag"
+
+	flags := cmd.Flags()
+	if flags.Changed(flagName) || !cfg.IsSet(flagName) {
+		return
+	}
+
+	val := getVal(cfg, flagName)
+	*dest = val
+
+	str := fmt.Sprint(val)
+	if err := flags.Set(flagName, str); err != nil {
+		horus.CheckErr(
+			horus.NewCategorizedHerror(
+				op,
+				"viper_error",
+				fmt.Sprintf("setting %q from config", flagName),
+				err,
+				map[string]any{"flag": flagName, "value": str},
+			),
+		)
+	}
+}
+
+func bindString(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
+	bindFlag(cmd, flagName, dest, cfg, (*viper.Viper).GetString)
+}
+func bindInt(cmd *cobra.Command, flagName string, dest *int, cfg *viper.Viper) {
+	bindFlag(cmd, flagName, dest, cfg, (*viper.Viper).GetInt)
+}
+func bindBool(cmd *cobra.Command, flagName string, dest *bool, cfg *viper.Viper) {
+	bindFlag(cmd, flagName, dest, cfg, (*viper.Viper).GetBool)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) {
 	const op = "daemon.saveMeta"
@@ -200,27 +251,6 @@ func spawnWatcher(meta *daemonMeta) int {
 	return pid
 }
 
-// TODO: rework from string to generic
-// bindFlag copies a Viper value into a flag variable if the flag was not set
-func bindFlag(cmd *cobra.Command, flagName string, dest *string, cfg *viper.Viper) {
-	const op = "cli.bindFlag"
-
-	// Only override if flag not manually set and config has value
-	if !cmd.Flags().Changed(flagName) && cfg.IsSet(flagName) {
-		*dest = cfg.GetString(flagName)
-
-		if err := cmd.Flags().Set(flagName, *dest); err != nil {
-			horus.CheckErr(horus.NewCategorizedHerror(
-				op,
-				"cli_error",
-				"setting flag from config",
-				err,
-				map[string]any{
-					"flag":  flagName,
-					"value": *dest,
-				},
-			))
-		}
 	}
 }
 
