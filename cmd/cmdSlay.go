@@ -19,11 +19,7 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
 	"syscall"
 
 	"github.com/DanielRivasMD/domovoi"
@@ -61,11 +57,7 @@ func init() {
 	slayCmd.Flags().BoolVar(&slayAll, "all", false, "Slay all daemons")
 	slayCmd.Flags().StringVar(&slayGroup, "group", "", "Slay all daemons in a specific group")
 
-	horus.CheckErr(
-		slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups),
-		horus.WithOp("slay.init"),
-		horus.WithMessage("registering config completion"),
-	)
+	horus.CheckErr(slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("slay.init"), horus.WithMessage("registering config completion"))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +71,7 @@ func runSlay(cmd *cobra.Command, args []string) {
 	case slayGroup != "":
 		slayGroupDaemons(slayGroup)
 	case len(args) == 1:
-		slaySingleDaemon(args[0])
+		slayDaemon(args[0])
 	default:
 		// TODO: refactor error message as one liner
 		horus.CheckErr(
@@ -96,87 +88,52 @@ func runSlay(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func slaySingleDaemon(name string) {
+func slayDaemon(daemonMeta string) {
 	const op = "lilith.slay"
 
-	// 1) Load metadata
-	meta := loadMeta(name)
+	// load metadata
+	meta := loadMeta(daemonMeta)
 
-	// 2) Try terminating the process, but proceed if it’s already gone
-	horus.CheckErr(
-		terminate(meta.PID),
-		horus.WithOp(op),
-		horus.WithMessage(fmt.Sprintf("terminating PID %d", meta.PID)),
-	)
+	// try terminating process, but proceed if already gone
+	sendDaemonSignal(meta.PID, syscall.SIGTERM)
 
-	// 3) Remove the metadata JSON file
-	metaFile := filepath.Join(daemonDir, name+".json")
+	// remove metadata JSON file
 	horus.CheckErr(
 		func() error {
-			_, err := domovoi.RemoveFile(metaFile, verbose)(metaFile)
+			_, err := domovoi.RemoveFile(daemonMeta, verbose)(resolveMetaPath(daemonMeta))
 			return err
 		}(),
 		horus.WithOp(op),
+		horus.WithCategory("io_error"),
 		horus.WithMessage("removing metadata file"),
 	)
 
-	// 4) Remove the log file
+	// remove log file
 	horus.CheckErr(
 		func() error {
 			_, err := domovoi.RemoveFile(meta.LogPath, verbose)(meta.LogPath)
 			return err
 		}(),
 		horus.WithOp(op),
+		horus.WithCategory("io_error"),
 		horus.WithMessage("removing log file"),
 	)
 
-	// 5) Final confirmation
-	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), name)
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// terminate sends SIGTERM to pid. Returns nil if the process is already gone.
-func terminate(pid int) error {
-	proc, err := os.FindProcess(pid)
-	if err != nil {
-		return fmt.Errorf("find process %d: %w", pid, err)
-	}
-
-	if err := proc.Signal(syscall.SIGTERM); err != nil {
-		// On Unix: ESRCH == “no such process”
-		// os.ErrProcessDone == “process already finished”
-		// On Windows: Signal isn't really supported, so ignore all errors
-		switch {
-		case errors.Is(err, syscall.ESRCH),
-			errors.Is(err, os.ErrProcessDone),
-			runtime.GOOS == "windows":
-			return nil
-		default:
-			return fmt.Errorf("signal SIGTERM to %d: %w", pid, err)
-		}
-	}
-
-	return nil
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func slayAllDaemons() {
-	files := listDaemonMetaFiles()
-	for _, file := range files {
-		name := getDaemonName(file)
-		slaySingleDaemon(name)
-	}
+	// log meta
+	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
 }
 
 func slayGroupDaemons(group string) {
-	files := listDaemonMetaFiles()
-	for _, metaPath := range files {
-		if matchDaemonGroup(metaPath, group) {
-			name := getDaemonName(metaPath)
-			slaySingleDaemon(name)
+	for _, daemonMeta := range listDaemonMetaFiles() {
+		if matchDaemonGroup(daemonMeta, group) {
+			slayDaemon(daemonMeta)
 		}
+	}
+}
+
+func slayAllDaemons() {
+	for _, daemonMeta := range listDaemonMetaFiles() {
+		slayDaemon(daemonMeta)
 	}
 }
 
