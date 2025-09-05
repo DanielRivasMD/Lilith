@@ -53,6 +53,7 @@ func Execute() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
+	home    string
 	verbose bool
 )
 
@@ -60,6 +61,7 @@ var (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostics")
+	cobra.OnInitialize(initHome)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,14 +81,16 @@ type daemonMeta struct {
 
 func errorFmt(er string) string {
 	return chalk.Bold.TextStyle(chalk.Red.Color(er))
+func initHome() {
+	var err error
+	home, err = domovoi.FindHome(verbose)
+	horus.CheckErr(err,
+		horus.WithCategory("env_error"),
+		horus.WithMessage("getting home directory"),
+	)
 }
 
 // TODO: update error categories
-var home = func() string {
-	home, err := domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithCategory("env_error"), horus.WithMessage("getting home directory"))
-	return home
-}()
 
 // TODO: potential set config variables in root
 // getDaemonDir returns ~/.lilith/daemon
