@@ -362,6 +362,9 @@ func spawnWatcher(meta *daemonMeta) int {
 		}),
 	)
 
+	// register pid
+	pid := cmd.Process.Pid
+
 	// detach from parent
 	horus.CheckErr(
 		cmd.Process.Release(),
@@ -369,11 +372,11 @@ func spawnWatcher(meta *daemonMeta) int {
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("releasing watcher process"),
 		horus.WithDetails(map[string]any{
-			"pid": cmd.Process.Pid,
+			"pid": pid,
 		}),
 	)
 
-	return cmd.Process.Pid
+	return pid
 }
 
 // sendDaemonSignal finds the process and sends it the given signal
