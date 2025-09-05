@@ -155,27 +155,42 @@ func bindBool(cmd *cobra.Command, flagName string, dest *bool, cfg *viper.Viper)
 // saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) {
 	const op = "daemon.saveMeta"
-
+	// ensure the daemon directory exists
 	if err := domovoi.CreateDir(daemonDir, verbose); err != nil {
-		horus.Wrap(err, op, "creating daemon directory")
+		horus.CheckErr(
+			err,
+			horus.WithOp(op),
+			horus.WithCategory("env_error"),
+			horus.WithMessage("creating daemon directory"),
+			horus.WithDetails(map[string]any{
+				"dir": daemonDir,
+			}),
+		)
 	}
 
+	// marshal the metadata
 	data, err := json.MarshalIndent(meta, "", "  ")
-	if err != nil {
-		horus.NewCategorizedHerror(
-			op, "encode_error", "marshaling metadata", err,
-			map[string]any{"name": meta.Name},
-		)
-	}
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("encode_error"),
+		horus.WithMessage("marshaling metadata"),
+		horus.WithDetails(map[string]any{
+			"name": meta.Name,
+		}),
+	)
 
+	// write the file
 	path := filepath.Join(daemonDir, meta.Name+".json")
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		horus.NewCategorizedHerror(
-			op, "env_error", "writing metadata file", err,
-			map[string]any{"path": path},
-		)
-	}
-
+	horus.CheckErr(
+		os.WriteFile(path, data, 0o644),
+		horus.WithOp(op),
+		horus.WithCategory("env_error"),
+		horus.WithMessage("writing metadata file"),
+		horus.WithDetails(map[string]any{
+			"path": path,
+		}),
+	)
 }
 
 // loadMeta reads ~/.lilith/daemon/<name>.json
@@ -183,6 +198,7 @@ func loadMeta(name string) *daemonMeta {
 	const op = "daemon.loadMeta"
 	path := filepath.Join(daemonDir, name+".json")
 
+	// read the file
 	data, err := os.ReadFile(path)
 	horus.CheckErr(
 		err,
@@ -195,6 +211,7 @@ func loadMeta(name string) *daemonMeta {
 		}),
 	)
 
+	// unmarshal into struct
 	var meta daemonMeta
 	horus.CheckErr(
 		json.Unmarshal(data, &meta),
@@ -234,7 +251,9 @@ func listDaemonMetaFiles() []string {
 		err,
 		horus.WithOp(op),
 		horus.WithMessage("listing daemon metadata files"),
-		horus.WithDetails(map[string]any{"pattern": daemonPattern}),
+		horus.WithDetails(map[string]any{
+			"pattern": daemonPattern,
+		}),
 	)
 	return matches
 }
@@ -268,62 +287,106 @@ func matchDaemonGroup(metaPath, expectedGroup string) bool {
 // spawnWatcher starts watchexec, redirects logs, returns its PID
 func spawnWatcher(meta *daemonMeta) int {
 	const op = "daemon.spawnWatcher"
-	logDir := filepath.Dir(meta.LogPath)
 
-	if err := domovoi.CreateDir(logDir, false); err != nil {
-		horus.Wrap(err, op, "creating log directory")
-	}
+	// ensure the log directory exists
+	horus.CheckErr(
+		domovoi.CreateDir(logDir, verbose),
+		horus.WithOp(op),
+		horus.WithCategory("spawn_error"),
+		horus.WithMessage("creating log directory"),
+		horus.WithDetails(map[string]any{
+			"logDir": logDir,
+		}),
+	)
 
-	cmd := exec.Command("watchexec",
+	// build watcher command
+	cmd := exec.Command(
+		"watchexec",
 		"--watch", meta.WatchDir,
 		"--",
 		"bash", meta.ScriptPath,
 	)
 
-	f, err := os.OpenFile(meta.LogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		horus.NewCategorizedHerror(
-			op, "env_error", "opening log file", err,
-			map[string]any{"logPath": meta.LogPath},
-		)
-	}
+	// open (or create) the log file
+	f, err := os.OpenFile(
+		meta.LogPath,
+		os.O_CREATE|os.O_APPEND|os.O_WRONLY,
+		0o644,
+	)
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("spawn_error"),
+		horus.WithMessage("opening log file"),
+		horus.WithDetails(map[string]any{
+			"logPath": meta.LogPath,
+		}),
+	)
+	defer f.Close()
+
 	cmd.Stdout = f
 	cmd.Stderr = f
 
-	if err := cmd.Start(); err != nil {
-		_ = f.Close()
-		horus.NewCategorizedHerror(
-			op, "spawn_error", "starting watcher process", err,
-			map[string]any{"watch": meta.WatchDir, "script": meta.ScriptPath},
-		)
-	}
+	// start the watcher process
+	horus.CheckErr(
+		cmd.Start(),
+		horus.WithOp(op),
+		horus.WithCategory("spawn_error"),
+		horus.WithMessage("starting watcher process"),
+		horus.WithDetails(map[string]any{
+			"watchDir":   meta.WatchDir,
+			"scriptPath": meta.ScriptPath,
+		}),
+	)
+
 	pid := cmd.Process.Pid
 
-	if err := cmd.Process.Release(); err != nil {
-		return pid
-	}
+	// detach from parent
+	horus.CheckErr(
+		cmd.Process.Release(),
+		horus.WithOp(op),
+		horus.WithCategory("spawn_error"),
+		horus.WithMessage("releasing watcher process"),
+		horus.WithDetails(map[string]any{
+			"pid": pid,
+		}),
+	)
 
 	return pid
 }
 
+// sendDaemonSignal finds the process and sends it the given signal
 func sendDaemonSignal(pid int, sig syscall.Signal) {
+	const op = "daemon.sendSignal"
+
 	proc, err := os.FindProcess(pid)
-	if err != nil {
-		fmt.Errorf("could not find process %d: %w", pid, err)
-	}
-	proc.Signal(sig)
+	horus.CheckErr(
+		err,
+		horus.WithOp(op),
+		horus.WithCategory("spawn_error"),
+		horus.WithMessage(fmt.Sprintf("finding process %d", pid)),
+		horus.WithDetails(map[string]any{
+			"pid": pid,
+		}),
+	)
+
+	horus.CheckErr(
+		proc.Signal(sig),
+		horus.WithOp(op),
+		horus.WithCategory("spawn_error"),
+		horus.WithMessage(fmt.Sprintf("sending signal %s to pid %d", sig, pid)),
+		horus.WithDetails(map[string]any{
+			"pid": pid,
+			"sig": sig,
+		}),
+	)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	home, err := domovoi.FindHome(false)
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveDefault
-	}
-	cfgDir := filepath.Join(home, ".lilith", "config")
-	fis, err := os.ReadDir(cfgDir)
+	fis, err := os.ReadDir(configDir)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
@@ -333,7 +396,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
 			continue
 		}
-		path := filepath.Join(cfgDir, fi.Name())
+		path := filepath.Join(configDir, fi.Name())
 		v := viper.New()
 		v.SetConfigFile(path)
 		if err := v.ReadInConfig(); err != nil {
