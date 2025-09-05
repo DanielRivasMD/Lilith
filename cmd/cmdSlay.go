@@ -19,6 +19,7 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
+	"errors"
 	"fmt"
 	"syscall"
 
@@ -73,15 +74,14 @@ func runSlay(cmd *cobra.Command, args []string) {
 	case len(args) == 1:
 		slayDaemon(args[0])
 	default:
-		// TODO: refactor error message as one liner
 		horus.CheckErr(
-			horus.NewCategorizedHerror(
-				op,
-				"validation",
-				"must provide a daemon name or --all / --group",
-				nil,
-				nil,
-			),
+			errors.New(""),
+			horus.WithOp(op),
+			horus.WithMessage("daemon / flag"),
+			horus.WithExitCode(2),
+			horus.WithFormatter(func(he *horus.Herror) string {
+				return "missing " + errorFmt(he.Message)
+			}),
 		)
 	}
 }

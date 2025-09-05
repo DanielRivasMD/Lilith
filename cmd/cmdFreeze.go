@@ -19,6 +19,7 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
+	"errors"
 	"fmt"
 	"syscall"
 
@@ -68,8 +69,15 @@ func runFreeze(cmd *cobra.Command, args []string) {
 	case len(args) == 1:
 		freezeDaemon(args[0])
 	default:
-		// TODO: one-liner error
-		horus.CheckErr(horus.NewCategorizedHerror(op, "validation", "missing daemon name or flag", nil, nil))
+		horus.CheckErr(
+			errors.New(""),
+			horus.WithOp(op),
+			horus.WithMessage("daemon / flag"),
+			horus.WithExitCode(2),
+			horus.WithFormatter(func(he *horus.Herror) string {
+				return "missing " + errorFmt(he.Message)
+			}),
+		)
 	}
 }
 
