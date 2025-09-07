@@ -8,11 +8,11 @@ source "${HOME}/.lilith/sh/config.sh"
 # create temporary files
 for type in normal insert select
 do
-  mbombo forge --path "${moded}" --out "${helix}/.${type}.tmp" --files "common.toml" --old MODE --new "${type}_mode"
+  mbombo forge --in "${moded}" --out "${helix}/.${type}.tmp" --files "common.toml" --replace MODE="${type}_mode"
 done
 
 # concatenate
-mbombo forge --path "${moded}" --out "${helix}/config.toml" \
+mbombo forge --in "${moded}" --out "${helix}/config.toml" \
   --files "theme.toml" \
   --files "editor.toml" \
   --files "mini-mode.toml" \
