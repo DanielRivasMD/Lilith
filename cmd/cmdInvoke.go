@@ -51,24 +51,28 @@ var invokeCmd = &cobra.Command{
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	configName string // workflow key
-	daemonName string // instance name, defaults to configName
+	config configPaths
+)
+
+type configPaths struct {
+	configName string
+	daemonName string
 	watchPath  string
 	scriptPath string
 	logName    string
-	groupName  string // derived from TOML filename
-)
+	groupName  string
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func init() {
 	rootCmd.AddCommand(invokeCmd)
 
-	invokeCmd.Flags().StringVarP(&daemonName, "daemon", "", "", "Daemon instance name (defaults to config key)")
-	invokeCmd.Flags().StringVarP(&groupName, "group", "", "default", "Watcher group name (overrides TOML). Default value: `default`")
-	invokeCmd.Flags().StringVarP(&watchPath, "watch", "", "", "Directory to watch (required in manual mode)")
-	invokeCmd.Flags().StringVarP(&scriptPath, "script", "", "", "Script to execute on change (required in manual mode)")
-	invokeCmd.Flags().StringVarP(&logName, "log", "", "", "Name for log file (no `.log` extension; required in manual mode)")
+	invokeCmd.Flags().StringVarP(&config.daemonName, "daemon", "", "", "Daemon instance name (defaults to config key)")
+	invokeCmd.Flags().StringVarP(&config.groupName, "group", "", "default", "Watcher group name (overrides TOML). Default value: `default`")
+	invokeCmd.Flags().StringVarP(&config.watchPath, "watch", "", "", "Directory to watch (required in manual mode)")
+	invokeCmd.Flags().StringVarP(&config.scriptPath, "script", "", "", "Script to execute on change (required in manual mode)")
+	invokeCmd.Flags().StringVarP(&config.logName, "log", "", "", "Name for log file (no `.log` extension; required in manual mode)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +87,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		}
 
 		// declare workflow
-		configName = args[0]
+		config.configName = args[0]
 
 		// discover matching workflow file
 		files, err := domovoi.ReadDir(configDir, verbose)
@@ -100,7 +104,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			if err := v.ReadInConfig(); err != nil {
 				continue
 			}
-			if v.IsSet("workflows." + configName) {
+			if v.IsSet("workflows." + config.configName) {
 				foundV = v
 				configFileUsed = path
 				break
@@ -109,33 +113,33 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		if foundV == nil {
 			horus.CheckErr(
 				errors.New(""),
-				horus.WithMessage(fmt.Sprintf("workflow %s not found", configName)),
+				horus.WithMessage(fmt.Sprintf("workflow %s not found", config.configName)),
 				horus.WithFormatter(func(he *horus.Herror) string { return errorFmt(he.Message) }),
 			)
 		}
 
 		// defaults
-		if daemonName == "" {
-			daemonName = configName
-			horus.CheckErr(cmd.Flags().Set("daemon", daemonName), horus.WithOp(op), horus.WithMessage("setting default --daemon"))
+		if config.daemonName == "" {
+			config.daemonName = config.configName
+			horus.CheckErr(cmd.Flags().Set("daemon", config.daemonName), horus.WithOp(op), horus.WithMessage("setting default --daemon"))
 		}
 
 		// bind watch & script from TOML
-		wf := foundV.Sub("workflows." + configName)
+		wf := foundV.Sub("workflows." + config.configName)
 		bindFlag(cmd, "watch", wf)
 		bindFlag(cmd, "script", wf)
 
 		// group default
 		if !cmd.Flags().Changed("group") {
 			base := filepath.Base(configFileUsed)
-			groupName = strings.TrimSuffix(base, filepath.Ext(base))
-			horus.CheckErr(cmd.Flags().Set("group", groupName), horus.WithOp(op), horus.WithMessage("setting default --group"))
+			config.groupName = strings.TrimSuffix(base, filepath.Ext(base))
+			horus.CheckErr(cmd.Flags().Set("group", config.groupName), horus.WithOp(op), horus.WithMessage("setting default --group"))
 		}
 
 		// log default
 		if !cmd.Flags().Changed("log") {
-			logName = configName
-			horus.CheckErr(cmd.Flags().Set("log", logName), horus.WithOp(op), horus.WithMessage("setting default --log"))
+			config.logName = config.configName
+			horus.CheckErr(cmd.Flags().Set("log", config.logName), horus.WithOp(op), horus.WithMessage("setting default --log"))
 		}
 
 	} else {
@@ -146,21 +150,21 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		}
 
 		horus.CheckEmpty(
-			watchPath,
+			config.watchPath,
 			"",
 			horus.WithMessage("`--watch` is required"),
 			horus.WithExitCode(2),
 			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }),
 		)
 		horus.CheckEmpty(
-			scriptPath,
+			config.scriptPath,
 			"",
 			horus.WithMessage("`--script` is required"),
 			horus.WithExitCode(2),
 			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }),
 		)
 		horus.CheckEmpty(
-			logName,
+			config.logName,
 			"",
 			horus.WithMessage("`--log` is required"),
 			horus.WithExitCode(2),
@@ -176,16 +180,16 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
 	// format paths
-	watchPath = strings.Replace(watchPath, "~", home, 1)
-	scriptPath = strings.Replace(scriptPath, "~", home, 1)
-	logPath := filepath.Join(logDir, logName+".log")
+	config.watchPath = strings.Replace(config.watchPath, "~", home, 1)
+	config.scriptPath = strings.Replace(config.scriptPath, "~", home, 1)
+	logPath := filepath.Join(logDir, config.logName+".log")
 
 	// declare meta
 	meta := &daemonMeta{
-		Name:       daemonName,
-		Group:      groupName,
-		WatchDir:   watchPath,
-		ScriptPath: scriptPath,
+		Name:       config.daemonName,
+		Group:      config.groupName,
+		WatchDir:   config.watchPath,
+		ScriptPath: config.scriptPath,
 		LogPath:    logPath,
 		InvokedAt:  time.Now(),
 	}
@@ -193,7 +197,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	// check running daemons
 	for _, path := range listDaemonMetaFiles() {
 		existingMeta := loadMeta(path)
-		if existingMeta.WatchDir == watchPath && isDaemonActive(existingMeta) {
+		if existingMeta.WatchDir == config.watchPath && isDaemonActive(existingMeta) {
 			horus.CheckErr(
 				errors.New(""),
 				horus.WithOp(op),
@@ -215,8 +219,8 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	// log meta
 	fmt.Printf(
 		"invoked daemon %s group %s PID %s\n",
-		chalk.Green.Color(daemonName),
-		chalk.Green.Color(groupName),
+		chalk.Green.Color(config.daemonName),
+		chalk.Green.Color(config.groupName),
 		chalk.Green.Color(strconv.Itoa(meta.PID)),
 	)
 }
