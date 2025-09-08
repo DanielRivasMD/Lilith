@@ -46,7 +46,7 @@ var helpInvoke = formatHelp(
 var helpSlay = formatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
-	"Gracefully stop alive daemons, removing their metadata and logs to allow clean reinvocation",
+	"Gracefully stop alive daemons, removing their metadata and log to allow clean reinvocation",
 )
 
 var helpTally = formatHelp(

@@ -4,4 +4,6 @@
 README.md
   line 70     TODO   add instructions for installing local directory & mock config-workflow file
   line 71     TODO   explain how logic works
+cmd/cmdInstall.go
+  line 114    TODO   review this command => install
 ==================================================

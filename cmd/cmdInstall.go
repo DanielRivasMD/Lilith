@@ -84,7 +84,7 @@ func createConfig(verbose bool) {
 		horus.WithMessage(fmt.Sprintf("creating directory %q", dir)),
 	)
 
-	// 1) Create the file if it doesn't exist
+	// Create the file if it doesn't exist
 	createAction := domovoi.CreateFile(path, verbose)
 	created, err := createAction(path)
 	horus.CheckErr(err,
@@ -92,7 +92,7 @@ func createConfig(verbose bool) {
 		horus.WithMessage(fmt.Sprintf("ensuring file %q exists", path)),
 	)
 
-	// 2) If newly created, write the default TOML
+	// If newly created, write the default TOML
 	if created {
 		if verbose {
 			fmt.Printf("Writing default configuration into %s\n", path)
@@ -111,19 +111,20 @@ script = "echo 'downloaded'"` + "\n"
 	}
 }
 
+// TODO: review this command => install
 func createDirs(verbose bool) {
 	const op = "install.create_dirs"
 
-	// 1) Find home
+	// Find home
 	home, err := domovoi.FindHome(verbose)
 	horus.CheckErr(err,
 		horus.WithOp(op),
 		horus.WithMessage("locating $HOME"),
 	)
 
-	// 2) Create ~/.lilith and its subdirs
+	// Create ~/.lilith and its subdirs
 	base := filepath.Join(home, ".lilith")
-	for _, sub := range []string{"config", "daemon", "logs"} {
+	for _, sub := range []string{"config", "daemon", "log"} {
 		dir := filepath.Join(base, sub)
 		horus.CheckErr(
 			domovoi.CreateDir(dir, verbose),

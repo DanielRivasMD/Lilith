@@ -29,7 +29,7 @@ It is built for developers & operators who need reliable, fine‑grained control
 ### Design goals
 
 - **Predictable**: Clear, composable primitives for starting, grouping, & signaling processes.
-- **Observable**: First‑class status, logs, & history so you can see what’s running & why.
+- **Observable**: First‑class status, log, & history so you can see what’s running & why.
 - **Minimal**: No hidden magic; sane defaults with explicit configuration when you need it.
 
 ## Quickstart
@@ -58,7 +58,7 @@ Download from [Releases](https://github.com/DanielRivasMD/Lilith/releases).
 | `rekindle`  | Resurrect a paused or limbo daemon     |
 | `slay`      | Stop and clean up daemon processes     |
 | `tally`     | List all active daemons                |
-| `summon`    | View logs of specific daemon(s)        |
+| `summon`    | View log of specific daemon(s)         |
 | `help`      | Display help for any command           |
 
 

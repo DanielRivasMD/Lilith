@@ -54,10 +54,11 @@ func Execute() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	home    string
 	verbose bool
 )
+
 var (
+	home      string
 	lilithDir string
 	configDir string
 	logDir    string
@@ -69,7 +70,6 @@ var (
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostics")
 	cobra.OnInitialize(initConfigPaths)
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ func initConfigPaths() {
 	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
 	lilithDir = filepath.Join(home, ".lilith")
 	configDir = filepath.Join(lilithDir, "config")
-	logDir = filepath.Join(lilithDir, "logs")
+	logDir = filepath.Join(lilithDir, "log")
 	daemonDir = filepath.Join(lilithDir, "daemon")
 }
 
@@ -234,17 +234,17 @@ func loadMeta(name string) *daemonMeta {
 //
 // check if the literal name exists first, otherwise falls back to daemonDir
 func resolveMetaPath(name string) string {
-	// 1) if the user passed an absolute or relative path that actually exists, use it
+	// if the user passed an absolute or relative path that actually exists, use it
 	if fi, err := os.Stat(name); err == nil && !fi.IsDir() {
 		return name
 	}
 
-	// 2) ensure we have a .json extension
+	// ensure we have a .json extension
 	if filepath.Ext(name) != ".json" {
 		name = name + ".json"
 	}
 
-	// 3) join with the default daemonDir
+	// join with the default daemonDir
 	return filepath.Join(daemonDir, name)
 }
 
@@ -302,7 +302,7 @@ func matchDaemonGroup(metaPath, expectedGroup string) bool {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// spawnWatcher starts watchexec, redirects logs, returns its PID
+// spawnWatcher starts watchexec, redirects log, returns its PID
 func spawnWatcher(meta *daemonMeta) int {
 	const op = "daemon.spawnWatcher"
 
