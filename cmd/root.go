@@ -54,10 +54,6 @@ func Execute() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	verbose bool
-)
-
-var (
 	dirs configDirs
 )
 
@@ -71,9 +67,27 @@ type configDirs struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+var verbose bool
+
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostics")
-	cobra.OnInitialize(initConfigPaths)
+	cobra.OnInitialize(initConfigDirs)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func initConfigDirs() {
+	var err error
+	dirs.home, err = domovoi.FindHome(verbose)
+	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
+	dirs.lilith = filepath.Join(dirs.home, ".lilith")
+	dirs.config = filepath.Join(dirs.lilith, "config")
+	dirs.log = filepath.Join(dirs.lilith, "log")
+	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
+}
+
+func errorFmt(er string) string {
+	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,22 +101,6 @@ type daemonMeta struct {
 	LogPath    string    `json:"logPath"`
 	PID        int       `json:"pid"`
 	InvokedAt  time.Time `json:"invokedAt"`
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func initConfigPaths() {
-	var err error
-	dirs.home, err = domovoi.FindHome(verbose)
-	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
-	dirs.lilith = filepath.Join(dirs.home, ".lilith")
-	dirs.config = filepath.Join(dirs.lilith, "config")
-	dirs.log = filepath.Join(dirs.lilith, "log")
-	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
-}
-
-func errorFmt(er string) string {
-	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
