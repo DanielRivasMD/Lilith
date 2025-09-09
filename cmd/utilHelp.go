@@ -87,4 +87,10 @@ var helpDumpConfig = formatHelp(
 		"Defines required fields under [workflows.<name>] and shows optional settings.",
 )
 
+var helpGenesis = formatHelp(
+	"Daniel Rivas",
+	"<danielrivasmd@gmail.com>",
+	"",
+)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
