@@ -28,7 +28,7 @@ cat << HEAD >> "${saiyajin}/.eof.tmp"
 HEAD
 
 # concatenate
-mbombo forge --path "${frag}" --out "${karabiner}/karabiner.edn" \
+mbombo forge --in "${frag}" --out "${karabiner}/karabiner.edn" \
   --files "../.profile.tmp" \
   --files "profile/profile.edn" \
   --files "../.main.tmp" \
