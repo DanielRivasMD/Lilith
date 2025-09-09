@@ -68,29 +68,16 @@ var helpSummon = formatHelp(
 		"Pass "+chalk.Italic.TextStyle("--follow")+" to stream in real time",
 )
 
-var helpInstall = formatHelp(
-	"Daniel Rivas ",
-	"<danielrivasmd@gmail.com>",
-	"Install lilith config",
-)
-
 var helpRekindle = formatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Restart daemons in limbo using persisted metadata",
 )
 
-var helpDumpConfig = formatHelp(
-	"Daniel Rivas",
-	"danielrivasmd@gmail.com",
-	"Generate a commented example of a Lilith TOML config.\n"+
-		"Defines required fields under [workflows.<name>] and shows optional settings.",
-)
-
 var helpGenesis = formatHelp(
 	"Daniel Rivas",
 	"<danielrivasmd@gmail.com>",
-	"",
+	"Install lilith config & Generate a commented example of a Lilith TOML config",
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -91,11 +91,6 @@ var exampleSummon = formatExample(
 	[]string{"summon", "helix", "--follow"},
 )
 
-var exampleInstall = formatExample(
-	"lilith",
-	[]string{"install"},
-)
-
 var exampleRekindle = formatExample(
 	"lilith",
 	[]string{"rekindle", "helix"},
@@ -103,15 +98,9 @@ var exampleRekindle = formatExample(
 	[]string{"rekindle", "--all"},
 )
 
-var exampleDumpConfig = formatExample(
-	"lilith",
-	[]string{"dumpconfig"},
-	[]string{"dumpconfig", "--output", "/home/user/.lilith/config/example.toml"},
-)
-
 var exampleGenesis = formatExample(
 	"lilith",
-	[]string{"genesis"},
+	[]string{"genesis", "--output", "/home/user/.lilith/config/example.toml"},
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
