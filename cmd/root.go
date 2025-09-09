@@ -58,12 +58,16 @@ var (
 )
 
 var (
-	home      string
-	lilithDir string
-	configDir string
-	logDir    string
-	daemonDir string
+	dirs configDirs
 )
+
+type configDirs struct {
+	home   string
+	lilith string
+	config string
+	log    string
+	daemon string
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -89,12 +93,12 @@ type daemonMeta struct {
 
 func initConfigPaths() {
 	var err error
-	home, err = domovoi.FindHome(verbose)
+	dirs.home, err = domovoi.FindHome(verbose)
 	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
-	lilithDir = filepath.Join(home, ".lilith")
-	configDir = filepath.Join(lilithDir, "config")
-	logDir = filepath.Join(lilithDir, "log")
-	daemonDir = filepath.Join(lilithDir, "daemon")
+	dirs.lilith = filepath.Join(dirs.home, ".lilith")
+	dirs.config = filepath.Join(dirs.lilith, "config")
+	dirs.log = filepath.Join(dirs.lilith, "log")
+	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
 }
 
 func errorFmt(er string) string {
@@ -157,12 +161,12 @@ func saveMeta(meta *daemonMeta) {
 
 	// ensure the daemon directory exists
 	horus.CheckErr(
-		domovoi.CreateDir(daemonDir, verbose),
+		domovoi.CreateDir(dirs.daemon, verbose),
 		horus.WithOp(op),
 		horus.WithCategory("io_error"),
 		horus.WithMessage("creating daemon directory"),
 		horus.WithDetails(map[string]any{
-			"dir": daemonDir,
+			"dir": dirs.daemon,
 		}),
 	)
 
@@ -179,7 +183,7 @@ func saveMeta(meta *daemonMeta) {
 	)
 
 	// write the file
-	path := filepath.Join(daemonDir, meta.Name+".json")
+	path := filepath.Join(dirs.daemon, meta.Name+".json")
 	horus.CheckErr(
 		os.WriteFile(path, data, 0o644),
 		horus.WithOp(op),
@@ -245,7 +249,7 @@ func resolveMetaPath(name string) string {
 	}
 
 	// join with the default daemonDir
-	return filepath.Join(daemonDir, name)
+	return filepath.Join(dirs.daemon, name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -266,7 +270,7 @@ func isDaemonActive(meta *daemonMeta) bool {
 
 func listDaemonMetaFiles() []string {
 	op := "daemon.list"
-	daemonPattern := filepath.Join(daemonDir, "*.json")
+	daemonPattern := filepath.Join(dirs.daemon, "*.json")
 	daemonMatches, err := filepath.Glob(daemonPattern)
 	horus.CheckErr(
 		err,
@@ -308,12 +312,12 @@ func spawnWatcher(meta *daemonMeta) int {
 
 	// ensure the log directory exists
 	horus.CheckErr(
-		domovoi.CreateDir(logDir, verbose),
+		domovoi.CreateDir(dirs.log, verbose),
 		horus.WithOp(op),
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("creating log directory"),
 		horus.WithDetails(map[string]any{
-			"logDir": logDir,
+			"logDir": dirs.log,
 		}),
 	)
 
@@ -405,7 +409,7 @@ func sendDaemonSignal(pid int, sig syscall.Signal) {
 
 // completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	fis, err := os.ReadDir(configDir)
+	fis, err := os.ReadDir(dirs.config)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
@@ -415,7 +419,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
 			continue
 		}
-		path := filepath.Join(configDir, fi.Name())
+		path := filepath.Join(dirs.config, fi.Name())
 		v := viper.New()
 		v.SetConfigFile(path)
 		if err := v.ReadInConfig(); err != nil {
@@ -437,7 +441,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 
 // completeDaemonNames offers tab‐completion based on ~/.lilith/daemons/*.json
 func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	fis, err := os.ReadDir(daemonDir)
+	fis, err := os.ReadDir(dirs.daemon)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
@@ -457,7 +461,7 @@ func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) (
 
 // completeWorkflowGroups offer tab-completion based on on ~/.lilith/daemons/*.json
 func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	files, err := filepath.Glob(filepath.Join(daemonDir, "*.json"))
+	files, err := filepath.Glob(filepath.Join(dirs.daemon, "*.json"))
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
