@@ -77,7 +77,7 @@ var helpRekindle = formatHelp(
 var helpGenesis = formatHelp(
 	"Daniel Rivas",
 	"<danielrivasmd@gmail.com>",
-	"Install lilith config & Generate a commented example of a Lilith TOML config",
+	"Install config directories & Generate a commented example of a Lilith TOML config",
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

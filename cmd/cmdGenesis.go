@@ -32,7 +32,7 @@ import (
 
 var genesisCmd = &cobra.Command{
 	Use:     "genesis",
-	Short:   "",
+	Short:   "Initiate config dirs & toml",
 	Long:    helpGenesis,
 	Example: exampleGenesis,
 
@@ -55,34 +55,16 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// TODO: fine-tune logic
 func runGenesis(cmd *cobra.Command, args []string) {
 	createSubdirs(dirs, verbose)
-
-	example := generateExampleConfig()
-
-	if dumpOutput == "" {
-		fmt.Print(example)
-		return
-	}
-
-	const op = "lilith.dumpConfig"
-	horus.CheckErr(
-		os.WriteFile(dumpOutput, []byte(example), 0o644),
-		horus.WithOp(op),
-		horus.WithCategory("io_error"),
-		horus.WithMessage(fmt.Sprintf("writing example to %q", dumpOutput)),
-	)
-
-	fmt.Printf("Example config written to %s\n", dumpOutput)
-
+	generateConfig(generateToml())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // createSubdirs create ~/.lilith subdirectories
 func createSubdirs(d configDirs, verbose bool) {
-	const op = "cmd.ensureSubDirs"
+	const op = "genesis.createSubDirs"
 
 	// name each for nicer error messages
 	toCreate := []struct {
@@ -98,16 +80,18 @@ func createSubdirs(d configDirs, verbose bool) {
 		horus.CheckErr(
 			domovoi.CreateDir(dir.path, verbose),
 			horus.WithOp(op),
-			horus.WithCategory("env_error"),
+			horus.WithCategory("io_error"),
 			horus.WithMessage(fmt.Sprintf("creating %s directory", dir.label)),
-			horus.WithDetails(map[string]any{"path": dir.path}),
+			horus.WithDetails(map[string]any{
+				"path": dir.path,
+			}),
 		)
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func generateExampleConfig() string {
+func generateToml() string {
 	lines := []string{
 		"# Lilith configuration file",
 		"# Define workflows under the [workflows.<name>] table.",
@@ -133,6 +117,27 @@ func generateExampleConfig() string {
 		"# Save this snippet as ~/.lilith/config/example.toml",
 	}
 	return strings.Join(lines, "\n") + "\n"
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func generateConfig(example string) {
+	op := "genesis.generateConfig"
+
+	if dumpOutput == "" {
+		fmt.Print(example)
+		return
+	}
+
+	horus.CheckErr(
+		os.WriteFile(dumpOutput, []byte(example), 0o644),
+		horus.WithOp(op),
+		horus.WithCategory("io_error"),
+		horus.WithMessage(fmt.Sprintf("writing example to %q", dumpOutput)),
+	)
+
+	fmt.Printf("Example config written to %s\n", dumpOutput)
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
