@@ -86,7 +86,7 @@ func initConfigDirs() {
 	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
 }
 
-func errorFmt(er string) string {
+func onelineErr(er string) string {
 	return chalk.Bold.TextStyle(chalk.Red.Color(er))
 }
 
@@ -106,7 +106,7 @@ type daemonMeta struct {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
-	const op = "cli.bindFlag"
+	const op = "daemon.bindFlag"
 	flags := cmd.Flags()
 
 	// only bind if not manually set & config has key
@@ -139,7 +139,7 @@ func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
 		horus.CheckErr(
 			horus.NewCategorizedHerror(
 				op,
-				"config_error",
+				"flag_error",
 				fmt.Sprintf("setting %q from config", flagName),
 				err,
 				map[string]any{

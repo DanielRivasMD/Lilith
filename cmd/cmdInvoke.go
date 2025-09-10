@@ -114,7 +114,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			horus.CheckErr(
 				errors.New(""),
 				horus.WithMessage(fmt.Sprintf("workflow %s not found", paths.config)),
-				horus.WithFormatter(func(he *horus.Herror) string { return errorFmt(he.Message) }),
+				horus.WithFormatter(func(he *horus.Herror) string { return onelineErr(he.Message) }),
 			)
 		}
 
@@ -184,6 +184,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	paths.script = strings.Replace(paths.script, "~", dirs.home, 1)
 	logPath := filepath.Join(dirs.log, paths.log+".log")
 
+	// TODO: bind directly from paths?
 	// declare meta
 	meta := &daemonMeta{
 		Name:       paths.daemon,
@@ -204,7 +205,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 				horus.WithMessage(existingMeta.Name),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
-					return "daemon " + errorFmt(he.Message) + " already running"
+					return "daemon " + onelineErr(he.Message) + " already running"
 				}),
 			)
 		}

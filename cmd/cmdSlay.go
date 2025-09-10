@@ -80,7 +80,7 @@ func runSlay(cmd *cobra.Command, args []string) {
 			horus.WithMessage("daemon / flag"),
 			horus.WithExitCode(2),
 			horus.WithFormatter(func(he *horus.Herror) string {
-				return "missing " + errorFmt(he.Message)
+				return "missing " + onelineErr(he.Message)
 			}),
 		)
 	}
