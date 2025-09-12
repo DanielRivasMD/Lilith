@@ -1,9 +1,11 @@
 - make release v1.0.0
+- add oneline error when config paths are not set
 
 ==================================================
 README.md
   line 70     TODO   add instructions for installing local directory & mock config-workflow file
   line 71     TODO   explain how logic works
 cmd/cmdInvoke.go
-  line 187    TODO   bind directly from paths?
+  line 186    TODO   catch erros if command does not launch succesfully
+  line 195    TODO   bind directly from paths?
 ==================================================
