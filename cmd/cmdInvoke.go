@@ -150,6 +150,13 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		}
 
 		horus.CheckEmpty(
+			paths.daemon,
+			"",
+			horus.WithMessage("`--daemon` is required"),
+			horus.WithExitCode(2),
+			horus.WithFormatter(func(he *horus.Herror) string { return chalk.Red.Color(he.Message) }),
+		)
+		horus.CheckEmpty(
 			paths.watch,
 			"",
 			horus.WithMessage("`--watch` is required"),
@@ -176,6 +183,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: catch erros if command does not launch succesfully
 func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
