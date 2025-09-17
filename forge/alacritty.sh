@@ -3,7 +3,7 @@
 ####################################################################################################
 
 # config
-source "${HOME}/.lilith/.config.sh"
+source "${HOME}/.lilith/.workflow_config.sh"
 
 # check & remove target
 if test -f "${config}/alacritty/alacritty.toml"

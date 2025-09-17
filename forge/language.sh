@@ -3,7 +3,7 @@
 ####################################################################################################
 
 # config
-source "${HOME}/.lilith/.config.sh"
+source "${HOME}/.lilith/.workflow_config.sh"
 
 # concatenate
 mbombo forge --path "${languages}" --out "${helix}/languages.toml" \

@@ -3,7 +3,7 @@
 ####################################################################################################
 
 # config
-source "${HOME}/.lilith/.config.sh"
+source "${HOME}/.lilith/.workflow_config.sh"
 
 # interpret
 babel interpret --program micro > "${dotfiles}/ex-situ/micro/bindings.json"
