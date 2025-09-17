@@ -1,15 +1,15 @@
 [workflows.helix]
 watch = "~/Factorem/dotfiles/ex-situ/helix/modes"
-script = "~/.lilith/sh/helix.sh"
+script = "~/.lilith/forge/helix.sh"
 
 [workflows.language]
 watch = "~/Factorem/dotfiles/ex-situ/helix/languages"
-script = "~/.lilith/sh/language.sh"
+script = "~/.lilith/forge/language.sh"
 
 [workflows.goku]
 watch = "~/.saiyajin/frag"
-script = "~/.lilith/sh/goku.sh"
+script = "~/.lilith/forge/goku.sh"
 
 [workflows.alacritty]
 watch = "~/.config/alacritty/alacritty.toml"
-script = "~/.lilith/sh/alacritty.sh"
+script = "~/.lilith/forge/alacritty.sh"
