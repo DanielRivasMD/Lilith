@@ -82,7 +82,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 
 	if len(args) == 1 {
 		// CONFIG MODE: pull everything from TOML
-		if verbose {
+		if flags.verbose {
 			fmt.Println("Running on Config mode...")
 		}
 
@@ -90,7 +90,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		paths.config = args[0]
 
 		// discover matching workflow file
-		files, err := domovoi.ReadDir(dirs.config, verbose)
+		files, err := domovoi.ReadDir(dirs.config, flags.verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 		var foundV *viper.Viper
 		var configFileUsed string
@@ -145,7 +145,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 	} else {
 
 		// MANUAL MODE: require explicit flags
-		if verbose {
+		if flags.verbose {
 			fmt.Println("Running on Manual mode...")
 		}
 
@@ -190,7 +190,6 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	// format paths
 	paths.watch = strings.Replace(paths.watch, "~", dirs.home, 1)
 	paths.script = strings.Replace(paths.script, "~", dirs.home, 1)
-	logPath := filepath.Join(dirs.log, paths.log+".log")
 
 	// TODO: bind directly from paths?
 	// declare meta
@@ -199,7 +198,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 		Group:      paths.group,
 		WatchDir:   paths.watch,
 		ScriptPath: paths.script,
-		LogPath:    logPath,
+		LogPath:    filepath.Join(dirs.log, paths.log+".log"),
 		InvokedAt:  time.Now(),
 	}
 

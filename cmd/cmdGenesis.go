@@ -56,7 +56,7 @@ func init() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func runGenesis(cmd *cobra.Command, args []string) {
-	createSubdirs(dirs, verbose)
+	createSubdirs(dirs, flags.verbose)
 	generateConfig(generateToml())
 }
 

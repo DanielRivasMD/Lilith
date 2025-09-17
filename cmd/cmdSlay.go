@@ -100,7 +100,7 @@ func slayDaemon(daemonMeta string) {
 	// remove metadata JSON file
 	horus.CheckErr(
 		func() error {
-			_, err := domovoi.RemoveFile(daemonMeta, verbose)(resolveMetaPath(daemonMeta))
+			_, err := domovoi.RemoveFile(daemonMeta, flags.verbose)(resolveMetaPath(daemonMeta))
 			return err
 		}(),
 		horus.WithOp(op),
@@ -111,7 +111,7 @@ func slayDaemon(daemonMeta string) {
 	// remove log file
 	horus.CheckErr(
 		func() error {
-			_, err := domovoi.RemoveFile(meta.LogPath, verbose)(meta.LogPath)
+			_, err := domovoi.RemoveFile(meta.LogPath, flags.verbose)(meta.LogPath)
 			return err
 		}(),
 		horus.WithOp(op),

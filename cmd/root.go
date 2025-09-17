@@ -54,7 +54,8 @@ func Execute() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	dirs configDirs
+	dirs  configDirs
+	flags lilithFlags
 )
 
 type configDirs struct {
@@ -65,12 +66,14 @@ type configDirs struct {
 	daemon string
 }
 
+type lilithFlags struct {
+	verbose bool
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var verbose bool
-
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose diagnostics")
+	rootCmd.PersistentFlags().BoolVarP(&flags.verbose, "verbose", "v", false, "Enable verbose diagnostics")
 	cobra.OnInitialize(initConfigDirs)
 }
 
@@ -78,7 +81,7 @@ func init() {
 
 func initConfigDirs() {
 	var err error
-	dirs.home, err = domovoi.FindHome(verbose)
+	dirs.home, err = domovoi.FindHome(flags.verbose)
 	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
 	dirs.lilith = filepath.Join(dirs.home, ".lilith")
 	dirs.config = filepath.Join(dirs.lilith, "config")
@@ -159,7 +162,7 @@ func saveMeta(meta *daemonMeta) {
 
 	// ensure the daemon directory exists
 	horus.CheckErr(
-		domovoi.CreateDir(dirs.daemon, verbose),
+		domovoi.CreateDir(dirs.daemon, flags.verbose),
 		horus.WithOp(op),
 		horus.WithCategory("io_error"),
 		horus.WithMessage("creating daemon directory"),
@@ -310,7 +313,7 @@ func spawnWatcher(meta *daemonMeta) int {
 
 	// ensure the log directory exists
 	horus.CheckErr(
-		domovoi.CreateDir(dirs.log, verbose),
+		domovoi.CreateDir(dirs.log, flags.verbose),
 		horus.WithOp(op),
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("creating log directory"),
