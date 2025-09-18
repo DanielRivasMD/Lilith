@@ -1,7 +1,7 @@
-[workflows.interpret_helix]
+[workflows.interpret-helix]
 watch = "~/Factorem/Saiya-jin/frag"
 script = "~/.lilith/interpret/helix.sh"
 
-[workflows.interpret_micro]
+[workflows.interpret-micro]
 watch = "~/Factorem/Saiya-jin/frag"
 script = "~/.lilith/interpret/micro.sh"
