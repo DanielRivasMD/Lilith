@@ -92,7 +92,7 @@ func runTally(cmd *cobra.Command, args []string) {
 		// print row
 		fmt.Printf(
 			"%-20s %-15s %-6d %-20s %s\n",
-			meta.Name, meta.Group, meta.PID, invoked, status,
+			meta.Daemon, meta.Group, meta.PID, invoked, status,
 		)
 	}
 }

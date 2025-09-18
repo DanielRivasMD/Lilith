@@ -104,7 +104,7 @@ func rekindleDaemon(daemonMeta string) {
 
 			fmt.Printf("%s resumed %q PID %d\n",
 				chalk.Green.Color("OK:"),
-				meta.Name,
+				meta.Daemon,
 				meta.PID,
 			)
 			return
@@ -121,7 +121,7 @@ func rekindleDaemon(daemonMeta string) {
 
 	fmt.Printf("%s rekindled %q new PID %d\n",
 		chalk.Green.Color("OK:"),
-		meta.Name,
+		meta.Daemon,
 		newPID,
 	)
 }

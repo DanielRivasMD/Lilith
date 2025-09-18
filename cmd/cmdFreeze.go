@@ -86,7 +86,7 @@ func runFreeze(cmd *cobra.Command, args []string) {
 func freezeDaemon(daemonMeta string) {
 	meta := loadMeta(daemonMeta)
 	sendDaemonSignal(meta.PID, syscall.SIGSTOP)
-	fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+	fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Daemon)
 }
 
 func freezeGroupDaemons(group string) {

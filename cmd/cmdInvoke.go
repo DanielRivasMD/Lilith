@@ -194,7 +194,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	// TODO: bind directly from paths?
 	// declare meta
 	meta := &daemonMeta{
-		Name:       paths.daemon,
+		Daemon:     paths.daemon,
 		Group:      paths.group,
 		WatchDir:   paths.watch,
 		ScriptPath: paths.script,

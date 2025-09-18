@@ -120,7 +120,7 @@ func slayDaemon(daemonMeta string) {
 	)
 
 	// log meta
-	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), meta.Name)
+	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), meta.Daemon)
 }
 
 func slayGroupDaemons(group string) {

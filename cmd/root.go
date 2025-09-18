@@ -97,7 +97,7 @@ func onelineErr(er string) string {
 
 // daemonMeta holds persistent info about process
 type daemonMeta struct {
-	Name       string    `json:"name"`
+	Daemon     string    `json:"name"`
 	Group      string    `json:"group"`
 	WatchDir   string    `json:"watchDir"`
 	ScriptPath string    `json:"scriptPath"`
@@ -179,12 +179,12 @@ func saveMeta(meta *daemonMeta) {
 		horus.WithCategory("encode_error"),
 		horus.WithMessage("marshaling metadata"),
 		horus.WithDetails(map[string]any{
-			"name": meta.Name,
+			"name": meta.Daemon,
 		}),
 	)
 
 	// write the file
-	path := filepath.Join(dirs.daemon, meta.Name+".json")
+	path := filepath.Join(dirs.daemon, meta.Daemon+".json")
 	horus.CheckErr(
 		os.WriteFile(path, data, 0o644),
 		horus.WithOp(op),
