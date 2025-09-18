@@ -205,11 +205,11 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	// check running daemons
 	for _, path := range listDaemonMetaFiles() {
 		existingMeta := loadMeta(path)
-		if existingMeta.WatchDir == paths.watch && isDaemonActive(existingMeta) {
+		if existingMeta.Daemon == paths.daemon && existingMeta.Group == paths.group && isDaemonActive(existingMeta) {
 			horus.CheckErr(
 				errors.New(""),
 				horus.WithOp(op),
-				horus.WithMessage(existingMeta.Name),
+				horus.WithMessage(existingMeta.Daemon),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
 					return "daemon " + onelineErr(he.Message) + " already running"
