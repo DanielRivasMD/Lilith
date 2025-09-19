@@ -7,5 +7,5 @@ README.md
   line 71     TODO   explain how logic works
 cmd/cmdInvoke.go
   line 186    TODO   catch erros if command does not launch succesfully
-  line 195    TODO   bind directly from paths?
+  line 194    TODO   bind directly from paths?
 ==================================================
