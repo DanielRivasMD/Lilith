@@ -394,16 +394,16 @@ func sendDaemonSignal(pid int, sig syscall.Signal) {
 		}),
 	)
 
-	horus.CheckErr(
-		proc.Signal(sig),
-		horus.WithOp(op),
-		horus.WithCategory("spawn_error"),
-		horus.WithMessage(fmt.Sprintf("sending signal %s to pid %d", sig, pid)),
-		horus.WithDetails(map[string]any{
-			"pid": pid,
-			"sig": sig,
-		}),
-	)
+	// horus.CheckErr(
+	proc.Signal(sig)
+	// 	horus.WithOp(op),
+	// 	horus.WithCategory("spawn_error"),
+	// 	horus.WithMessage(fmt.Sprintf("sending signal %s to pid %d", sig, pid)),
+	// 	horus.WithDetails(map[string]any{
+	// 		"pid": pid,
+	// 		"sig": sig,
+	// 	}),
+	// )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

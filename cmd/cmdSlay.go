@@ -88,6 +88,7 @@ func runSlay(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: if process finish, clean up
 func slayDaemon(daemonMeta string) {
 	const op = "lilith.slay"
 

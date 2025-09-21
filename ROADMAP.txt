@@ -8,4 +8,6 @@ README.md
 cmd/cmdInvoke.go
   line 186    TODO   catch erros if command does not launch succesfully
   line 194    TODO   bind directly from paths?
+cmd/cmdSlay.go
+  line 91     TODO   if process finish, clean up
 ==================================================
