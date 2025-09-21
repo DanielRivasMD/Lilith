@@ -5,58 +5,17 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"strings"
-
-	"github.com/ttacon/chalk"
+	"github.com/DanielRivasMD/domovoi"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// formatExample builds a multi‐line example block
-// each usage is a slice of “tokens”: [ command, flagOrArg, flagOrArg, ... ].
-//
-//	app:    your binary name, e.g. "lilith"
-//	usages: one or more usages—each becomes its own line.
-func formatExample(app string, usages ...[]string) string {
-	var b strings.Builder
-
-	for i, usage := range usages {
-		if len(usage) == 0 {
-			continue
-		}
-
-		// first token is the subcommand
-		b.WriteString(
-			chalk.White.Color(app) + " " +
-				chalk.White.Color(chalk.Bold.TextStyle(usage[0])),
-		)
-
-		// remaining tokens are either flags (--foo) or args
-		for _, tok := range usage[1:] {
-			switch {
-			case strings.HasPrefix(tok, "--"):
-				b.WriteString(" " + chalk.Italic.TextStyle(chalk.White.Color(tok)))
-			default:
-				b.WriteString(" " + chalk.Dim.TextStyle(chalk.Italic.TextStyle(tok)))
-			}
-		}
-
-		if i < len(usages)-1 {
-			b.WriteRune('\n')
-		}
-	}
-
-	return b.String()
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-var exampleRoot = formatExample(
+var exampleRoot = domovoi.FormatExample(
 	"lilith",
 	[]string{"help"},
 )
 
-var exampleInvoke = formatExample(
+var exampleInvoke = domovoi.FormatExample(
 	"lilith",
 	[]string{"invoke", "helix"},
 	[]string{
@@ -67,38 +26,38 @@ var exampleInvoke = formatExample(
 	},
 )
 
-var exampleSlay = formatExample(
+var exampleSlay = domovoi.FormatExample(
 	"lilith",
 	[]string{"slay", "helix"},
 	[]string{"slay", "--group", "<forge>"},
 	[]string{"slay", "--all"},
 )
 
-var exampleTally = formatExample(
+var exampleTally = domovoi.FormatExample(
 	"lilith",
 	[]string{"tally"},
 )
 
-var exampleFreeze = formatExample(
+var exampleFreeze = domovoi.FormatExample(
 	"lilith",
 	[]string{"freeze", "helix"},
 	[]string{"freeze", "--group", "<forge>"},
 	[]string{"freeze", "--all"},
 )
 
-var exampleSummon = formatExample(
+var exampleSummon = domovoi.FormatExample(
 	"lilith",
 	[]string{"summon", "helix", "--follow"},
 )
 
-var exampleRekindle = formatExample(
+var exampleRekindle = domovoi.FormatExample(
 	"lilith",
 	[]string{"rekindle", "helix"},
 	[]string{"rekindle", "--group", "<forge>"},
 	[]string{"rekindle", "--all"},
 )
 
-var exampleGenesis = formatExample(
+var exampleGenesis = domovoi.FormatExample(
 	"lilith",
 	[]string{"genesis", "--output", "/Users/drivas/.lilith/config/example.toml"},
 )
