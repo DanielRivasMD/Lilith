@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -312,78 +311,6 @@ func matchDaemonGroup(metaPath, expectedGroup string) bool {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// spawnWatcher starts watchexec, redirects log, returns its PID
-func spawnWatcher(meta *daemonMeta) int {
-	const op = "daemon.spawnWatcher"
-
-	// ensure the log directory exists
-	horus.CheckErr(
-		domovoi.CreateDir(dirs.log, flags.verbose),
-		horus.WithOp(op),
-		horus.WithCategory("spawn_error"),
-		horus.WithMessage("creating log directory"),
-		horus.WithDetails(map[string]any{
-			"logDir": dirs.log,
-		}),
-	)
-
-	// build watcher command
-	cmd := exec.Command(
-		"watchexec",
-		"--watch", meta.WatchDir,
-		"--",
-		"bash", meta.ScriptPath,
-	)
-
-	// open (or create) the log file
-	f, err := os.OpenFile(
-		meta.LogPath,
-		os.O_CREATE|os.O_APPEND|os.O_WRONLY,
-		0o644,
-	)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("spawn_error"),
-		horus.WithMessage("opening log file"),
-		horus.WithDetails(map[string]any{
-			"logPath": meta.LogPath,
-		}),
-	)
-	defer f.Close()
-
-	cmd.Stdout = f
-	cmd.Stderr = f
-
-	// start the watcher process
-	horus.CheckErr(
-		cmd.Start(),
-		horus.WithOp(op),
-		horus.WithCategory("spawn_error"),
-		horus.WithMessage("starting watcher process"),
-		horus.WithDetails(map[string]any{
-			"watchDir":   meta.WatchDir,
-			"scriptPath": meta.ScriptPath,
-		}),
-	)
-
-	// register pid
-	pid := cmd.Process.Pid
-
-	// detach from parent
-	horus.CheckErr(
-		cmd.Process.Release(),
-		horus.WithOp(op),
-		horus.WithCategory("spawn_error"),
-		horus.WithMessage("releasing watcher process"),
-		horus.WithDetails(map[string]any{
-			"pid": pid,
-		}),
-	)
-
-	return pid
-}
 
 // sendDaemonSignal finds the process & sends signal
 func sendDaemonSignal(pid int, sig syscall.Signal) {
