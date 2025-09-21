@@ -1,5 +1,6 @@
 - make release v1.0.0
 - add oneline error when config paths are not set
+- auto-prefix group names to daemons
 
 ==================================================
 README.md
@@ -10,4 +11,6 @@ cmd/cmdInvoke.go
   line 194    TODO   bind directly from paths?
 cmd/cmdSlay.go
   line 91     TODO   if process finish, clean up
+cmd/root.go
+  line 100    TODO   bind directly from flags?
 ==================================================

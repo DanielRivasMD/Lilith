@@ -51,10 +51,10 @@ var invokeCmd = &cobra.Command{
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	paths configPaths
+	paths daemonPaths
 )
 
-type configPaths struct {
+type daemonPaths struct {
 	config string
 	daemon string
 	watch  string
@@ -226,7 +226,8 @@ func runInvoke(cmd *cobra.Command, args []string) {
 
 	// log meta
 	fmt.Printf(
-		"invoked daemon %s group %s PID %s\n",
+		"%s invoked daemon %s group %s PID %s\n",
+		chalk.Green.Color("OK:"),
 		chalk.Green.Color(paths.daemon),
 		chalk.Green.Color(paths.group),
 		chalk.Green.Color(strconv.Itoa(meta.PID)),
