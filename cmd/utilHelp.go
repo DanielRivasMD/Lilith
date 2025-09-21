@@ -5,76 +5,57 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
+	"github.com/DanielRivasMD/domovoi"
 	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// formatHelp produces the “help” header + description.
-//
-//	author: name, e.g. "Daniel Rivas"
-//	email:  email, e.g. "danielrivasmd@gmail.com"
-//	desc:   the multi‐line description, "\n"-separated.
-func formatHelp(author, email, desc string) string {
-	header := chalk.Bold.TextStyle(
-		chalk.Green.Color(author+" "),
-	) +
-		chalk.Dim.TextStyle(
-			chalk.Italic.TextStyle("<"+email+">"),
-		)
-
-	// prefix two newlines to your desc, chalk it cyan + dim it
-	body := "\n\n" + desc
-	return header + chalk.Dim.TextStyle(chalk.Cyan.Color(body))
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-var helpRoot = formatHelp(
+var helpRoot = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Master of daemons",
 )
 
-var helpInvoke = formatHelp(
+var helpInvoke = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Spawn daemon process for the specified directory & execute the configured script on change\n"+
 		"Metadata is persistent for summoning the daemon",
 )
 
-var helpSlay = formatHelp(
+var helpSlay = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Gracefully stop alive daemons, removing their metadata and log to allow clean reinvocation",
 )
 
-var helpTally = formatHelp(
+var helpTally = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"List all daemons invoked, showing group, PID, start time, and current status",
 )
 
-var helpFreeze = formatHelp(
+var helpFreeze = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Pause daemon execution using SIGSTOP, until resumed manually",
 )
 
-var helpSummon = formatHelp(
+var helpSummon = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Display daemon log output\n"+
 		"Pass "+chalk.Italic.TextStyle("--follow")+" to stream in real time",
 )
 
-var helpRekindle = formatHelp(
+var helpRekindle = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"danielrivasmd@gmail.com",
 	"Restart daemons in limbo using persisted metadata",
 )
 
-var helpGenesis = formatHelp(
+var helpGenesis = domovoi.FormatHelp(
 	"Daniel Rivas",
 	"<danielrivasmd@gmail.com>",
 	"Install config directories & Generate a commented example of a Lilith TOML config",
