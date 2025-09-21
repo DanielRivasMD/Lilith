@@ -46,18 +46,11 @@ var rekindleCmd = &cobra.Command{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	rekindleGroup string
-	rekindleAll   bool
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func init() {
 	rootCmd.AddCommand(rekindleCmd)
 
-	rekindleCmd.Flags().BoolVar(&rekindleAll, "all", false, "Rekindle all dead daemons")
-	rekindleCmd.Flags().StringVar(&rekindleGroup, "group", "", "Rekindle all daemons in a specific group")
+	rekindleCmd.Flags().BoolVar(&flags.rekindleAll, "all", false, "Rekindle all dead daemons")
+	rekindleCmd.Flags().StringVar(&flags.rekindleGroup, "group", "", "Rekindle all daemons in a specific group")
 
 	horus.CheckErr(rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
 }
@@ -68,10 +61,10 @@ func runRekindle(cmd *cobra.Command, args []string) {
 	const op = "lilith.rekindle"
 
 	switch {
-	case rekindleAll:
+	case flags.rekindleAll:
 		rekindleAllDaemons()
-	case rekindleGroup != "":
-		rekindleGroupDaemons(rekindleGroup)
+	case flags.rekindleGroup != "":
+		rekindleGroupDaemons(flags.rekindleGroup)
 	case len(args) == 1:
 		rekindleDaemon(args[0])
 	default:

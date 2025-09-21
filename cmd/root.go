@@ -72,6 +72,9 @@ type lilithFlags struct {
 
 	daemon daemonPaths
 
+	rekindleAll   bool
+	rekindleGroup string
+
 	slayAll   bool
 	slayGroup string
 }
