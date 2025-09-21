@@ -45,18 +45,11 @@ var slayCmd = &cobra.Command{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	slayAll   bool
-	slayGroup string
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func init() {
 	rootCmd.AddCommand(slayCmd)
 
-	slayCmd.Flags().BoolVar(&slayAll, "all", false, "Slay all daemons")
-	slayCmd.Flags().StringVar(&slayGroup, "group", "", "Slay all daemons in a specific group")
+	slayCmd.Flags().BoolVar(&flags.slayAll, "all", false, "Slay all daemons")
+	slayCmd.Flags().StringVar(&flags.slayGroup, "group", "", "Slay all daemons in a specific group")
 
 	horus.CheckErr(slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("slay.init"), horus.WithMessage("registering config completion"))
 }
@@ -67,10 +60,10 @@ func runSlay(cmd *cobra.Command, args []string) {
 	const op = "lilith.slay"
 
 	switch {
-	case slayAll:
+	case flags.slayAll:
 		slayAllDaemons()
-	case slayGroup != "":
-		slayGroupDaemons(slayGroup)
+	case flags.slayGroup != "":
+		slayGroupDaemons(flags.slayGroup)
 	case len(args) == 1:
 		slayDaemon(args[0])
 	default:

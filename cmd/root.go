@@ -68,6 +68,11 @@ type configDirs struct {
 
 type lilithFlags struct {
 	verbose bool
+
+	daemon daemonPaths
+
+	slayAll   bool
+	slayGroup string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +100,7 @@ func onelineErr(er string) string {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: bind directly from flags?
 // daemonMeta holds persistent info about process
 type daemonMeta struct {
 	Daemon     string    `json:"name"`
