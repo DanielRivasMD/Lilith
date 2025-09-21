@@ -68,6 +68,8 @@ type configDirs struct {
 type lilithFlags struct {
 	verbose bool
 
+	configOutput string
+
 	daemon daemonPaths
 
 	slayAll   bool

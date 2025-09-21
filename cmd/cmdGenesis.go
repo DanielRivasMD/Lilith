@@ -41,16 +41,10 @@ var genesisCmd = &cobra.Command{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	dumpOutput string
-)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func init() {
 	rootCmd.AddCommand(genesisCmd)
 
-	genesisCmd.Flags().StringVarP(&dumpOutput, "output", "o", "", "Path to write example config (default = stdout)")
+	genesisCmd.Flags().StringVarP(&flags.configOutput, "output", "o", "", "Path to write example config (default = stdout)")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,19 +118,19 @@ func generateToml() string {
 func generateConfig(example string) {
 	op := "genesis.generateConfig"
 
-	if dumpOutput == "" {
+	if flags.configOutput == "" {
 		fmt.Print(example)
 		return
 	}
 
 	horus.CheckErr(
-		os.WriteFile(dumpOutput, []byte(example), 0o644),
+		os.WriteFile(flags.configOutput, []byte(example), 0o644),
 		horus.WithOp(op),
 		horus.WithCategory("io_error"),
-		horus.WithMessage(fmt.Sprintf("writing example to %q", dumpOutput)),
+		horus.WithMessage(fmt.Sprintf("writing example to %q", flags.configOutput)),
 	)
 
-	fmt.Printf("Example config written to %s\n", dumpOutput)
+	fmt.Printf("Example config written to %s\n", flags.configOutput)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
