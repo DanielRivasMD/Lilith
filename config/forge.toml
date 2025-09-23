@@ -1,3 +1,7 @@
+[workflows.forge-alacritty]
+watch = "~/.config/alacritty/alacritty.toml"
+script = "~/.lilith/forge/alacritty.sh"
+
 [workflows.forge-helix]
 watch = "~/Factorem/dotfiles/ex-situ/helix/modes"
 script = "~/.lilith/forge/helix.sh"
@@ -10,6 +14,6 @@ script = "~/.lilith/forge/language.sh"
 watch = "~/Factorem/Saiya-jin/frag"
 script = "~/.lilith/forge/goku.sh"
 
-[workflows.forge-alacritty]
-watch = "~/.config/alacritty/alacritty.toml"
-script = "~/.lilith/forge/alacritty.sh"
+[workflows.forge-zellij]
+watch = "~/Factorem/dotfiles/in-situ/zellij/modes"
+script = "~/.lilith/forge/zellij.sh"

@@ -1,0 +1,40 @@
+####################################################################################################
+# zellij
+####################################################################################################
+
+# config
+source "${HOME}/.lilith/.workflow_config.sh"
+
+# create temporary files
+cat << HEAD >> "${zellij}/.keybinds.tmp"
+
+keybinds clear-defaults=true {
+    shared_except "normal" "locked" {
+        bind "Enter" "Esc" { SwitchToMode "Normal"; }
+    }
+
+HEAD
+
+cat << HEAD >> "${zellij}/.eof.tmp"
+
+}
+
+HEAD
+
+# concatenate
+mbombo forge --in "${zellij_modes}" --out "${zellij}/config.kdl" \
+  --files "header.kdl" \
+  --files "../.keybinds.tmp" \
+  --files "locked.kdl" \
+  --files "shared.kdl" \
+  --files "renamepane.kdl" \
+  --files "renametab.kdl" \
+  --files "entersearch.kdl" \
+  --files "search.kdl" \
+  --files "../.eof.tmp"
+
+# purge temporary files
+rm "${zellij}/.keybinds.tmp"
+rm "${zellij}/.eof.tmp"
+
+####################################################################################################
