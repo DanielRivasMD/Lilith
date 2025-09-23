@@ -6,6 +6,6 @@
 source "${HOME}/.lilith/.workflow_config.sh"
 
 # interpret
-babel embed --program lazygit --target "${dotfiles}/in-situ/lazygit/config.yml"
+babel embed --program lazygit --target "${lazygit}/config.yml"
 
 ####################################################################################################
