@@ -9,3 +9,7 @@ script = "~/.lilith/interpret/micro.sh"
 [workflows.interpret-lazygit]
 watch = "~/Factorem/Saiya-jin/frag"
 script = "~/.lilith/interpret/lazygit.sh"
+
+[workflows.interpret-zellij]
+watch = "~/Factorem/Saiya-jin/frag"
+script = "~/.lilith/interpret/zellij.sh"
