@@ -5,73 +5,84 @@
 # config
 source "${HOME}/.lilith/.workflow_config.sh"
 
-# format
-cljfmt fix "${frag}/"*
+# relocate
+oldd=$(pwd)
+cd "${saiyajin}"
+
+# generate edn files
+find "$ssrc" -type f -name "*.clj" | while read -r filepath; do
+  parent=$(dirname "$filepath")
+  if [ "$parent" = "$ssrc" ]; then
+    continue  # skip top-level files
+  fi
+  filename=$(basename "$filepath" .clj)
+  subdir=$(basename "$parent")
+  clojure -M -m "${subdir}.${filename}"
+done
+
+# relocate
+cd "${oldd}"
+
+####################################################################################################
 
 # create temporary files
-cat << HEAD >> "${saiyajin}/.profile.tmp"
+cat << HEAD >> "${sedn}/.profile.tmp"
 
 {:profiles
 
 HEAD
 
-cat << HEAD >> "${saiyajin}/.main.tmp"
+cat << HEAD >> "${sedn}/.main.tmp"
 
 :main [
 
 HEAD
 
-cat << HEAD >> "${saiyajin}/.eof.tmp"
+cat << HEAD >> "${sedn}/.eof.tmp"
 
   ]}]}
 
 HEAD
 
+####################################################################################################
+
 # concatenate
-mbombo forge --in "${frag}" --out "${karabiner}/karabiner.edn" \
-  --files "../.profile.tmp" \
-  --files "profile/profile.edn" \
-  --files "../.main.tmp" \
-  --files "apps/browser.edn" \
-  --files "apps/finder.edn" \
-  --files "apps/mail.edn" \
-  --files "apps/zoom.edn" \
-  --files "double/keypad.edn" \
-  --files "double/lcmd.edn" \
-  --files "double/lctl.edn" \
-  --files "mode/q.edn" \
-  --files "mode/z.edn" \
-  --files "mode/mouse.edn" \
-  --files "mode/obracket.edn" \
-  --files "mode/cbracket.edn" \
-  --files "mode/semicolon.edn" \
-  --files "mode/quote.edn" \
-  --files "mode/backslash.edn" \
-  --files "mode/slash.edn" \
-  --files "simple/claw.edn" \
-  --files "simple/hyper.edn" \
-  --files "simple/joker.edn" \
-  --files "simple/loptcmd.edn" \
-  --files "simple/loptctl.edn" \
-  --files "simple/lctlcmd.edn" \
-  --files "simple/lcmd.edn" \
-  --files "simple/lctl.edn" \
-  --files "simple/lopt.edn" \
-  --files "simple/lshift.edn" \
-  --files "simple/patch.edn" \
-  --files "simple/rcmd.edn" \
-  --files "simple/rctl.edn" \
-  --files "simple/rshift.edn" \
-  --files "simple/ropt.edn" \
-  --files "simple/tab.edn" \
-  --files "simple/zero.edn" \
-  --files "profile/keys.edn" \
-  --files "../.eof.tmp"
+mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
+  --files ".profile.tmp" \
+  --files "header.edn" \
+  --files ".main.tmp" \
+  --files "browser.edn" \
+  --files "finder.edn" \
+  --files "zoom.edn" \
+  --files "lcmd.edn" \
+  --files "lctl.edn" \
+  --files "q.edn" \
+  --files "z.edn" \
+  --files "mouse.edn" \
+  --files "hyper.edn" \
+  --files "joker.edn" \
+  --files "loptcmd.edn" \
+  --files "loptctl.edn" \
+  --files "lctlcmd.edn" \
+  --files "lcmd.edn" \
+  --files "lctl.edn" \
+  --files "lopt.edn" \
+  --files "lshift.edn" \
+  --files "patch.edn" \
+  --files "rcmd.edn" \
+  --files "rctl.edn" \
+  --files "rshift.edn" \
+  --files "ropt.edn" \
+  --files "tab.edn" \
+  --files "keymod.edn" \
+  --files ".eof.tmp"
+
+####################################################################################################
 
 # purge temporary files
-rm "${saiyajin}/.profile.tmp"
-rm "${saiyajin}/.main.tmp"
-rm "${saiyajin}/.eof.tmp"
+rm "${sedn}/.profile.tmp"
+rm "${sedn}/.main.tmp"
+rm "${sedn}/.eof.tmp"
 
 # render config
 goku
