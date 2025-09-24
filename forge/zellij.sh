@@ -5,6 +5,8 @@
 # config
 source "${HOME}/.lilith/.workflow_config.sh"
 
+####################################################################################################
+
 # create temporary files
 cat << HEAD >> "${zellij}/.keybinds.tmp"
 
@@ -21,8 +23,10 @@ cat << HEAD >> "${zellij}/.eof.tmp"
 
 HEAD
 
+####################################################################################################
+
 # concatenate
-mbombo forge --in "${zellij_modes}" --out "${zellij}/config.kdl" \
+mbombo forge --in "${zmodes}" --out "${zellij}/config.kdl" \
   --files "header.kdl" \
   --files "../.keybinds.tmp" \
   --files "locked.kdl" \
@@ -32,6 +36,8 @@ mbombo forge --in "${zellij_modes}" --out "${zellij}/config.kdl" \
   --files "entersearch.kdl" \
   --files "search.kdl" \
   --files "../.eof.tmp"
+
+####################################################################################################
 
 # purge temporary files
 rm "${zellij}/.keybinds.tmp"

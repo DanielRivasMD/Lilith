@@ -5,8 +5,10 @@
 # config
 source "${HOME}/.lilith/.workflow_config.sh"
 
+####################################################################################################
+
 # concatenate
-mbombo forge --path "${languages}" --out "${helix}/languages.toml" \
+mbombo forge --path "${hlangs}" --out "${helix}/languages.toml" \
   --files "awk.toml" \
   --files "bash.toml" \
   --files "docker.toml" \
@@ -26,4 +28,3 @@ mbombo forge --path "${languages}" --out "${helix}/languages.toml" \
   --files "yaml.toml"
 
 ####################################################################################################
-
