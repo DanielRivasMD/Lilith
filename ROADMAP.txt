@@ -1,6 +1,7 @@
 - make release v1.0.0
 - add oneline error when config paths are not set
 - auto-prefix group names to daemons
+- add option to invoke all daemons in the group
 
 ==================================================
 README.md
