@@ -2,7 +2,6 @@
 # config
 ####################################################################################################
 
-# TODO: update config paths
 # home
 export home="${HOME}"
 export config="${home}/.config"
@@ -15,19 +14,16 @@ export dotfiles="${home}/Factorem/dotfiles"
 
 export saiyajin="${home}/.saiyajin"
 export karabiner="${saiyajin}/karabiner"
-export frag="${saiyajin}/frag"
-export fapps="${frag}/apps"
-export fprofile="${frag}/profile"
-export fmode="${frag}/mode"
-export fsimple="${frag}/simple"
+export ssrc="${saiyajin}/src"
+export sedn="${saiyajin}/edn"
 
 ####################################################################################################
 # helix
 ####################################################################################################
 
 export helix="${dotfiles}/ex-situ/helix"
-export moded="${helix}/modes"
-export languages="${helix}/languages"
+export hmodes="${helix}/modes"
+export hlangs="${helix}/languages"
 
 ####################################################################################################
 # lazygit
@@ -36,10 +32,16 @@ export languages="${helix}/languages"
 export lazygit="${dotfiles}/in-situ/lazygit"
 
 ####################################################################################################
+# micro
+####################################################################################################
+
+export micro="${dotfiles}/ex-situ/micro"
+
+####################################################################################################
 # zellij
 ####################################################################################################
 
 export zellij="${dotfiles}/in-situ/zellij"
-export zellij_modes="${zellij}/modes"
+export zmodes="${zellij}/modes"
 
 ####################################################################################################
