@@ -11,7 +11,7 @@ watch = "~/Factorem/dotfiles/ex-situ/helix/languages"
 script = "~/.lilith/forge/language.sh"
 
 [workflows.forge-goku]
-watch = "~/Factorem/Saiya-jin/frag"
+watch = "~/Factorem/Saiya-jin/src"
 script = "~/.lilith/forge/goku.sh"
 
 [workflows.forge-zellij]
