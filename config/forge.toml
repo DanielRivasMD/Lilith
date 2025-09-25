@@ -1,5 +1,5 @@
 [workflows.forge-alacritty]
-watch = "~/.config/alacritty/alacritty.toml"
+watch = "~/.config/alacritty/alacritty.yml"
 script = "~/.lilith/forge/alacritty.sh"
 
 [workflows.forge-helix]
