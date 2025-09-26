@@ -30,22 +30,6 @@ cat << HEAD >> "${sedn}/.header.tmp"
 {:profiles
 HEAD
 
-cat << HEAD >> "${sedn}/.apps.tmp"
-:applications
-HEAD
-
-cat << HEAD >> "${sedn}/.devices.tmp"
-:devices
-HEAD
-
-cat << HEAD >> "${sedn}/.templates.tmp"
-:templates
-HEAD
-
-cat << HEAD >> "${sedn}/.layers.tmp"
-:layers
-HEAD
-
 cat << HEAD >> "${sedn}/.main.tmp"
 :main [
 HEAD
@@ -60,14 +44,6 @@ HEAD
 mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files ".header.tmp" \
   --files "header.edn" \
-  --files ".apps.tmp" \
-  --files "apps.edn" \
-  --files ".devices.tmp" \
-  --files "devices.edn" \
-  --files ".templates.tmp" \
-  --files "templates.edn" \
-  --files ".layers.tmp" \
-  --files "layers.edn" \
   --files ".main.tmp" \
   --files "browser.edn" \
   --files "finder.edn" \
@@ -99,10 +75,6 @@ mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
 
 # purge temporary files
 rm "${sedn}/.header.tmp"
-rm "${sedn}/.apps.tmp"
-rm "${sedn}/.devices.tmp"
-rm "${sedn}/.templates.tmp"
-rm "${sedn}/.layers.tmp"
 rm "${sedn}/.main.tmp"
 rm "${sedn}/.eof.tmp"
 
