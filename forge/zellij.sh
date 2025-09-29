@@ -11,9 +11,6 @@ source "${HOME}/.lilith/.workflow_config.sh"
 cat << HEAD >> "${zellij}/.keybinds.tmp"
 
 keybinds clear-defaults=true {
-    shared_except "normal" "locked" {
-        bind "Enter" "Esc" { SwitchToMode "Normal"; }
-    }
 
 HEAD
 
@@ -29,6 +26,7 @@ HEAD
 mbombo forge --in "${zmodes}" --out "${zellij}/config.kdl" \
   --files "header.kdl" \
   --files "../.keybinds.tmp" \
+  --files "except.kdl" \
   --files "locked.kdl" \
   --files "shared.kdl" \
   --files "renamepane.kdl" \
