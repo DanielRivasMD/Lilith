@@ -2,6 +2,7 @@
 - add oneline error when config paths are not set
 - auto-prefix group names to daemons
 - add option to invoke all daemons in the group
+- write ascii diagram of daemon workflows
 
 ==================================================
 README.md
