@@ -67,6 +67,7 @@ mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files "rctl.edn" \
   --files "rshift.edn" \
   --files "ropt.edn" \
+  --files "space.edn" \
   --files "tab.edn" \
   --files "keymod.edn" \
   --files ".eof.tmp"
