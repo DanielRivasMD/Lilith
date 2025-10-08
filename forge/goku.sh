@@ -12,9 +12,18 @@ cd "${saiyajin}"
 # generate edn files
 find "$ssrc" -type f -name "*.clj" | while read -r filepath; do
   parent=$(dirname "$filepath")
+
+  # skip top-level files
   if [ "$parent" = "$ssrc" ]; then
-    continue  # skip top-level files
+    continue
   fi
+
+  # skip anything under config/
+  case "$parent" in
+    */config) continue ;;
+    */config/*) continue ;;
+  esac
+
   filename=$(basename "$filepath" .clj)
   subdir=$(basename "$parent")
   clojure -M -m "${subdir}.${filename}"
