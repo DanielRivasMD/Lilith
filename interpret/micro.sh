@@ -8,6 +8,6 @@ source "${HOME}/.lilith/.workflow_config.sh"
 ####################################################################################################
 
 # interpret
-babel interpret --program micro > "${micro}/bindings.json"
+babel interpret --program micro --target "${micro}/bindings.json"
 
 ####################################################################################################
