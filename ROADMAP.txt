@@ -3,6 +3,7 @@
 - auto-prefix group names to daemons
 - add option to invoke all daemons in the group
 - write ascii diagram of daemon workflows
+- segregate interpret & embed daemons
 
 ==================================================
 README.md
