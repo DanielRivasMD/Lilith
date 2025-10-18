@@ -49,6 +49,7 @@ HEAD
 
 ####################################################################################################
 
+# TODO: verify & update
 # concatenate
 mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files ".header.tmp" \
@@ -57,27 +58,20 @@ mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files "browser.edn" \
   --files "finder.edn" \
   --files "zoom.edn" \
-  --files "lcmd.edn" \
-  --files "lctl.edn" \
   --files "q.edn" \
   --files "z.edn" \
-  --files "mouse.edn" \
-  --files "hyper.edn" \
+  --files "tab.edn" \
+  --files "zero.edn" \
   --files "joker.edn" \
-  --files "loptcmd.edn" \
-  --files "loptctl.edn" \
-  --files "lctlcmd.edn" \
   --files "lcmd.edn" \
   --files "lctl.edn" \
   --files "lopt.edn" \
   --files "lshift.edn" \
-  --files "keyboards.edn" \
   --files "rcmd.edn" \
   --files "rctl.edn" \
   --files "rshift.edn" \
   --files "ropt.edn" \
-  --files "space.edn" \
-  --files "tab.edn" \
+  --files "keyboards.edn" \
   --files "keymod.edn" \
   --files ".eof.tmp"
 

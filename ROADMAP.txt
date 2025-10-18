@@ -16,4 +16,6 @@ cmd/cmdSlay.go
   line 84     TODO   if process finish, clean up
 cmd/root.go
   line 107    TODO   bind directly from flags?
+forge/goku.sh
+  line 52     TODO   verify & update
 ==================================================
