@@ -59,9 +59,9 @@ mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files "finder.edn" \
   --files "zoom.edn" \
   --files "q.edn" \
+  --files "w.edn" \
   --files "z.edn" \
   --files "tab.edn" \
-  --files "zero.edn" \
   --files "joker.edn" \
   --files "lcmd.edn" \
   --files "lctl.edn" \
