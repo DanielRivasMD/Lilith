@@ -1,0 +1,7 @@
+[workflows.embed-lazygit]
+watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
+script = "~/.lilith/embed/lazygit.sh"
+
+[workflows.embed-zellij]
+watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
+script = "~/.lilith/embed/zellij.sh"

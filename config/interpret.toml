@@ -5,11 +5,3 @@ script = "~/.lilith/interpret/helix.sh"
 [workflows.interpret-micro]
 watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
 script = "~/.lilith/interpret/micro.sh"
-
-[workflows.interpret-lazygit]
-watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
-script = "~/.lilith/interpret/lazygit.sh"
-
-[workflows.interpret-zellij]
-watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
-script = "~/.lilith/interpret/zellij.sh"
