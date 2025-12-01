@@ -4,6 +4,7 @@
 - add option to invoke all daemons in the group
 - write ascii diagram of daemon workflows
 - segregate interpret & embed daemons
+- add one-off run
 
 ==================================================
 README.md
