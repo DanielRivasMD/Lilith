@@ -1,4 +1,6 @@
 - make release v1.0.0
+- update justfile
+- refactor code base using json embedding
 - add oneline error when config paths are not set
 - auto-prefix group names to daemons
 - add option to invoke all daemons in the group
