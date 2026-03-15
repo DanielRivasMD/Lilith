@@ -1,3 +1,7 @@
+add kanata daemon
+
+
+
 - make release v1.0.0
 - update justfile
 - refactor code base using json embedding
