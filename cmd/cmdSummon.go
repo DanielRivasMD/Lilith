@@ -24,34 +24,25 @@ import (
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
-	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var summonCmd = &cobra.Command{
-	Use:     "summon " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "Inspect daemon",
-	Long:    helpSummon,
-	Example: exampleSummon,
-
-	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: completeDaemonNames,
-
-	Run: runSummon,
+var summonFlags struct {
+	follow bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	follow bool
-)
+func SummonCmd() *cobra.Command {
+	d := horus.Must(domovoi.GlobalDocs())
+	cmd := horus.Must(d.MakeCmd("summon", runSummon,
+		domovoi.WithArgs(cobra.ExactArgs(1)),
+	))
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+	cmd.Flags().BoolVarP(&summonFlags.follow, "follow", "f", false, "Continuously watch the log file")
 
-func init() {
-	rootCmd.AddCommand(summonCmd)
-	summonCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Continuously watch the log file")
+	return cmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +53,7 @@ func runSummon(cmd *cobra.Command, args []string) {
 
 	meta := loadMeta(name)
 
-	if follow {
+	if summonFlags.follow {
 		horus.CheckErr(
 			domovoi.ExecCmd("tail", "-f", meta.LogPath),
 			horus.WithOp(op),
