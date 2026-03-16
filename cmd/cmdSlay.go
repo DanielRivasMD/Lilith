@@ -31,27 +31,23 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var slayCmd = &cobra.Command{
-	Use:     "slay " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "Kill daemon",
-	Long:    helpSlay,
-	Example: exampleSlay,
-
-	Args:              cobra.MaximumNArgs(1),
-	ValidArgsFunction: completeDaemonNames,
-
-	Run: runSlay,
+var slayFlags struct {
+	all   bool
+	group string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.AddCommand(slayCmd)
+func SlayCmd() *cobra.Command {
+	d := horus.Must(domovoi.GlobalDocs())
+	cmd := horus.Must(d.MakeCmd("slay", runSlay))
 
-	slayCmd.Flags().BoolVar(&flags.slayAll, "all", false, "Slay all daemons")
-	slayCmd.Flags().StringVar(&flags.slayGroup, "group", "", "Slay all daemons in a specific group")
+	cmd.Flags().BoolVarP(&slayFlags.all, "all", "", false, "Slay all daemons")
+	cmd.Flags().StringVarP(&slayFlags.group, "group", "", "", "Slay all daemons in a specific group")
 
-	horus.CheckErr(slayCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("slay.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("slay.init"), horus.WithMessage("registering config completion"))
+
+	return cmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,10 +56,10 @@ func runSlay(cmd *cobra.Command, args []string) {
 	const op = "lilith.slay"
 
 	switch {
-	case flags.slayAll:
+	case slayFlags.all:
 		slayAllDaemons()
-	case flags.slayGroup != "":
-		slayGroupDaemons(flags.slayGroup)
+	case slayFlags.group != "":
+		slayGroupDaemons(slayFlags.group)
 	case len(args) == 1:
 		slayDaemon(args[0])
 	default:
@@ -81,20 +77,15 @@ func runSlay(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// TODO: if process finish, clean up
 func slayDaemon(daemonMeta string) {
 	const op = "lilith.slay"
-
-	// load metadata
 	meta := loadMeta(daemonMeta)
 
-	// try terminating process, but proceed if already gone
 	sendDaemonSignal(meta.PID, syscall.SIGTERM)
 
-	// remove metadata JSON file
 	horus.CheckErr(
 		func() error {
-			_, err := domovoi.RemoveFile(daemonMeta, flags.verbose)(resolveMetaPath(daemonMeta))
+			_, err := domovoi.RemoveFile(daemonMeta, rootFlags.verbose)(resolveMetaPath(daemonMeta))
 			return err
 		}(),
 		horus.WithOp(op),
@@ -102,10 +93,9 @@ func slayDaemon(daemonMeta string) {
 		horus.WithMessage("removing metadata file"),
 	)
 
-	// remove log file
 	horus.CheckErr(
 		func() error {
-			_, err := domovoi.RemoveFile(meta.LogPath, flags.verbose)(meta.LogPath)
+			_, err := domovoi.RemoveFile(meta.LogPath, rootFlags.verbose)(meta.LogPath)
 			return err
 		}(),
 		horus.WithOp(op),
@@ -113,7 +103,6 @@ func slayDaemon(daemonMeta string) {
 		horus.WithMessage("removing log file"),
 	)
 
-	// log meta
 	fmt.Printf("%s slayed daemon %q\n", chalk.Green.Color("OK:"), meta.Daemon)
 }
 
