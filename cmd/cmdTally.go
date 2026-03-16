@@ -33,19 +33,9 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var tallyCmd = &cobra.Command{
-	Use:     "tally",
-	Short:   "List active daemons",
-	Long:    helpTally,
-	Example: exampleTally,
-
-	Run: runTally,
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func init() {
-	rootCmd.AddCommand(tallyCmd)
+func TallyCmd() *cobra.Command {
+	d := horus.Must(domovoi.GlobalDocs())
+	return horus.Must(d.MakeCmd("tally", runTally))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,27 +43,21 @@ func init() {
 func runTally(cmd *cobra.Command, args []string) {
 	const op = "lilith.tally"
 
-	// read the daemon directory
-	entries, err := domovoi.ReadDir(dirs.daemon, flags.verbose)
+	entries, err := domovoi.ReadDir(dirs.daemon, rootFlags.verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
-	// print header
 	fmt.Printf(
 		"%-20s %-15s %-6s %-20s %s\n",
 		"NAME", "GROUP", "PID", "INVOKED", "STATUS",
 	)
 
-	// iterate over metadata files
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
 		}
 		name := strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
-
-		// load metadata
 		meta := loadMeta(name)
 
-		// determine process status via `ps` (detect T=stopped/paused)
 		status := chalk.Red.Color("dead")
 		stateOut, err := exec.Command("ps", "-o", "state=", "-p", strconv.Itoa(meta.PID)).Output()
 		if err == nil {
@@ -86,10 +70,7 @@ func runTally(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		// format invoked timestamp
 		invoked := meta.InvokedAt.Format("2006-01-02 15:04:05")
-
-		// print row
 		fmt.Printf(
 			"%-20s %-15s %-6d %-20s %s\n",
 			meta.Daemon, meta.Group, meta.PID, invoked, status,
