@@ -5,87 +5,88 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/DanielRivasMD/Lilith)](https://goreportcard.com/report/github.com/DanielRivasMD/Lilith)
 [![Release](https://img.shields.io/github/release/DanielRivasMD/Lilith.svg?label=Release)](https://github.com/DanielRivasMD/Lilith/releases)
 
-
 ## Overview
-Go-based CLI for orchestrating, monitoring, and controlling background processes with precision
-It is built for developers & operators who need reliable, fine‑grained control over concurrent jobs without the noise
 
-## Features
+Minimalist CLI for orchestrating, monitoring & controlling background processes
+that watch filesystem changes and execute scripts
 
-### Core capabilities
+`lilith` spawns persistent watcher daemons, keeps structured metadata and logs,
+tracks process state, and lets you pause, resume, or terminate them
 
-- **Process orchestration**: Spawn & manage background processes with structured metadata and predictable lifecycle control
-- **Grouping and workflows**: Assign related processes to groups for coordinated start, stop, & teardown
-- **Signal control**: Pause, resume, & terminate processes via standard system signals
-- **Status and history**: Inspect live state, invocation history, exit codes, & runtimes at a glance
-- **File watching**: Trigger scripts or tasks when monitored paths change, with debouncing & clean restarts
+## Technical Architecture
 
-### Use cases
+Lilith is a Go‑based CLI that separates command‑line orchestration from
+background workers, persists per‑daemon state on disk, and uses standard Unix
+signals for process control
 
-- **Development loops**: Run linters, test suites, & rebuilds in parallel with clear visibility & control.
-- **Automation pipelines**: Chain scripts & long‑running tasks with grouping & graceful shutdowns.
-- **Ops tooling**: Keep lightweight daemons in check, audit their status, & enforce consistent process behavior.
+### Core Framework
 
-### Design goals
+- Built with **Cobra** for command definitions & **Viper** for loading TOML
+  workflows
+- Each daemon is a **watchexec** child process, launched and detached by the
+  Lilith launcher
+- Metadata (PID, watch directory, script, group, invocation time) is stored as
+  JSON
+- Process signals (`SIGSTOP`, `SIGCONT`, `SIGTERM`) are used to freeze,
+  rekindle, and slay daemons
 
-- **Predictable**: Clear, composable primitives for starting, grouping, & signaling processes.
-- **Observable**: First‑class status, log, & history so you can see what’s running & why.
-- **Minimal**: No hidden magic; sane defaults with explicit configuration when you need it.
+### Logic Schematic
 
-## Quickstart
-```
-```
+    ┌────────────────┐
+    │ lilith genesis │ → creates directories + example config
+    └───────┬────────┘
+            │
+            ▼
+    ┌─────────────────────────────────┐
+    │ lilith invoke <workflow>        │
+    │   - loads config or uses flags  │
+    │   - checks for duplicate        │
+    │   - spawns watcher (detached)   │
+    │   - writes metadata             │
+    └───────┬─────────────────────────┘
+            │
+            ▼
+    ┌─────────────────────────────────────────┐
+    │ watchexec --watch <dir> -- script       │ (background worker)
+    │   - logs stdout/stderr to ~/.lilith/log │
+    │   - runs on every filesystem change     │
+    └───────┬─────────────────────────────────┘
+            │
+            ▼
+    ┌───────────────────────────────────┐
+    │ lilith tally                      │ → lists all daemons with status
+    │ lilith summon <daemon> [--follow] │ → view / tail log
+    │ lilith freeze <daemon>            │ → SIGSTOP
+    │ lilith rekindle <daemon>          │ → SIGCONT (or respawn if dead)
+    │ lilith slay <daemon>              │ → SIGTERM + remove metadata/log
+    └───────────────────────────────────┘
+
+### Storage Layout (~/.lilith/)
+
+    ~/.lilith/
+    ├─ config/   # workflow definitions (*.toml)
+    ├─ log/      # logs for each daemon (*.log)
+    └─ daemon/   # metadata for each running daemon (*.json)
+
+### Workflow Configuration Example
+
+    # ~/.lilith/config/forge.toml
+
+    [workflows.helix]
+    watch  = "~/src/helix"
+    script = "~/.lilith/forge/helix.sh"
+    daemon = "helix-watcher"      # optional
+    group  = "forge"              # optional
+    log    = "helix"              # optional
 
 ## Installation
 
-### **Language-Specific**
-| Language   | Command                                                                 |
-|------------|-------------------------------------------------------------------------|
-| **Go**     | `go install github.com/DanielRivasMD/Lilith@latest`                  |
+### Language-Specific
 
-### **Pre-built Binaries**
-Download from [Releases](https://github.com/DanielRivasMD/Lilith/releases).
-
-## Usage
-
-```
-```
-
-| Command     | Description                            |
-|-------------|----------------------------------------|
-| `invoke`    | Start a new daemon                     |
-| `freeze`    | Pause a running daemon                 |
-| `rekindle`  | Resurrect a paused or limbo daemon     |
-| `slay`      | Stop and clean up daemon processes     |
-| `tally`     | List all active daemons                |
-| `summon`    | View log of specific daemon(s)         |
-| `help`      | Display help for any command           |
-
-
-## Example
-```
-```
-
-## Configuration
-<!-- TODO: add instructions for installing local directory & mock config-workflow file -->
-<!-- TODO: explain how logic works -->
-
-
-## Development
-
-Build from source
-```
-git clone https://github.com/DanielRivasMD/Lilith
-cd Lilith
-```
-
-## Language-Specific Setup
-
-| Language | Dev Dependencies | Hot Reload           |
-|----------|------------------|----------------------|
-| Go       | `go >= 1.21`     | `air` (live reload)  |
+    Go:  go install github.com/DanielRivasMD/Lilith@latest
 
 ## License
+
 Copyright (c) 2025
 
 See the [LICENSE](LICENSE) file for license details.
