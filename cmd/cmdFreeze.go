@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"syscall"
 
+	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/ttacon/chalk"
@@ -30,27 +31,23 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var freezeCmd = &cobra.Command{
-	Use:     "freeze " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "Pause daemon",
-	Long:    helpFreeze,
-	Example: exampleFreeze,
-
-	Args:              cobra.MaximumNArgs(1),
-	ValidArgsFunction: completeDaemonNames,
-
-	Run: runFreeze,
+var freezeFlags struct {
+	all   bool
+	group string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.AddCommand(freezeCmd)
+func FreezeCmd() *cobra.Command {
+	d := horus.Must(domovoi.GlobalDocs())
+	cmd := horus.Must(d.MakeCmd("freeze", runFreeze))
 
-	freezeCmd.Flags().String("group", "", "Freeze all daemons belonging to a specific group")
-	freezeCmd.Flags().Bool("all", false, "Freeze all running daemons")
+	cmd.Flags().StringVarP(&freezeFlags.group, "group", "", "", "Freeze all daemons belonging to a specific group")
+	cmd.Flags().BoolVarP(&freezeFlags.all, "all", "", false, "Freeze all running daemons")
 
-	horus.CheckErr(freezeCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("freeze.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("freeze.init"), horus.WithMessage("registering config completion"))
+
+	return cmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,14 +55,11 @@ func init() {
 func runFreeze(cmd *cobra.Command, args []string) {
 	const op = "lilith.freeze"
 
-	group, _ := cmd.Flags().GetString("group")
-	all, _ := cmd.Flags().GetBool("all")
-
 	switch {
-	case all:
+	case freezeFlags.all:
 		freezeAllDaemons()
-	case group != "":
-		freezeGroupDaemons(group)
+	case freezeFlags.group != "":
+		freezeGroupDaemons(freezeFlags.group)
 	case len(args) == 1:
 		freezeDaemon(args[0])
 	default:
