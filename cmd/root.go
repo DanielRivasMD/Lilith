@@ -19,43 +19,87 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"os"
+	"embed"
 	"path/filepath"
-	"strconv"
-	"strings"
-	"syscall"
+	"sync"
 	"time"
 
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var rootCmd = &cobra.Command{
-	Use:     "lilith",
-	Long:    helpRoot,
-	Example: exampleRoot,
+//go:embed docs.json
+var docsFS embed.FS
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const (
+	APP     = "lilith"
+	VERSION = "v0.1.0"
+	AUTHOR  = "Daniel Rivas"
+	EMAIL   = "danielrivasmd@gmail.com"
+)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var (
+	onceRoot  sync.Once
+	rootCmd   *cobra.Command
+	rootFlags struct {
+		verbose bool
+	}
+	dirs configDirs
+)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func InitDocs() {
+	info := domovoi.AppInfo{
+		Name:    APP,
+		Version: VERSION,
+		Author:  AUTHOR,
+		Email:   EMAIL,
+	}
+	domovoi.SetGlobalDocsConfig(docsFS, info)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func GetRootCmd() *cobra.Command {
+	onceRoot.Do(func() {
+		d := horus.Must(domovoi.GlobalDocs())
+		var err error
+		rootCmd, err = d.MakeCmd("root", nil)
+		horus.CheckErr(err)
+
+		rootCmd.PersistentFlags().BoolVarP(&rootFlags.verbose, "verbose", "v", false, "Enable verbose diagnostics")
+		rootCmd.Version = VERSION
+
+		cobra.OnInitialize(initConfigDirs)
+	})
+	return rootCmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func Execute() {
-	horus.CheckErr(rootCmd.Execute())
+	horus.CheckErr(GetRootCmd().Execute())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var (
-	dirs  configDirs
-	flags lilithFlags
-)
+func initConfigDirs() {
+	var err error
+	dirs.home, err = domovoi.FindHome(rootFlags.verbose)
+	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
+	dirs.lilith = filepath.Join(dirs.home, ".lilith")
+	dirs.config = filepath.Join(dirs.lilith, "config")
+	dirs.log = filepath.Join(dirs.lilith, "log")
+	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
+}
 
 type configDirs struct {
 	home   string
@@ -65,47 +109,9 @@ type configDirs struct {
 	daemon string
 }
 
-type lilithFlags struct {
-	verbose bool
-
-	configOutput string
-
-	daemon daemonPaths
-
-	rekindleAll   bool
-	rekindleGroup string
-
-	slayAll   bool
-	slayGroup string
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.PersistentFlags().BoolVarP(&flags.verbose, "verbose", "v", false, "Enable verbose diagnostics")
-	cobra.OnInitialize(initConfigDirs)
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func initConfigDirs() {
-	var err error
-	dirs.home, err = domovoi.FindHome(flags.verbose)
-	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
-	dirs.lilith = filepath.Join(dirs.home, ".lilith")
-	dirs.config = filepath.Join(dirs.lilith, "config")
-	dirs.log = filepath.Join(dirs.lilith, "log")
-	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
-}
-
-func onelineErr(er string) string {
-	return chalk.Bold.TextStyle(chalk.Red.Color(er))
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// TODO: bind directly from flags?
-// daemonMeta holds persistent info about process
+// daemonMeta holds persistent info about a process
 type daemonMeta struct {
 	Daemon     string    `json:"name"`
 	Group      string    `json:"group"`
@@ -118,315 +124,20 @@ type daemonMeta struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
-	const op = "daemon.bindFlag"
-	flags := cmd.Flags()
+func BuildCommands() {
+	root := GetRootCmd()
+	root.AddCommand(
+		CompletionCmd(),
+		IdentityCmd(),
 
-	// only bind if not manually set & config has key
-	if flags.Changed(flagName) || !cfg.IsSet(flagName) {
-		return
-	}
-
-	f := flags.Lookup(flagName)
-	if f == nil {
-		// no such flag
-		return
-	}
-
-	// build string representation based on flag declared type
-	var raw string
-	switch f.Value.Type() {
-	case "string":
-		raw = cfg.GetString(flagName)
-	case "int":
-		raw = strconv.Itoa(cfg.GetInt(flagName))
-	case "bool":
-		raw = strconv.FormatBool(cfg.GetBool(flagName))
-	default:
-		// fallback: just use the string getter
-		raw = cfg.GetString(flagName)
-	}
-
-	// set flag value
-	if err := flags.Set(flagName, raw); err != nil {
-		horus.CheckErr(
-			horus.NewCategorizedHerror(
-				op,
-				"flag_error",
-				fmt.Sprintf("setting %q from config", flagName),
-				err,
-				map[string]any{
-					"flag":  flagName,
-					"value": raw,
-				},
-			),
-		)
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// saveMeta writes meta to ~/.lilith/daemon/<name>.json
-func saveMeta(meta *daemonMeta) {
-	const op = "daemon.saveMeta"
-
-	// ensure the daemon directory exists
-	horus.CheckErr(
-		domovoi.CreateDir(dirs.daemon, flags.verbose),
-		horus.WithOp(op),
-		horus.WithCategory("io_error"),
-		horus.WithMessage("creating daemon directory"),
-		horus.WithDetails(map[string]any{
-			"dir": dirs.daemon,
-		}),
+		InvokeCmd(),
+		SlayCmd(),
+		TallyCmd(),
+		FreezeCmd(),
+		SummonCmd(),
+		RekindleCmd(),
+		GenesisCmd(),
 	)
-
-	// marshal the metadata
-	data, err := json.MarshalIndent(meta, "", "  ")
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("encode_error"),
-		horus.WithMessage("marshaling metadata"),
-		horus.WithDetails(map[string]any{
-			"name": meta.Daemon,
-		}),
-	)
-
-	// write the file
-	path := filepath.Join(dirs.daemon, meta.Daemon+".json")
-	horus.CheckErr(
-		os.WriteFile(path, data, 0o644),
-		horus.WithOp(op),
-		horus.WithCategory("io_error"),
-		horus.WithMessage("writing metadata file"),
-		horus.WithDetails(map[string]any{
-			"path": path,
-		}),
-	)
-}
-
-// loadMeta reads ~/.lilith/daemon/<name>.json
-func loadMeta(name string) *daemonMeta {
-	const op = "daemon.loadMeta"
-	path := resolveMetaPath(name)
-
-	// read the file
-	data, err := os.ReadFile(path)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("io_error"),
-		horus.WithMessage("reading metadata file"),
-		horus.WithDetails(map[string]any{
-			"path": path,
-			"name": name,
-		}),
-	)
-
-	// unmarshal into struct
-	var meta daemonMeta
-	horus.CheckErr(
-		json.Unmarshal(data, &meta),
-		horus.WithOp(op),
-		horus.WithCategory("decode_error"),
-		horus.WithMessage("unmarshaling metadata"),
-		horus.WithDetails(map[string]any{
-			"path": path,
-			"name": name,
-		}),
-	)
-
-	return &meta
-}
-
-// resolveMetaPath will turn any of these into the correct file to read:
-//
-//	"foo"          → /home/me/.lilith/daemon/foo.json
-//	"foo.json"     → /home/me/.lilith/daemon/foo.json
-//	"/tmp/bar.json" → /tmp/bar.json
-//	"sub/dir/baz"  → sub/dir/baz.json (relative path)
-//
-// check if the literal name exists first, otherwise falls back to daemonDir
-func resolveMetaPath(name string) string {
-	// if the user passed an absolute or relative path that actually exists, use it
-	if fi, err := os.Stat(name); err == nil && !fi.IsDir() {
-		return name
-	}
-
-	// ensure we have a .json extension
-	if filepath.Ext(name) != ".json" {
-		name = name + ".json"
-	}
-
-	// join with the default daemonDir
-	return filepath.Join(dirs.daemon, name)
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func isDaemonActive(meta *daemonMeta) bool {
-	if meta.PID <= 0 {
-		return false
-	}
-	proc, err := os.FindProcess(meta.PID)
-	if err != nil {
-		return false
-	}
-	if err := proc.Signal(syscall.Signal(0)); err != nil {
-		return errors.Is(err, syscall.EPERM)
-	}
-	return true
-}
-
-func listDaemonMetaFiles() []string {
-	op := "daemon.list"
-	daemonPattern := filepath.Join(dirs.daemon, "*.json")
-	daemonMatches, err := filepath.Glob(daemonPattern)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("daemon_error"),
-		horus.WithMessage("listing daemon metadata files"),
-		horus.WithDetails(map[string]any{
-			"pattern": daemonPattern,
-		}),
-	)
-	return daemonMatches
-}
-
-func matchDaemonGroup(metaPath, expectedGroup string) bool {
-	// Try to load JSON metadata
-	data, err := os.ReadFile(metaPath)
-	if err != nil {
-		// optionally log or ignore
-		return false
-	}
-
-	var meta struct {
-		Group string `json:"group"`
-	}
-
-	if err := json.Unmarshal(data, &meta); err != nil {
-		// if unmarshal fails, ignore this file
-		return false
-	}
-
-	return meta.Group == expectedGroup
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// sendDaemonSignal finds the process & sends signal
-func sendDaemonSignal(pid int, sig syscall.Signal) {
-	const op = "daemon.sendSignal"
-
-	proc, err := os.FindProcess(pid)
-	horus.CheckErr(
-		err,
-		horus.WithOp(op),
-		horus.WithCategory("spawn_error"),
-		horus.WithMessage(fmt.Sprintf("finding process %d", pid)),
-		horus.WithDetails(map[string]any{
-			"pid": pid,
-		}),
-	)
-
-	// horus.CheckErr(
-	proc.Signal(sig)
-	// 	horus.WithOp(op),
-	// 	horus.WithCategory("spawn_error"),
-	// 	horus.WithMessage(fmt.Sprintf("sending signal %s to pid %d", sig, pid)),
-	// 	horus.WithDetails(map[string]any{
-	// 		"pid": pid,
-	// 		"sig": sig,
-	// 	}),
-	// )
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// completeWorkflowNames scans ~/.lilith/config/*.toml for [workflows.<name>] keys
-func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	fis, err := os.ReadDir(dirs.config)
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveDefault
-	}
-
-	seen := map[string]struct{}{}
-	for _, fi := range fis {
-		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
-			continue
-		}
-		path := filepath.Join(dirs.config, fi.Name())
-		v := viper.New()
-		v.SetConfigFile(path)
-		if err := v.ReadInConfig(); err != nil {
-			continue
-		}
-		for wf := range v.GetStringMap("workflows") {
-			if strings.HasPrefix(wf, toComplete) {
-				seen[wf] = struct{}{}
-			}
-		}
-	}
-
-	var out []string
-	for wf := range seen {
-		out = append(out, wf)
-	}
-	return out, cobra.ShellCompDirectiveNoFileComp
-}
-
-// completeDaemonNames offers tab‐completion based on ~/.lilith/daemons/*.json
-func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	fis, err := os.ReadDir(dirs.daemon)
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveNoFileComp
-	}
-
-	var out []string
-	for _, fi := range fis {
-		if fi.IsDir() {
-			continue
-		}
-		name := strings.TrimSuffix(fi.Name(), filepath.Ext(fi.Name()))
-		if strings.HasPrefix(name, toComplete) {
-			out = append(out, name)
-		}
-	}
-	return out, cobra.ShellCompDirectiveNoFileComp
-}
-
-// completeWorkflowGroups offer tab-completion based on on ~/.lilith/daemons/*.json
-func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	files, err := filepath.Glob(filepath.Join(dirs.daemon, "*.json"))
-	if err != nil {
-		return nil, cobra.ShellCompDirectiveDefault
-	}
-
-	groups := map[string]bool{}
-	for _, path := range files {
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		var meta struct {
-			Group string `json:"group"`
-		}
-		if err := json.Unmarshal(data, &meta); err != nil {
-			continue
-		}
-		if meta.Group != "" {
-			groups[meta.Group] = true
-		}
-	}
-
-	var availableGroups []string
-	for g := range groups {
-		availableGroups = append(availableGroups, g)
-	}
-	return availableGroups, cobra.ShellCompDirectiveDefault
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
