@@ -21,35 +21,33 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/DanielRivasMD/domovoi"
+	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
-	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var identityCmd = &cobra.Command{
-	Use:     "identity",
-	Aliases: []string{"id"},
-	Hidden:  true,
-	Short:   `Reveal Lilith’s mythic origin`,
-
-	Run: runIdentity,
+func IdentityCmd() *cobra.Command {
+	return horus.Must(horus.Must(domovoi.GlobalDocs()).MakeCmd("identity", runIdentity,
+		domovoi.WithAliases([]string{"id"}),
+	))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.AddCommand(identityCmd)
-}
+const IDENT = `Lilith:
+  • In ancient Mesopotamia she appears as a wind spirit, free and untamed.
+  • In early Jewish lore she is Adam’s first wife, who walked away rather than submit.
+  • Through medieval tales she became a demon of the night—yet also a feminist icon.
+  • Today she embodies autonomy, the power of the untold story, and the strength of dusk.`
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func runIdentity(cmd *cobra.Command, args []string) {
-	fmt.Println(chalk.Magenta.Color("Lilith:"))
-	fmt.Println("  • In ancient Mesopotamia she appears as a wind spirit, free and untamed.")
-	fmt.Println("  • In early Jewish lore she is Adam’s first wife, who walked away rather than submit.")
-	fmt.Println("  • Through medieval tales she became a demon of the night—yet also a feminist icon.")
-	fmt.Println("  • Today she embodies autonomy, the power of the untold story, and the strength of dusk.")
+	fmt.Println()
+	fmt.Println(IDENT)
+	fmt.Println()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
