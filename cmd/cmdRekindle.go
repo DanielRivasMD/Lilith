@@ -25,6 +25,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/ttacon/chalk"
@@ -32,27 +33,23 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var rekindleCmd = &cobra.Command{
-	Use:     "rekindle " + chalk.Dim.TextStyle(chalk.Italic.TextStyle("[daemon]")),
-	Short:   "Resurrect daemon from limbo",
-	Long:    helpRekindle,
-	Example: exampleRekindle,
-
-	Args:              cobra.MaximumNArgs(1),
-	ValidArgsFunction: completeDaemonNames,
-
-	Run: runRekindle,
+var rekindleFlags struct {
+	all   bool
+	group string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.AddCommand(rekindleCmd)
+func RekindleCmd() *cobra.Command {
+	d := horus.Must(domovoi.GlobalDocs())
+	cmd := horus.Must(d.MakeCmd("rekindle", runRekindle))
 
-	rekindleCmd.Flags().BoolVar(&flags.rekindleAll, "all", false, "Rekindle all dead daemons")
-	rekindleCmd.Flags().StringVar(&flags.rekindleGroup, "group", "", "Rekindle all daemons in a specific group")
+	cmd.Flags().BoolVarP(&rekindleFlags.all, "all", "", false, "Rekindle all dead daemons")
+	cmd.Flags().StringVarP(&rekindleFlags.group, "group", "", "", "Rekindle all daemons in a specific group")
 
-	horus.CheckErr(rekindleCmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
+
+	return cmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,10 +58,10 @@ func runRekindle(cmd *cobra.Command, args []string) {
 	const op = "lilith.rekindle"
 
 	switch {
-	case flags.rekindleAll:
+	case rekindleFlags.all:
 		rekindleAllDaemons()
-	case flags.rekindleGroup != "":
-		rekindleGroupDaemons(flags.rekindleGroup)
+	case rekindleFlags.group != "":
+		rekindleGroupDaemons(rekindleFlags.group)
 	case len(args) == 1:
 		rekindleDaemon(args[0])
 	default:
@@ -85,16 +82,11 @@ func runRekindle(cmd *cobra.Command, args []string) {
 func rekindleDaemon(daemonMeta string) {
 	meta := loadMeta(daemonMeta)
 
-	// try to find & ping the existing process
 	if proc, err := os.FindProcess(meta.PID); err == nil {
 		if err = proc.Signal(syscall.Signal(0)); err == nil {
-			// process alive => send SIGCONT
 			sendDaemonSignal(meta.PID, syscall.SIGCONT)
-
-			// update only timestamp
 			meta.InvokedAt = time.Now()
 			saveMeta(meta)
-
 			fmt.Printf("%s resumed %q PID %d\n",
 				chalk.Green.Color("OK:"),
 				meta.Daemon,
@@ -104,10 +96,7 @@ func rekindleDaemon(daemonMeta string) {
 		}
 	}
 
-	// no existing process => spawn fresh watcher
 	newPID := spawnWatcher(meta)
-
-	// update metadata
 	meta.PID = newPID
 	meta.InvokedAt = time.Now()
 	saveMeta(meta)
