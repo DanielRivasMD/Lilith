@@ -30,37 +30,33 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var genesisCmd = &cobra.Command{
-	Use:     "genesis",
-	Short:   "Initiate config dirs & toml",
-	Long:    helpGenesis,
-	Example: exampleGenesis,
-
-	Run: runGenesis,
+var genesisFlags struct {
+	output string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func init() {
-	rootCmd.AddCommand(genesisCmd)
+func GenesisCmd() *cobra.Command {
+	d := horus.Must(domovoi.GlobalDocs())
+	cmd := horus.Must(d.MakeCmd("genesis", runGenesis))
 
-	genesisCmd.Flags().StringVarP(&flags.configOutput, "output", "o", "", "Path to write example config (default = stdout)")
+	cmd.Flags().StringVarP(&genesisFlags.output, "output", "o", "", "Path to write example config (default = stdout)")
+
+	return cmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func runGenesis(cmd *cobra.Command, args []string) {
-	createSubdirs(dirs, flags.verbose)
+	createSubdirs(dirs, rootFlags.verbose)
 	generateConfig(generateToml())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// createSubdirs create ~/.lilith subdirectories
 func createSubdirs(d configDirs, verbose bool) {
 	const op = "genesis.createSubDirs"
 
-	// name each for nicer error messages
 	toCreate := []struct {
 		label, path string
 	}{
@@ -118,19 +114,19 @@ func generateToml() string {
 func generateConfig(example string) {
 	op := "genesis.generateConfig"
 
-	if flags.configOutput == "" {
+	if genesisFlags.output == "" {
 		fmt.Print(example)
 		return
 	}
 
 	horus.CheckErr(
-		os.WriteFile(flags.configOutput, []byte(example), 0o644),
+		os.WriteFile(genesisFlags.output, []byte(example), 0o644),
 		horus.WithOp(op),
 		horus.WithCategory("io_error"),
-		horus.WithMessage(fmt.Sprintf("writing example to %q", flags.configOutput)),
+		horus.WithMessage(fmt.Sprintf("writing example to %q", genesisFlags.output)),
 	)
 
-	fmt.Printf("Example config written to %s\n", flags.configOutput)
+	fmt.Printf("Example config written to %s\n", genesisFlags.output)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
