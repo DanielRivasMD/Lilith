@@ -1,11 +1,11 @@
 module github.com/DanielRivasMD/Lilith
 
-go 1.23.4
+go 1.25
 
 require (
-	github.com/DanielRivasMD/domovoi v0.0.0-20250919090745-b5386a990062
-	github.com/DanielRivasMD/horus v0.0.0-20250720074121-f8b5256376f9
-	github.com/spf13/cobra v1.9.1
+	github.com/DanielRivasMD/domovoi v0.2.0
+	github.com/DanielRivasMD/horus v1.1.0
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.20.1
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 )
@@ -23,7 +23,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
-	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
