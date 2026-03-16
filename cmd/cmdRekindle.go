@@ -42,7 +42,9 @@ var rekindleFlags struct {
 
 func RekindleCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
-	cmd := horus.Must(d.MakeCmd("rekindle", runRekindle))
+	cmd := horus.Must(d.MakeCmd("rekindle", runRekindle,
+		domovoi.WithValidArgsFunction(completeDaemonNames),
+	))
 
 	cmd.Flags().BoolVarP(&rekindleFlags.all, "all", "", false, "Rekindle all dead daemons")
 	cmd.Flags().StringVarP(&rekindleFlags.group, "group", "", "", "Rekindle all daemons in a specific group")

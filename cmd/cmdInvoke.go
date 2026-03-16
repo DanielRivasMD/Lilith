@@ -49,7 +49,9 @@ var invokeFlags struct {
 
 func InvokeCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
-	cmd := horus.Must(d.MakeCmd("invoke", runInvoke))
+	cmd := horus.Must(d.MakeCmd("invoke", runInvoke,
+		domovoi.WithValidArgsFunction(completeWorkflowNames),
+	))
 
 	cmd.Flags().StringVarP(&invokeFlags.daemon, "daemon", "", "", "Daemon instance name (defaults to config key)")
 	cmd.Flags().StringVarP(&invokeFlags.group, "group", "", "default", "Watcher group name (overrides TOML). Default value: `default`")

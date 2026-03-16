@@ -40,7 +40,9 @@ var slayFlags struct {
 
 func SlayCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
-	cmd := horus.Must(d.MakeCmd("slay", runSlay))
+	cmd := horus.Must(d.MakeCmd("slay", runSlay,
+		domovoi.WithValidArgsFunction(completeDaemonNames),
+	))
 
 	cmd.Flags().BoolVarP(&slayFlags.all, "all", "", false, "Slay all daemons")
 	cmd.Flags().StringVarP(&slayFlags.group, "group", "", "", "Slay all daemons in a specific group")

@@ -38,6 +38,7 @@ func SummonCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
 	cmd := horus.Must(d.MakeCmd("summon", runSummon,
 		domovoi.WithArgs(cobra.ExactArgs(1)),
+		domovoi.WithValidArgsFunction(completeDaemonNames),
 	))
 
 	cmd.Flags().BoolVarP(&summonFlags.follow, "follow", "f", false, "Continuously watch the log file")

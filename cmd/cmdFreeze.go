@@ -40,7 +40,9 @@ var freezeFlags struct {
 
 func FreezeCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
-	cmd := horus.Must(d.MakeCmd("freeze", runFreeze))
+	cmd := horus.Must(d.MakeCmd("freeze", runFreeze,
+		domovoi.WithValidArgsFunction(completeDaemonNames),
+	))
 
 	cmd.Flags().StringVarP(&freezeFlags.group, "group", "", "", "Freeze all daemons belonging to a specific group")
 	cmd.Flags().BoolVarP(&freezeFlags.all, "all", "", false, "Freeze all running daemons")
