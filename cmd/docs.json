@@ -1,0 +1,147 @@
+{
+  "root": {
+    "use": "lilith",
+    "long": "Master of daemons",
+    "example_usages": [
+      [
+        "help"
+      ]
+    ]
+  },
+  "invoke": {
+    "use": "invoke [config]",
+    "short": "Start daemon",
+    "long": "Spawn daemon process for the specified directory & execute the configured script on change\nMetadata is persistent for summoning the daemon",
+    "example_usages": [
+      [
+        "invoke",
+        "helix"
+      ],
+      [
+        "invoke",
+        "--daemon",
+        "helix",
+        "--watch",
+        "~/src/helix",
+        "--script",
+        "helix.sh",
+        "--log",
+        "helix"
+      ]
+    ]
+  },
+  "slay": {
+    "use": "slay [daemon]",
+    "short": "Kill daemon",
+    "long": "Gracefully stop alive daemons, removing their metadata and log to allow clean reinvocation",
+    "example_usages": [
+      [
+        "slay",
+        "helix"
+      ],
+      [
+        "slay",
+        "--group",
+        "<forge>"
+      ],
+      [
+        "slay",
+        "--all"
+      ]
+    ]
+  },
+  "tally": {
+    "use": "tally",
+    "short": "List active daemons",
+    "long": "List all daemons invoked, showing group, PID, start time, and current status",
+    "example_usages": [
+      [
+        "tally"
+      ]
+    ]
+  },
+  "freeze": {
+    "use": "freeze [daemon]",
+    "short": "Pause daemon",
+    "long": "Pause daemon execution using SIGSTOP, until resumed manually",
+    "example_usages": [
+      [
+        "freeze",
+        "helix"
+      ],
+      [
+        "freeze",
+        "--group",
+        "<forge>"
+      ],
+      [
+        "freeze",
+        "--all"
+      ]
+    ]
+  },
+  "summon": {
+    "use": "summon [daemon]",
+    "short": "Inspect daemon",
+    "long": "Display daemon log output\nPass --follow to stream in real time",
+    "example_usages": [
+      [
+        "summon",
+        "helix",
+        "--follow"
+      ]
+    ]
+  },
+  "rekindle": {
+    "use": "rekindle [daemon]",
+    "short": "Resurrect daemon from limbo",
+    "long": "Restart daemons in limbo using persisted metadata",
+    "example_usages": [
+      [
+        "rekindle",
+        "helix"
+      ],
+      [
+        "rekindle",
+        "--group",
+        "<forge>"
+      ],
+      [
+        "rekindle",
+        "--all"
+      ]
+    ]
+  },
+  "genesis": {
+    "use": "genesis",
+    "short": "Initiate config dirs & toml",
+    "long": "Install config directories & Generate a commented example of a Lilith TOML config",
+    "example_usages": [
+      [
+        "genesis",
+        "--output",
+        "/Users/drivas/.lilith/config/example.toml"
+      ]
+    ]
+  },
+  "identity": {
+    "use": "identity",
+    "aliases": [
+      "id"
+    ],
+    "hidden": true,
+    "short": "Reveal Lilith’s mythic origin",
+    "long": "Lilith:\n  • In ancient Mesopotamia she appears as a wind spirit, free and untamed.\n  • In early Jewish lore she is Adam’s first wife, who walked away rather than submit.\n  • Through medieval tales she became a demon of the night—yet also a feminist icon.\n  • Today she embodies autonomy, the power of the untold story, and the strength of dusk."
+  },
+  "completion": {
+    "use": "completion [bash|zsh|fish|powershell]",
+    "hidden": true,
+    "long": "To load completions:\n\nBash:\n\n  $ source <(lilith completion bash)\n\n  # To load completions for each session, execute once:\n  # Linux:\n  $ lilith completion bash > /etc/bash_completion.d/lilith\n  # macOS:\n  $ lilith completion bash > $(brew --prefix)/etc/bash_completion.d/lilith\n\nZsh:\n\n  # If shell completion is not already enabled in your environment,\n  # you will need to enable it. You can execute the following once:\n\n  $ echo \"autoload -U compinit; compinit\" >> ~/.zshrc\n\n  # To load completions for each session, execute once:\n  $ lilith completion zsh > \"${fpath[1]}/_lilith\"\n\n  # You will need to start a new shell for this setup to take effect.\n\nfish:\n\n  $ lilith completion fish | source\n\n  # To load completions for each session, execute once:\n  $ lilith completion fish > ~/.config/fish/completions/lilith.fish\n\nPowerShell:\n\n  PS> lilith completion powershell | Out-String | Invoke-Expression\n\n  # To load completions for every new session, run:\n  PS> lilith completion powershell > lilith.ps1\n  # and source this file from your PowerShell profile.",
+    "valid_args": [
+      "bash",
+      "zsh",
+      "fish",
+      "powershell"
+    ]
+  }
+}
