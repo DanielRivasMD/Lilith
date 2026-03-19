@@ -23,7 +23,7 @@ HEAD
 ####################################################################################################
 
 # concatenate
-mbombo forge --in "${zmodes}" --out "${zellij}/config.kdl" \
+mbombo --in "${zmodes}" --out "${zellij}/config.kdl" \
   --files "header.kdl" \
   --files "../.keybinds.tmp" \
   --files "except.kdl" \

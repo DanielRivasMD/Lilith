@@ -10,13 +10,13 @@ source "${HOME}/.lilith/.workflow_config.sh"
 # create temporary files
 for type in normal insert select
 do
-  mbombo forge --in "${hmodes}" --out "${helix}/.${type}.tmp" --files "common.toml" --replace MODE="${type}_mode"
+  mbombo --in "${hmodes}" --out "${helix}/.${type}.tmp" --files "common.toml" --replace MODE="${type}_mode"
 done
 
 ####################################################################################################
 
 # concatenate
-mbombo forge --in "${hmodes}" --out "${helix}/config.toml" \
+mbombo --in "${hmodes}" --out "${helix}/config.toml" \
   --files "theme.toml" \
   --files "editor.toml" \
   --files "mini-mode.toml" \

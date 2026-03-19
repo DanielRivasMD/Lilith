@@ -49,9 +49,8 @@ HEAD
 
 ####################################################################################################
 
-# TODO: verify & update
 # concatenate
-mbombo forge --in "${sedn}" --out "${karabiner}/karabiner.edn" \
+mbombo --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files ".header.tmp" \
   --files "header.edn" \
   --files ".main.tmp" \
