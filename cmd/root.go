@@ -135,7 +135,7 @@ func BuildCommands() {
 		TallyCmd(),
 		FreezeCmd(),
 		SummonCmd(),
-		RekindleCmd(),
+		ReviveCmd(),
 		GenesisCmd(),
 	)
 }

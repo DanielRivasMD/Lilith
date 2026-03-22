@@ -40,7 +40,7 @@ var rekindleFlags struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func RekindleCmd() *cobra.Command {
+func ReviveCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
 	cmd := horus.Must(d.MakeCmd("rekindle", runRekindle,
 		domovoi.WithValidArgsFunction(completeDaemonNames),
