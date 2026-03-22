@@ -33,7 +33,7 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var rekindleFlags struct {
+var reviveFlags struct {
 	all   bool
 	group string
 }
@@ -42,30 +42,30 @@ var rekindleFlags struct {
 
 func ReviveCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
-	cmd := horus.Must(d.MakeCmd("rekindle", runRekindle,
+	cmd := horus.Must(d.MakeCmd("revive", runRevive,
 		domovoi.WithValidArgsFunction(completeDaemonNames),
 	))
 
-	cmd.Flags().BoolVarP(&rekindleFlags.all, "all", "", false, "Rekindle all dead daemons")
-	cmd.Flags().StringVarP(&rekindleFlags.group, "group", "", "", "Rekindle all daemons in a specific group")
+	cmd.Flags().BoolVarP(&reviveFlags.all, "all", "", false, "Revive all dead daemons")
+	cmd.Flags().StringVarP(&reviveFlags.group, "group", "", "", "Revive all daemons in a specific group")
 
-	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("rekindle.init"), horus.WithMessage("registering config completion"))
+	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("revive.init"), horus.WithMessage("registering config completion"))
 
 	return cmd
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func runRekindle(cmd *cobra.Command, args []string) {
-	const op = "lilith.rekindle"
+func runRevive(cmd *cobra.Command, args []string) {
+	const op = "lilith.revive"
 
 	switch {
-	case rekindleFlags.all:
-		rekindleAllDaemons()
-	case rekindleFlags.group != "":
-		rekindleGroupDaemons(rekindleFlags.group)
+	case reviveFlags.all:
+		reviveAllDaemons()
+	case reviveFlags.group != "":
+		reviveGroupDaemons(reviveFlags.group)
 	case len(args) == 1:
-		rekindleDaemon(args[0])
+		reviveDaemon(args[0])
 	default:
 		horus.CheckErr(
 			errors.New(""),
@@ -81,7 +81,7 @@ func runRekindle(cmd *cobra.Command, args []string) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func rekindleDaemon(daemonMeta string) {
+func reviveDaemon(daemonMeta string) {
 	meta := loadMeta(daemonMeta)
 
 	if proc, err := os.FindProcess(meta.PID); err == nil {
@@ -103,24 +103,24 @@ func rekindleDaemon(daemonMeta string) {
 	meta.InvokedAt = time.Now()
 	saveMeta(meta)
 
-	fmt.Printf("%s rekindled %q new PID %d\n",
+	fmt.Printf("%s revived %q new PID %d\n",
 		chalk.Green.Color("OK:"),
 		meta.Daemon,
 		newPID,
 	)
 }
 
-func rekindleGroupDaemons(group string) {
+func reviveGroupDaemons(group string) {
 	for _, daemonMeta := range listDaemonMetaFiles() {
 		if matchDaemonGroup(daemonMeta, group) {
-			rekindleDaemon(daemonMeta)
+			reviveDaemon(daemonMeta)
 		}
 	}
 }
 
-func rekindleAllDaemons() {
+func reviveAllDaemons() {
 	for _, daemonMeta := range listDaemonMetaFiles() {
-		rekindleDaemon(daemonMeta)
+		reviveDaemon(daemonMeta)
 	}
 }
 
