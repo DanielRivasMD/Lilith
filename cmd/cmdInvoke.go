@@ -224,6 +224,7 @@ func spawnWatcher(meta *daemonMeta) int {
 	cmd := exec.Command(
 		"watchexec",
 		"--watch", meta.WatchDir,
+		"--no-vcs-ignore",
 		"--",
 		"bash", meta.ScriptPath,
 	)
