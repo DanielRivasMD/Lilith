@@ -73,7 +73,7 @@ func runRevive(cmd *cobra.Command, args []string) {
 			horus.WithMessage("daemon / flag"),
 			horus.WithExitCode(2),
 			horus.WithFormatter(func(he *horus.Herror) string {
-				return "missing " + onelineErr(he.Message)
+				return "missing " + horus.OneLineErr(he.Message)
 			}),
 		)
 	}
