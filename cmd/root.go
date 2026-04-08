@@ -51,8 +51,16 @@ var (
 	rootFlags struct {
 		verbose bool
 	}
-	dirs configDirs
+	configDirs configDir
 )
+
+type configDir struct {
+	home   string
+	lilith string
+	config string
+	log    string
+	daemon string
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -93,33 +101,12 @@ func Execute() {
 
 func initConfigDirs() {
 	var err error
-	dirs.home, err = domovoi.FindHome(rootFlags.verbose)
+	configDirs.home, err = domovoi.FindHome(rootFlags.verbose)
 	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
-	dirs.lilith = filepath.Join(dirs.home, ".lilith")
-	dirs.config = filepath.Join(dirs.lilith, "config")
-	dirs.log = filepath.Join(dirs.lilith, "log")
-	dirs.daemon = filepath.Join(dirs.lilith, "daemon")
-}
-
-type configDirs struct {
-	home   string
-	lilith string
-	config string
-	log    string
-	daemon string
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// daemonMeta holds persistent info about a process
-type daemonMeta struct {
-	Daemon     string    `json:"name"`
-	Group      string    `json:"group"`
-	WatchDir   string    `json:"watchDir"`
-	ScriptPath string    `json:"scriptPath"`
-	LogPath    string    `json:"logPath"`
-	PID        int       `json:"pid"`
-	InvokedAt  time.Time `json:"invokedAt"`
+	configDirs.lilith = filepath.Join(configDirs.home, ".lilith")
+	configDirs.config = filepath.Join(configDirs.lilith, "config")
+	configDirs.log = filepath.Join(configDirs.lilith, "log")
+	configDirs.daemon = filepath.Join(configDirs.lilith, "daemon")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,6 +125,19 @@ func BuildCommands() {
 		ReviveCmd(),
 		GenesisCmd(),
 	)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// daemonMeta holds persistent info about a process
+type daemonMeta struct {
+	Daemon     string    `json:"name"`
+	Group      string    `json:"group"`
+	WatchDir   string    `json:"watchDir"`
+	ScriptPath string    `json:"scriptPath"`
+	LogPath    string    `json:"logPath"`
+	PID        int       `json:"pid"`
+	InvokedAt  time.Time `json:"invokedAt"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
