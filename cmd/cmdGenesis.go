@@ -48,13 +48,13 @@ func GenesisCmd() *cobra.Command {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func runGenesis(cmd *cobra.Command, args []string) {
-	createSubdirs(dirs, rootFlags.verbose)
+	createSubdirs(configDirs, rootFlags.verbose)
 	generateConfig(generateToml())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func createSubdirs(d configDirs, verbose bool) {
+func createSubdirs(d configDir, verbose bool) {
 	const op = "genesis.createSubDirs"
 
 	toCreate := []struct {
