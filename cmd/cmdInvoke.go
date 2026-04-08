@@ -77,7 +77,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		}
 		configName := args[0]
 
-		files, err := domovoi.ReadDir(dirs.config, rootFlags.verbose)
+		files, err := domovoi.ReadDir(configDirs.config, rootFlags.verbose)
 		horus.CheckErr(err, horus.WithOp(op), horus.WithCategory("env_error"), horus.WithMessage("reading config dir"))
 		var foundV *viper.Viper
 		var configFileUsed string
@@ -85,7 +85,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			if f.IsDir() || !strings.HasSuffix(f.Name(), ".toml") {
 				continue
 			}
-			path := filepath.Join(dirs.config, f.Name())
+			path := filepath.Join(configDirs.config, f.Name())
 			v := viper.New()
 			v.SetConfigFile(path)
 			if err := v.ReadInConfig(); err != nil {
@@ -166,15 +166,15 @@ func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
 	// expand tilde
-	invokeFlags.watch = strings.Replace(invokeFlags.watch, "~", dirs.home, 1)
-	invokeFlags.script = strings.Replace(invokeFlags.script, "~", dirs.home, 1)
+	invokeFlags.watch = strings.Replace(invokeFlags.watch, "~", configDirs.home, 1)
+	invokeFlags.script = strings.Replace(invokeFlags.script, "~", configDirs.home, 1)
 
 	meta := &daemonMeta{
 		Daemon:     invokeFlags.daemon,
 		Group:      invokeFlags.group,
 		WatchDir:   invokeFlags.watch,
 		ScriptPath: invokeFlags.script,
-		LogPath:    filepath.Join(dirs.log, invokeFlags.log+".log"),
+		LogPath:    filepath.Join(configDirs.log, invokeFlags.log+".log"),
 		InvokedAt:  time.Now(),
 	}
 
@@ -212,12 +212,12 @@ func spawnWatcher(meta *daemonMeta) int {
 	const op = "daemon.spawnWatcher"
 
 	horus.CheckErr(
-		domovoi.CreateDir(dirs.log, rootFlags.verbose),
+		domovoi.CreateDir(configDirs.log, rootFlags.verbose),
 		horus.WithOp(op),
 		horus.WithCategory("spawn_error"),
 		horus.WithMessage("creating log directory"),
 		horus.WithDetails(map[string]any{
-			"logDir": dirs.log,
+			"logDir": configDirs.log,
 		}),
 	)
 
