@@ -2,6 +2,10 @@
 watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
 script = "~/.lilith/embed/lazygit.sh"
 
+[workflows.embed-serpl]
+watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
+script = "~/.lilith/embed/serpl.sh"
+
 [workflows.embed-zellij]
 watch = "~/Factorem/Saiya-jin/karabiner/karabiner.edn"
 script = "~/.lilith/embed/zellij.sh"
