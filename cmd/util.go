@@ -94,12 +94,12 @@ func saveMeta(meta *daemonMeta) {
 	const op = "daemon.saveMeta"
 
 	horus.CheckErr(
-		domovoi.CreateDir(dirs.daemon, rootFlags.verbose),
+		domovoi.CreateDir(configDirs.daemon, rootFlags.verbose),
 		horus.WithOp(op),
 		horus.WithCategory("io_error"),
 		horus.WithMessage("creating daemon directory"),
 		horus.WithDetails(map[string]any{
-			"dir": dirs.daemon,
+			"dir": configDirs.daemon,
 		}),
 	)
 
@@ -134,7 +134,7 @@ func saveMeta(meta *daemonMeta) {
 		}),
 	)
 
-	path := filepath.Join(dirs.daemon, meta.Daemon+".json")
+	path := filepath.Join(configDirs.daemon, meta.Daemon+".json")
 	horus.CheckErr(
 		os.WriteFile(path, data, 0o644),
 		horus.WithOp(op),
@@ -203,7 +203,7 @@ func resolveMetaPath(name string) string {
 	if filepath.Ext(name) != ".json" {
 		name = name + ".json"
 	}
-	return filepath.Join(dirs.daemon, name)
+	return filepath.Join(configDirs.daemon, name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +224,7 @@ func isDaemonActive(meta *daemonMeta) bool {
 
 func listDaemonMetaFiles() []string {
 	op := "daemon.list"
-	daemonPattern := filepath.Join(dirs.daemon, "*.json")
+	daemonPattern := filepath.Join(configDirs.daemon, "*.json")
 	daemonMatches, err := filepath.Glob(daemonPattern)
 	horus.CheckErr(
 		err,
@@ -274,7 +274,7 @@ func sendDaemonSignal(pid int, sig syscall.Signal) {
 
 // completion functions
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	fis, err := os.ReadDir(dirs.config)
+	fis, err := os.ReadDir(configDirs.config)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
@@ -283,7 +283,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 		if fi.IsDir() || !strings.HasSuffix(fi.Name(), ".toml") {
 			continue
 		}
-		path := filepath.Join(dirs.config, fi.Name())
+		path := filepath.Join(configDirs.config, fi.Name())
 		v := viper.New()
 		v.SetConfigFile(path)
 		if err := v.ReadInConfig(); err != nil {
@@ -303,7 +303,7 @@ func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string)
 }
 
 func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	fis, err := os.ReadDir(dirs.daemon)
+	fis, err := os.ReadDir(configDirs.daemon)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
@@ -321,7 +321,7 @@ func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) (
 }
 
 func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	files, err := filepath.Glob(filepath.Join(dirs.daemon, "*.json"))
+	files, err := filepath.Glob(filepath.Join(configDirs.daemon, "*.json"))
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
