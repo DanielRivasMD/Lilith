@@ -43,7 +43,7 @@ func TallyCmd() *cobra.Command {
 func runTally(cmd *cobra.Command, args []string) {
 	const op = "lilith.tally"
 
-	entries, err := domovoi.ReadDir(dirs.daemon, rootFlags.verbose)
+	entries, err := domovoi.ReadDir(configDirs.daemon, rootFlags.verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
 	fmt.Printf(
