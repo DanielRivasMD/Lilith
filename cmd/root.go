@@ -122,7 +122,7 @@ func BuildCommands() {
 		TallyCmd(),
 		FreezeCmd(),
 		SummonCmd(),
-		ReviveCmd(),
+		RekindleCmd(),
 		GenesisCmd(),
 	)
 }

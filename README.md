@@ -28,7 +28,7 @@ signals for process control
 - Metadata (PID, watch directory, script, group, invocation time) is stored as
   JSON
 - Process signals (`SIGSTOP`, `SIGCONT`, `SIGTERM`) are used to freeze,
-  revive, and slay daemons
+  rekindle, and slay daemons
 
 ### Logic Schematic
 
@@ -57,7 +57,7 @@ signals for process control
     │ lilith tally                      │ → lists all daemons with status
     │ lilith summon <daemon> [--follow] │ → view / tail log
     │ lilith freeze <daemon>            │ → SIGSTOP
-    │ lilith revive <daemon>            │ → SIGCONT (or respawn if dead)
+    │ lilith rekindle <daemon>          │ → SIGCONT (or respawn if dead)
     │ lilith slay <daemon>              │ → SIGTERM + remove metadata/log
     └───────────────────────────────────┘
 

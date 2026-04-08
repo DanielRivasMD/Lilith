@@ -107,22 +107,22 @@
       ]
     ]
   },
-  "revive": {
-    "use": "revive [daemon]",
+  "rekindle": {
+    "use": "rekindle [daemon]",
     "short": "Resurrect daemon from limbo",
     "long": "Restart daemons in limbo using persisted metadata",
     "example_usages": [
       [
-        "revive",
+        "rekindle",
         "helix"
       ],
       [
-        "revive",
+        "rekindle",
         "--group",
         "<forge>"
       ],
       [
-        "revive",
+        "rekindle",
         "--all"
       ]
     ]
