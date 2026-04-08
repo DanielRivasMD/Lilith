@@ -101,7 +101,7 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			horus.CheckErr(
 				errors.New(""),
 				horus.WithMessage(fmt.Sprintf("workflow %s not found", configName)),
-				horus.WithFormatter(func(he *horus.Herror) string { return onelineErr(he.Message) }),
+				horus.WithFormatter(func(he *horus.Herror) string { return horus.OneLineErr(he.Message) }),
 			)
 		}
 
@@ -188,7 +188,7 @@ func runInvoke(cmd *cobra.Command, args []string) {
 				horus.WithMessage(existingMeta.Daemon),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
-					return "daemon " + onelineErr(he.Message) + " already running"
+					return "daemon " + horus.OneLineErr(he.Message) + " already running"
 				}),
 			)
 		}
