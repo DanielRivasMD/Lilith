@@ -33,15 +33,7 @@ import (
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/ttacon/chalk"
 )
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// onelineErr returns a bold red error string (used in some formatters)
-func onelineErr(er string) string {
-	return chalk.Bold.TextStyle(chalk.Red.Color(er))
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
