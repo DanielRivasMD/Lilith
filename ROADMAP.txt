@@ -1,22 +1,5 @@
 - make release v1.0.0
-- add oneline error when config paths are not set
-- auto-prefix group names to daemons
-- add option to invoke all daemons in the group
-- write ascii diagram of daemon workflows
-- segregate interpret & embed daemons
-- add one-off run
+- relocate functions
 
 ==================================================
-README.md
-  line 70     TODO   add instructions for installing local directory & mock config-workflow file
-  line 71     TODO   explain how logic works
-cmd/cmdInvoke.go
-  line 188    TODO   catch erros if command does not launch succesfully
-  line 196    TODO   bind directly from paths?
-cmd/cmdSlay.go
-  line 84     TODO   if process finish, clean up
-cmd/root.go
-  line 107    TODO   bind directly from flags?
-forge/goku.sh
-  line 52     TODO   verify & update
 ==================================================
