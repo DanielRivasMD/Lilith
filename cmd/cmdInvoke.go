@@ -45,6 +45,7 @@ var invokeFlags struct {
 	daemonLog    string
 	group        string
 	all          bool
+	once         bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,14 +63,14 @@ func InvokeCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&invokeFlags.daemonScript, "daemon-script", "", "", "Script to execute on change (required in manual mode)")
 	cmd.Flags().StringVarP(&invokeFlags.daemonLog, "daemon-log", "", "", "Name for log file (no .log extension; required in manual mode)")
 
-	// Group / all modes
-	cmd.Flags().StringVarP(&invokeFlags.group, "group", "g", "", "Invoke all workflows in this group (config file name without .toml)")
-	cmd.Flags().BoolVarP(&invokeFlags.all, "all", "a", false, "Invoke all workflows from all config files")
+	// Group / all / once modes
+	cmd.Flags().StringVarP(&invokeFlags.group, "group", "", "", "Invoke all workflows in this group (config file name without .toml)")
+	cmd.Flags().BoolVarP(&invokeFlags.all, "all", "", false, "Invoke all workflows from all config files")
+	cmd.Flags().BoolVarP(&invokeFlags.once, "once", "", false, "Run script once and exit (no watching, no persistent daemon)")
 
 	// Completion for --group flag (config file names)
 	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeConfigGroups), horus.WithOp("invoke.init"), horus.WithMessage("registering group completion"))
 
-	// PreRun only needed for manual mode validation
 	cmd.PreRun = preInvokeManual
 
 	return cmd
@@ -122,6 +123,12 @@ func preInvokeManual(cmd *cobra.Command, args []string) {
 
 func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
+
+	// Mode 0: --once
+	if invokeFlags.once {
+		runOnce(cmd, args)
+		return
+	}
 
 	// Mode 1: --all
 	if invokeFlags.all {
@@ -407,6 +414,166 @@ func spawnWatcher(meta *daemonMeta) int {
 	)
 
 	return pid
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// runOnce handles one‑off execution of scripts (no watching, no daemon)
+func runOnce(cmd *cobra.Command, args []string) {
+	// Determine what to run
+	if invokeFlags.all {
+		// Run all workflows once
+		runAllWorkflowsOnce()
+		return
+	}
+	if invokeFlags.group != "" {
+		// Run all workflows in a group once
+		runGroupWorkflowsOnce(invokeFlags.group)
+		return
+	}
+	if len(args) >= 1 {
+		// Run named workflows once (across all configs)
+		runNamedWorkflowsOnce(args)
+		return
+	}
+	// Manual mode: run a single script once
+	runManualOnce()
+}
+
+// runAllWorkflowsOnce runs every workflow from every config file once
+func runAllWorkflowsOnce() {
+	configDir := configDirs.config
+	entries, err := os.ReadDir(configDir)
+	if err != nil {
+		horus.CheckErr(err, horus.WithOp("once.all"), horus.WithMessage("reading config directory"))
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".toml") {
+			continue
+		}
+		groupName := strings.TrimSuffix(entry.Name(), ".toml")
+		runGroupWorkflowsOnce(groupName)
+	}
+}
+
+// runGroupWorkflowsOnce runs all workflows inside a specific config file once
+func runGroupWorkflowsOnce(groupName string) {
+	configPath := filepath.Join(configDirs.config, groupName+".toml")
+	v := viper.New()
+	v.SetConfigFile(configPath)
+	if err := v.ReadInConfig(); err != nil {
+		fmt.Printf("Warning: cannot read group config %s: %v\n", configPath, err)
+		return
+	}
+	workflows := v.GetStringMap("workflows")
+	for wfName := range workflows {
+		runSingleWorkflowOnce(v, wfName, groupName)
+	}
+}
+
+// runNamedWorkflowsOnce finds all workflows with given names across configs and runs them once
+func runNamedWorkflowsOnce(workflowNames []string) {
+	wanted := make(map[string]bool)
+	for _, name := range workflowNames {
+		wanted[name] = true
+	}
+	configDir := configDirs.config
+	entries, err := os.ReadDir(configDir)
+	if err != nil {
+		horus.CheckErr(err, horus.WithOp("once.named"), horus.WithMessage("reading config directory"))
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".toml") {
+			continue
+		}
+		groupName := strings.TrimSuffix(entry.Name(), ".toml")
+		path := filepath.Join(configDir, entry.Name())
+		v := viper.New()
+		v.SetConfigFile(path)
+		if err := v.ReadInConfig(); err != nil {
+			continue
+		}
+		for wfName := range v.GetStringMap("workflows") {
+			if wanted[wfName] {
+				runSingleWorkflowOnce(v, wfName, groupName)
+			}
+		}
+	}
+}
+
+// runSingleWorkflowOnce executes a single workflow's script once and logs output
+func runSingleWorkflowOnce(v *viper.Viper, wfName, groupName string) {
+	wf := v.Sub("workflows." + wfName)
+	if wf == nil {
+		return
+	}
+	scriptPath := wf.GetString("script")
+	if scriptPath == "" {
+		fmt.Printf("Skipping %s/%s: missing script\n", groupName, wfName)
+		return
+	}
+	// Expand tilde
+	scriptPath = strings.Replace(scriptPath, "~", configDirs.home, 1)
+
+	// Determine log name: if "log" key exists, use it; else group-wfname
+	logName := wf.GetString("log")
+	if logName == "" {
+		logName = groupName + "-" + wfName
+	}
+	logPath := filepath.Join(configDirs.log, logName+".log")
+
+	// Create log directory if needed
+	horus.CheckErr(domovoi.CreateDir(configDirs.log, rootFlags.verbose),
+		horus.WithOp("once"), horus.WithMessage("creating log directory"))
+
+	// Open log file
+	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	horus.CheckErr(err, horus.WithOp("once"), horus.WithMessage("opening log file"))
+	defer f.Close()
+
+	// Run script
+	cmd := exec.Command("bash", scriptPath)
+	cmd.Stdout = f
+	cmd.Stderr = f
+
+	if rootFlags.verbose {
+		fmt.Printf("Running %s/%s once, logging to %s\n", groupName, wfName, logPath)
+	}
+	err = cmd.Run()
+	if err != nil {
+		fmt.Printf("Error running %s/%s: %v\n", groupName, wfName, err)
+	} else {
+		fmt.Printf("Successfully ran %s/%s once\n", groupName, wfName)
+	}
+}
+
+// runManualOnce runs a single script in manual mode once
+func runManualOnce() {
+	// Expand tilde
+	invokeFlags.daemonScript = strings.Replace(invokeFlags.daemonScript, "~", configDirs.home, 1)
+
+	// Log path
+	logPath := filepath.Join(configDirs.log, invokeFlags.daemonLog+".log")
+	horus.CheckErr(domovoi.CreateDir(configDirs.log, rootFlags.verbose),
+		horus.WithOp("once.manual"), horus.WithMessage("creating log directory"))
+
+	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	horus.CheckErr(err, horus.WithOp("once.manual"), horus.WithMessage("opening log file"))
+	defer f.Close()
+
+	cmd := exec.Command("bash", invokeFlags.daemonScript)
+	cmd.Stdout = f
+	cmd.Stderr = f
+
+	if rootFlags.verbose {
+		fmt.Printf("Running script %s once, logging to %s\n", invokeFlags.daemonScript, logPath)
+	}
+	err = cmd.Run()
+	if err != nil {
+		fmt.Printf("Error running script: %v\n", err)
+	} else {
+		fmt.Println("Successfully ran script once")
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
