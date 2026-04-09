@@ -105,9 +105,11 @@ func preInvoke(cmd *cobra.Command, args []string) {
 			)
 		}
 
+		groupPrefix := strings.TrimSuffix(filepath.Base(configFileUsed), filepath.Ext(configFileUsed))
+
 		if invokeFlags.daemon == "" {
-			invokeFlags.daemon = configName
-			horus.CheckErr(cmd.Flags().Set("daemon", invokeFlags.daemon), horus.WithOp(op), horus.WithMessage("setting default --daemon"))
+			invokeFlags.daemon = groupPrefix + "-" + configName
+			horus.CheckErr(cmd.Flags().Set("daemon", invokeFlags.daemon), horus.WithOp(op), horus.WithMessage("setting default --daemon with group prefix"))
 		}
 
 		wf := foundV.Sub("workflows." + configName)
@@ -115,14 +117,13 @@ func preInvoke(cmd *cobra.Command, args []string) {
 		bindFlag(cmd, "script", wf)
 
 		if !cmd.Flags().Changed("group") {
-			base := filepath.Base(configFileUsed)
-			invokeFlags.group = strings.TrimSuffix(base, filepath.Ext(base))
+			invokeFlags.group = groupPrefix
 			horus.CheckErr(cmd.Flags().Set("group", invokeFlags.group), horus.WithOp(op), horus.WithMessage("setting default --group"))
 		}
 
 		if !cmd.Flags().Changed("log") {
-			invokeFlags.log = configName
-			horus.CheckErr(cmd.Flags().Set("log", invokeFlags.log), horus.WithOp(op), horus.WithMessage("setting default --log"))
+			invokeFlags.log = groupPrefix + "-" + configName
+			horus.CheckErr(cmd.Flags().Set("log", invokeFlags.log), horus.WithOp(op), horus.WithMessage("setting default --log with group prefix"))
 		}
 	} else {
 		// MANUAL MODE
