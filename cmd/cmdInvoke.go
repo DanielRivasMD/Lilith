@@ -38,11 +38,12 @@ import (
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var invokeFlags struct {
-	daemon string
-	group  string
-	watch  string
-	script string
-	log    string
+	daemon   string
+	group    string
+	watch    string
+	script   string
+	log      string
+	allGroup string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +59,7 @@ func InvokeCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&invokeFlags.watch, "watch", "", "", "Directory to watch (required in manual mode)")
 	cmd.Flags().StringVarP(&invokeFlags.script, "script", "", "", "Script to execute on change (required in manual mode)")
 	cmd.Flags().StringVarP(&invokeFlags.log, "log", "", "", "Name for log file (no `.log` extension; required in manual mode)")
+	cmd.Flags().StringVarP(&invokeFlags.allGroup, "all-group", "G", "", "Invoke all daemons in the specified group (config file name)")
 
 	cmd.PreRun = preInvoke
 	horus.CheckErr(cmd.RegisterFlagCompletionFunc("group", completeWorkflowGroups), horus.WithOp("invoke.init"), horus.WithMessage("registering config completion"))
@@ -69,6 +71,10 @@ func InvokeCmd() *cobra.Command {
 
 func preInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke.pre"
+
+	if invokeFlags.allGroup != "" {
+		return
+	}
 
 	if len(args) == 1 {
 		// CONFIG MODE
@@ -166,6 +172,67 @@ func preInvoke(cmd *cobra.Command, args []string) {
 func runInvoke(cmd *cobra.Command, args []string) {
 	const op = "lilith.invoke"
 
+	// GROUP MODE: invoke all workflows in a group config file
+	if invokeFlags.allGroup != "" {
+		groupName := invokeFlags.allGroup
+		configPath := filepath.Join(configDirs.config, groupName+".toml")
+		v := viper.New()
+		v.SetConfigFile(configPath)
+		if err := v.ReadInConfig(); err != nil {
+			horus.CheckErr(err, horus.WithOp(op), horus.WithMessage(fmt.Sprintf("reading group config %s", configPath)))
+		}
+		workflows := v.GetStringMap("workflows")
+		if len(workflows) == 0 {
+			fmt.Printf("No workflows found in group %q\n", groupName)
+			return
+		}
+		for wfName := range workflows {
+			// Build daemon name and log name from group + workflow
+			daemonName := groupName + "-" + wfName
+			logName := daemonName
+			wf := v.Sub("workflows." + wfName)
+			watchDir := wf.GetString("watch")
+			scriptPath := wf.GetString("script")
+			if watchDir == "" || scriptPath == "" {
+				fmt.Printf("Skipping %s: missing watch or script\n", wfName)
+				continue
+			}
+			// Expand tilde
+			watchDir = strings.Replace(watchDir, "~", configDirs.home, 1)
+			scriptPath = strings.Replace(scriptPath, "~", configDirs.home, 1)
+
+			meta := &daemonMeta{
+				Daemon:     daemonName,
+				Group:      groupName,
+				WatchDir:   watchDir,
+				ScriptPath: scriptPath,
+				LogPath:    filepath.Join(configDirs.log, logName+".log"),
+				InvokedAt:  time.Now(),
+			}
+
+			// Check for already running daemon with same name+group
+			duplicate := false
+			for _, path := range listDaemonMetaFiles() {
+				existing := loadMeta(path)
+				if existing.Daemon == meta.Daemon && existing.Group == meta.Group && isDaemonActive(existing) {
+					fmt.Printf("Daemon %s already running, skipping\n", meta.Daemon)
+					duplicate = true
+					break
+				}
+			}
+			if duplicate {
+				continue
+			}
+
+			meta.PID = spawnWatcher(meta)
+			saveMeta(meta)
+			fmt.Printf("%s invoked daemon %s group %s PID %s\n",
+				chalk.Green.Color("OK:"), meta.Daemon, meta.Group, chalk.Green.Color(strconv.Itoa(meta.PID)))
+		}
+		return
+	}
+
+	// SINGLE INVOCATION (manual or config mode)
 	// expand tilde
 	invokeFlags.watch = strings.Replace(invokeFlags.watch, "~", configDirs.home, 1)
 	invokeFlags.script = strings.Replace(invokeFlags.script, "~", configDirs.home, 1)
