@@ -19,10 +19,6 @@ package cmd
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
@@ -48,85 +44,9 @@ func GenesisCmd() *cobra.Command {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func runGenesis(cmd *cobra.Command, args []string) {
-	createSubdirs(configDirs, rootFlags.verbose)
+	const op = "lilith.genesis"
+	createSubdirs(configDirs, rootFlags.verbose, op)
 	generateConfig(generateToml())
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func createSubdirs(d configDir, verbose bool) {
-	const op = "genesis.createSubDirs"
-
-	toCreate := []struct {
-		label, path string
-	}{
-		{"lilith root", d.lilith},
-		{"config", d.config},
-		{"logs", d.log},
-		{"daemon", d.daemon},
-	}
-
-	for _, dir := range toCreate {
-		horus.CheckErr(
-			domovoi.CreateDir(dir.path, verbose),
-			horus.WithOp(op),
-			horus.WithCategory("io_error"),
-			horus.WithMessage(fmt.Sprintf("creating %s directory", dir.label)),
-			horus.WithDetails(map[string]any{
-				"path": dir.path,
-			}),
-		)
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func generateToml() string {
-	lines := []string{
-		"# Lilith configuration file",
-		"# Define workflows under the [workflows.<name>] table.",
-		"",
-		"# Minimal example workflow named \"demo\":",
-		"[workflows.demo]",
-		"watch  = \"/path/to/your/project\"   # directory to watch",
-		"script = \"build.sh\"                # script to run on changes",
-		"",
-		"# Optional settings:",
-		"# daemon = \"demo-daemon\"            # unique watcher name",
-		"# group  = \"default\"                # watcher group",
-		"# log    = \"demo\"                   # base name for the .log file",
-		"",
-		"# Add more workflows simply by adding new blocks:",
-		"# [workflows.other]",
-		"# watch  = \"/another/path\"",
-		"# script = \"deploy.sh\"",
-		"# daemon = \"other-daemon\"",
-		"# group  = \"deploy-group\"",
-		"# log    = \"other\"",
-		"",
-		"# Save this snippet as ~/.lilith/config/example.toml",
-	}
-	return strings.Join(lines, "\n") + "\n"
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func generateConfig(example string) {
-	op := "genesis.generateConfig"
-
-	if genesisFlags.output == "" {
-		fmt.Print(example)
-		return
-	}
-
-	horus.CheckErr(
-		os.WriteFile(genesisFlags.output, []byte(example), 0o644),
-		horus.WithOp(op),
-		horus.WithCategory("io_error"),
-		horus.WithMessage(fmt.Sprintf("writing example to %q", genesisFlags.output)),
-	)
-
-	fmt.Printf("Example config written to %s\n", genesisFlags.output)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
