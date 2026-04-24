@@ -19,6 +19,7 @@ mbombo --in "${hlangs}" --out "${helix}/languages.toml" \
   --files "html.toml" \
   --files "json.toml" \
   --files "julia.toml" \
+  --files "just.toml" \
   --files "kbd.toml" \
   --files "kdl.toml" \
   --files "lua.toml" \
