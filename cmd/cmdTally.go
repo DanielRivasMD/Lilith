@@ -43,13 +43,29 @@ func TallyCmd() *cobra.Command {
 func runTally(cmd *cobra.Command, args []string) {
 	const op = "lilith.tally"
 
+	tallyBorder := strings.Repeat("=", 80)
+	tallyInter := strings.Repeat("-", 80)
+	colWidths := []int{20, 15, 10, 25, 10}
+
 	entries, err := domovoi.ReadDir(configDirs.daemon, rootFlags.verbose)
 	horus.CheckErr(err, horus.WithOp(op), horus.WithMessage("reading daemon directory"))
 
-	fmt.Printf(
-		"%-20s %-15s %-6s %-20s %s\n",
-		"NAME", "GROUP", "PID", "INVOKED", "STATUS",
-	)
+	fmt.Println(tallyBorder)
+
+	headers := []string{
+		chalk.Cyan.Color("NAME"),
+		chalk.Cyan.Color("GROUP"),
+		chalk.Cyan.Color("PID"),
+		chalk.Cyan.Color("INVOKED"),
+		chalk.Cyan.Color("STATUS"),
+	}
+	var headerRow string
+	for i, h := range headers {
+		headerRow += padRight(h, colWidths[i])
+	}
+	fmt.Println(headerRow)
+
+	fmt.Println(tallyInter)
 
 	for _, e := range entries {
 		if e.IsDir() {
@@ -71,11 +87,15 @@ func runTally(cmd *cobra.Command, args []string) {
 		}
 
 		invoked := meta.InvokedAt.Format("2006-01-02 15:04:05")
-		fmt.Printf(
-			"%-20s %-15s %-6d %-20s %s\n",
-			meta.Daemon, meta.Group, meta.PID, invoked, status,
-		)
+
+		row := padRight(meta.Daemon, colWidths[0]) +
+			padRight(meta.Group, colWidths[1]) +
+			padRight(strconv.Itoa(meta.PID), colWidths[2]) +
+			padRight(invoked, colWidths[3]) +
+			padRight(status, colWidths[4])
+		fmt.Println(row)
 	}
+	fmt.Println(tallyBorder)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
