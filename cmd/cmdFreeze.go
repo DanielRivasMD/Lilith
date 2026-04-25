@@ -20,13 +20,10 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
-	"syscall"
 
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
-	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,28 +71,6 @@ func runFreeze(cmd *cobra.Command, args []string) {
 				return "missing " + horus.OneLineErr(he.Message)
 			}),
 		)
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func freezeDaemon(daemonMeta string) {
-	meta := loadMeta(daemonMeta)
-	sendDaemonSignal(meta.PID, syscall.SIGSTOP)
-	fmt.Printf("%s froze daemon %q\n", chalk.Green.Color("OK:"), meta.Daemon)
-}
-
-func freezeGroupDaemons(group string) {
-	for _, daemonMeta := range listDaemonMetaFiles() {
-		if matchDaemonGroup(daemonMeta, group) {
-			freezeDaemon(daemonMeta)
-		}
-	}
-}
-
-func freezeAllDaemons() {
-	for _, daemonMeta := range listDaemonMetaFiles() {
-		freezeDaemon(daemonMeta)
 	}
 }
 
