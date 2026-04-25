@@ -20,15 +20,10 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
-	"os"
-	"syscall"
-	"time"
 
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
 	"github.com/spf13/cobra"
-	"github.com/ttacon/chalk"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,51 +71,6 @@ func runRekindle(cmd *cobra.Command, args []string) {
 				return "missing " + horus.OneLineErr(he.Message)
 			}),
 		)
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func rekindleDaemon(daemonMeta string) {
-	meta := loadMeta(daemonMeta)
-
-	if proc, err := os.FindProcess(meta.PID); err == nil {
-		if err = proc.Signal(syscall.Signal(0)); err == nil {
-			sendDaemonSignal(meta.PID, syscall.SIGCONT)
-			meta.InvokedAt = time.Now()
-			saveMeta(meta)
-			fmt.Printf("%s resumed %q PID %d\n",
-				chalk.Green.Color("OK:"),
-				meta.Daemon,
-				meta.PID,
-			)
-			return
-		}
-	}
-
-	newPID := spawnWatcher(meta)
-	meta.PID = newPID
-	meta.InvokedAt = time.Now()
-	saveMeta(meta)
-
-	fmt.Printf("%s rekindled %q new PID %d\n",
-		chalk.Green.Color("OK:"),
-		meta.Daemon,
-		newPID,
-	)
-}
-
-func rekindleGroupDaemons(group string) {
-	for _, daemonMeta := range listDaemonMetaFiles() {
-		if matchDaemonGroup(daemonMeta, group) {
-			rekindleDaemon(daemonMeta)
-		}
-	}
-}
-
-func rekindleAllDaemons() {
-	for _, daemonMeta := range listDaemonMetaFiles() {
-		rekindleDaemon(daemonMeta)
 	}
 }
 
