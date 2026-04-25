@@ -53,7 +53,7 @@ install app=app exe=exe:
   @mv -v "${HOME}/go/bin/{{app}}" "${HOME}/go/bin/{{exe}}"
   @echo "\n\033[1;33mCopying\033[0;37m...\n=================================================="
   @if [ ! -d "${HOME}/{{dir}}" ]; then mkdir "${HOME}/{{dir}}"; fi
-  @cp -v ".workflow_config.sh" "${HOME}/{{dir}}"
+  @cp -v ".config.sh" "${HOME}/{{dir}}"
   @if test -e "${HOME}/{{config}}"; then rm -r "${HOME}/{{config}}"; fi && echo "\033[1;33mconfig\033[0;37m" && cp -v -R "config" "${HOME}/{{config}}"
   @if test -e "${HOME}/{{embed}}"; then rm -r "${HOME}/{{embed}}"; fi && echo "\033[1;33membed\033[0;37m" && cp -v -R "embed" "${HOME}/{{embed}}"
   @if test -e "${HOME}/{{forge}}"; then rm -r "${HOME}/{{forge}}"; fi && echo "\033[1;33mforge\033[0;37m" && cp -v -R "forge" "${HOME}/{{forge}}"
