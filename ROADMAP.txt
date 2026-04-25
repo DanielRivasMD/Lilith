@@ -1,5 +1,10 @@
 - make release v1.0.0
-- relocate functions
 
 ==================================================
+cmd/cmdInvoke.go
+  line 114    TODO   use op in invoke functions
+cmd/util.go
+  line 311    TODO   check for complete group redundancy
+cmd/utilInvoke.go
+  line 39     TODO   consider refactoring to eliminate redundant code => tilde expansion into function, run once functions into generics to cognate watchers
 ==================================================
