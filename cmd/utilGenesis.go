@@ -61,21 +61,13 @@ func generateToml() string {
 		"",
 		"# Minimal example workflow named \"demo\":",
 		"[workflows.demo]",
-		"watch  = \"/path/to/your/project\"   # directory to watch",
-		"script = \"build.sh\"                # script to run on changes",
+		"watch  = \"/path/to/project\"   # directory to watch",
+		"script = \"build.sh\"           # script to run on changes",
 		"",
-		"# Optional settings:",
-		"# daemon = \"demo-daemon\"            # unique watcher name",
-		"# group  = \"default\"                # watcher group",
-		"# log    = \"demo\"                   # base name for the .log file",
-		"",
-		"# Add more workflows simply by adding new blocks:",
+		"# More workflows simply by adding new blocks:",
 		"# [workflows.other]",
 		"# watch  = \"/another/path\"",
 		"# script = \"deploy.sh\"",
-		"# daemon = \"other-daemon\"",
-		"# group  = \"deploy-group\"",
-		"# log    = \"other\"",
 		"",
 		"# Save this snippet as ~/.lilith/config/example.toml",
 	}
@@ -99,7 +91,7 @@ func generateConfig(example string) {
 		horus.WithMessage(fmt.Sprintf("writing example to %q", genesisFlags.output)),
 	)
 
-	fmt.Printf("Example config written to %s\n", genesisFlags.output)
+	fmt.Printf("Example config written: %s\n", genesisFlags.output)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
