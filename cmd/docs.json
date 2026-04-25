@@ -26,7 +26,7 @@
   "genesis": {
     "use": "genesis",
     "short": "Initiate config dirs & toml",
-    "long": "Install config directories & Generate a commented example of a Lilith TOML config",
+    "long": "Install config directories\nGenerate lilith TOML config example",
     "example_usages": [
       [
         "genesis",
@@ -38,7 +38,7 @@
   "invoke": {
     "use": "invoke [config]",
     "short": "Start daemon",
-    "long": "Spawn daemon process for the specified directory & execute the configured script on change\nMetadata is persistent for summoning the daemon",
+    "long": "Spawn daemon watcher process",
     "example_usages": [
       [
         "invoke",
@@ -59,8 +59,8 @@
   },
   "slay": {
     "use": "slay [daemon]",
-    "short": "Kill daemon",
-    "long": "Gracefully stop alive daemons, removing their metadata and log to allow clean reinvocation",
+    "short": "Stop daemon",
+    "long": "Gracefully kill daemons",
     "example_usages": [
       [
         "slay",
@@ -80,7 +80,7 @@
   "tally": {
     "use": "tally",
     "short": "List active daemons",
-    "long": "List all daemons invoked, showing group, PID, start time, and current status",
+    "long": "List all daemons invoked, showing group, PID, start time & current status",
     "example_usages": [
       [
         "tally"
@@ -90,7 +90,7 @@
   "freeze": {
     "use": "freeze [daemon]",
     "short": "Pause daemon",
-    "long": "Pause daemon execution using SIGSTOP, until resumed manually",
+    "long": "Pause daemon execution using SIGSTOP",
     "example_usages": [
       [
         "freeze",
@@ -110,7 +110,7 @@
   "summon": {
     "use": "summon [daemon]",
     "short": "Inspect daemon",
-    "long": "Display daemon log output\nPass --follow to stream in real time",
+    "long": "Display daemon log output\nPass --follow to real time stream",
     "example_usages": [
       [
         "summon",
@@ -121,8 +121,8 @@
   },
   "rekindle": {
     "use": "rekindle [daemon]",
-    "short": "Resurrect daemon from limbo",
-    "long": "Restart daemons in limbo using persisted metadata",
+    "short": "Restart daemon",
+    "long": "Resurrect daemons in limbo using persistent metadata",
     "example_usages": [
       [
         "rekindle",
