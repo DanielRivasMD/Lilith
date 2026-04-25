@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -81,7 +82,6 @@ func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// saveMeta writes meta to ~/.lilith/daemon/<name>.json
 func saveMeta(meta *daemonMeta) {
 	const op = "daemon.saveMeta"
 
@@ -95,7 +95,6 @@ func saveMeta(meta *daemonMeta) {
 		}),
 	)
 
-	// Convert time to string for JSON
 	type metaExport struct {
 		Daemon     string `json:"name"`
 		Group      string `json:"group"`
@@ -138,7 +137,6 @@ func saveMeta(meta *daemonMeta) {
 	)
 }
 
-// loadMeta reads ~/.lilith/daemon/<name>.json
 func loadMeta(name string) *daemonMeta {
 	const op = "daemon.loadMeta"
 	path := resolveMetaPath(name)
@@ -175,7 +173,7 @@ func loadMeta(name string) *daemonMeta {
 		}),
 	)
 
-	invoked, _ := time.Parse(time.RFC3339, export.InvokedAt) // ignore error, default to zero
+	invoked, _ := time.Parse(time.RFC3339, export.InvokedAt)
 	return &daemonMeta{
 		Daemon:     export.Daemon,
 		Group:      export.Group,
@@ -187,7 +185,6 @@ func loadMeta(name string) *daemonMeta {
 	}
 }
 
-// resolveMetaPath returns the full path to a daemon metadata file
 func resolveMetaPath(name string) string {
 	if fi, err := os.Stat(name); err == nil && !fi.IsDir() {
 		return name
@@ -259,12 +256,11 @@ func sendDaemonSignal(pid int, sig syscall.Signal) {
 			"pid": pid,
 		}),
 	)
-	proc.Signal(sig) // ignore error if process already gone
+	proc.Signal(sig)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// completion functions
 func completeWorkflowNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	fis, err := os.ReadDir(configDirs.config)
 	if err != nil {
@@ -312,6 +308,7 @@ func completeDaemonNames(cmd *cobra.Command, args []string, toComplete string) (
 	return out, cobra.ShellCompDirectiveNoFileComp
 }
 
+// TODO: check for complete group redundancy
 func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	files, err := filepath.Glob(filepath.Join(configDirs.daemon, "*.json"))
 	if err != nil {
@@ -338,6 +335,39 @@ func completeWorkflowGroups(cmd *cobra.Command, args []string, toComplete string
 		availableGroups = append(availableGroups, g)
 	}
 	return availableGroups, cobra.ShellCompDirectiveDefault
+}
+
+func completeConfigGroups(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	entries, err := os.ReadDir(configDirs.config)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveDefault
+	}
+	var groups []string
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".toml") {
+			continue
+		}
+		name := strings.TrimSuffix(entry.Name(), ".toml")
+		if strings.HasPrefix(name, toComplete) {
+			groups = append(groups, name)
+		}
+	}
+	return groups, cobra.ShellCompDirectiveNoFileComp
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func visibleLength(s string) int {
+	ansi := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	return len(ansi.ReplaceAllString(s, ""))
+}
+
+func padRight(s string, width int) string {
+	cur := visibleLength(s)
+	if cur >= width {
+		return s
+	}
+	return s + strings.Repeat(" ", width-cur)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
