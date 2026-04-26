@@ -45,46 +45,6 @@ type daemonMeta struct {
 	LogPath    string    `json:"logPath"`
 	PID        int       `json:"pid"`
 	InvokedAt  time.Time `json:"invokedAt"`
-// bindFlag sets a flag from a viper config if not already changed
-func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
-	const op = "daemon.bindFlag"
-	flags := cmd.Flags()
-
-	if flags.Changed(flagName) || !cfg.IsSet(flagName) {
-		return
-	}
-
-	f := flags.Lookup(flagName)
-	if f == nil {
-		return
-	}
-
-	var raw string
-	switch f.Value.Type() {
-	case "string":
-		raw = cfg.GetString(flagName)
-	case "int":
-		raw = strconv.Itoa(cfg.GetInt(flagName))
-	case "bool":
-		raw = strconv.FormatBool(cfg.GetBool(flagName))
-	default:
-		raw = cfg.GetString(flagName)
-	}
-
-	if err := flags.Set(flagName, raw); err != nil {
-		horus.CheckErr(
-			horus.NewCategorizedHerror(
-				op,
-				"flag_error",
-				fmt.Sprintf("setting %q from config", flagName),
-				err,
-				map[string]any{
-					"flag":  flagName,
-					"value": raw,
-				},
-			),
-		)
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
