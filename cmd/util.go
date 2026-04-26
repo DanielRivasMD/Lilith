@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -38,6 +37,14 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+type daemonMeta struct {
+	Daemon     string    `json:"name"`
+	Group      string    `json:"group"`
+	WatchDir   string    `json:"watchDir"`
+	ScriptPath string    `json:"scriptPath"`
+	LogPath    string    `json:"logPath"`
+	PID        int       `json:"pid"`
+	InvokedAt  time.Time `json:"invokedAt"`
 // bindFlag sets a flag from a viper config if not already changed
 func bindFlag(cmd *cobra.Command, flagName string, cfg *viper.Viper) {
 	const op = "daemon.bindFlag"
@@ -243,6 +250,7 @@ func matchDaemonGroup(metaPath, expectedGroup string) bool {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: wrap err on horus, both explicit err & proc.Siganl
 func sendDaemonSignal(pid int, sig syscall.Signal) {
 	const op = "daemon.sendSignal"
 

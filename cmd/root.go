@@ -22,7 +22,6 @@ import (
 	"embed"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/DanielRivasMD/domovoi"
 	"github.com/DanielRivasMD/horus"
@@ -125,19 +124,6 @@ func BuildCommands() {
 		RekindleCmd(),
 		GenesisCmd(),
 	)
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// daemonMeta holds persistent info about a process
-type daemonMeta struct {
-	Daemon     string    `json:"name"`
-	Group      string    `json:"group"`
-	WatchDir   string    `json:"watchDir"`
-	ScriptPath string    `json:"scriptPath"`
-	LogPath    string    `json:"logPath"`
-	PID        int       `json:"pid"`
-	InvokedAt  time.Time `json:"invokedAt"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
