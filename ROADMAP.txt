@@ -1,10 +1,15 @@
 - make release v1.0.0
 
+review error handlers
+
+
+
 ==================================================
 cmd/cmdInvoke.go
   line 114    TODO   use op in invoke functions
 cmd/util.go
-  line 311    TODO   check for complete group redundancy
+  line 213    TODO   wrap err on horus, both explicit err & proc.Siganl
+  line 279    TODO   check for complete group redundancy
 cmd/utilInvoke.go
   line 39     TODO   consider refactoring to eliminate redundant code => tilde expansion into function, run once functions into generics to cognate watchers
 ==================================================
