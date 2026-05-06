@@ -190,12 +190,11 @@ func invokeManual() {
 		existingMeta := loadMeta(path)
 		if existingMeta.Daemon == invokeFlags.daemonName && existingMeta.Group == invokeFlags.daemonGroup && isDaemonActive(existingMeta) {
 			horus.CheckErr(
-				errors.New(""),
-				horus.WithOp(op),
+				errors.New("daemon already running: "),
 				horus.WithMessage(existingMeta.Daemon),
 				horus.WithExitCode(2),
 				horus.WithFormatter(func(he *horus.Herror) string {
-					return "daemon " + horus.OneLineErr(he.Message) + " already running"
+					return horus.OneLineErr(he.Message)
 				}),
 			)
 		}

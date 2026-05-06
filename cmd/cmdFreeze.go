@@ -63,12 +63,11 @@ func runFreeze(cmd *cobra.Command, args []string) {
 		freezeDaemon(args[0])
 	default:
 		horus.CheckErr(
-			errors.New(""),
-			horus.WithOp(op),
+			errors.New("missing: "),
 			horus.WithMessage("daemon / flag"),
 			horus.WithExitCode(2),
 			horus.WithFormatter(func(he *horus.Herror) string {
-				return "missing " + horus.OneLineErr(he.Message)
+				return horus.OneLineErr(he.Message)
 			}),
 		)
 	}
