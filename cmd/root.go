@@ -99,9 +99,11 @@ func Execute() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func initConfigDirs() {
-	var err error
-	configDirs.home, err = domovoi.FindHome(rootFlags.verbose)
-	horus.CheckErr(err, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
+	configDirs.home = func() string {
+		h, e := domovoi.FindHome(rootFlags.verbose)
+		horus.CheckErr(e, horus.WithCategory("init_error"), horus.WithMessage("getting home directory"))
+		return h
+	}()
 	configDirs.lilith = filepath.Join(configDirs.home, ".lilith")
 	configDirs.config = filepath.Join(configDirs.lilith, "config")
 	configDirs.log = filepath.Join(configDirs.lilith, "log")
