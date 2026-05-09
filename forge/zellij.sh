@@ -25,7 +25,6 @@ HEAD
 
 # concatenate
 mbombo --in "${zmodes}" --out "${zellij}/config.kdl" \
-  --files "header.kdl" \
   --files "../.keybinds.tmp" \
   --files "except.kdl" \
   --files "locked.kdl" \
@@ -34,7 +33,8 @@ mbombo --in "${zmodes}" --out "${zellij}/config.kdl" \
   --files "renametab.kdl" \
   --files "entersearch.kdl" \
   --files "search.kdl" \
-  --files "../.eof.tmp"
+  --files "../.eof.tmp" \
+  --files "header.kdl"
 
 ####################################################################################################
 
