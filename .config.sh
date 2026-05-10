@@ -5,7 +5,7 @@
 # home
 export home="${HOME}"
 export config="${home}/.config"
-export dotfiles="${home}/Factorem/dotfiles"
+export dotfiles="${home}/lab/dotfiles"
 
 ####################################################################################################
 # goku
