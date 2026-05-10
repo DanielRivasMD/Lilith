@@ -3,17 +3,17 @@ watch = "~/.config/alacritty/alacritty.yml"
 script = "~/.lilith/forge/alacritty.sh"
 
 [workflows.helix]
-watch = "~/Factorem/dotfiles/ex-situ/helix/modes"
+watch = "~/lab/dotfiles/ex-situ/helix/modes"
 script = "~/.lilith/forge/helix.sh"
 
 [workflows.language]
-watch = "~/Factorem/dotfiles/ex-situ/helix/languages"
+watch = "~/lab/dotfiles/ex-situ/helix/languages"
 script = "~/.lilith/forge/language.sh"
 
 [workflows.goku]
-watch = "~/Factorem/Saiya-jin/src"
+watch = "~/lab/Saiya-jin/src"
 script = "~/.lilith/forge/goku.sh"
 
 [workflows.zellij]
-watch = "~/Factorem/dotfiles/in-situ/zellij/modes"
+watch = "~/lab/dotfiles/in-situ/zellij/modes"
 script = "~/.lilith/forge/zellij.sh"
