@@ -33,11 +33,8 @@ var genesisFlags struct {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func GenesisCmd() *cobra.Command {
-	d := horus.Must(domovoi.GlobalDocs())
-	cmd := horus.Must(d.MakeCmd("genesis", runGenesis))
-
+	cmd := horus.Must(horus.Must(domovoi.GlobalDocs()).MakeCmd("genesis", runGenesis))
 	cmd.Flags().StringVarP(&genesisFlags.output, "output", "o", "", "Path to write example config (default = stdout)")
-
 	return cmd
 }
 
