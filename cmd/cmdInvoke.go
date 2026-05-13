@@ -48,6 +48,7 @@ func InvokeCmd() *cobra.Command {
 		domovoi.WithValidArgsFunction(completeWorkflowNames),
 	))
 
+	// DOC: manual is mutually exclusive with toml file mode
 	// manual mode flags
 	cmd.Flags().StringVarP(&invokeFlags.daemonName, "daemon-name", "", "", "Daemon instance name (required in manual mode)")
 	cmd.Flags().StringVarP(&invokeFlags.daemonGroup, "daemon-group", "", "default", "Group name for this daemon (overrides TOML). Default: `default`")
