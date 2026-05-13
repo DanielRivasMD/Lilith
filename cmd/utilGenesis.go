@@ -76,9 +76,7 @@ func generateToml() string {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func generateConfig(example string) {
-	op := "genesis.generateConfig"
-
+func generateConfig(example string, op string) {
 	if genesisFlags.output == "" {
 		fmt.Print(example)
 		return
