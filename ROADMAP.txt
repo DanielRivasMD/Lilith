@@ -6,8 +6,9 @@ review error handlers
 
 ==================================================
 cmd/cmdInvoke.go
-  line 51     DOC    manual is mutually exclusive with toml file mode
-  line 115    TODO   use op in invoke functions
+  line 45     TODO   clean daemons run once
+  line 52     DOC    manual is mutually exclusive with toml file mode
+  line 116    TODO   use op in invoke functions
 cmd/util.go
   line 213    TODO   wrap err on horus, both explicit err & proc.Siganl
   line 279    TODO   check for complete group redundancy

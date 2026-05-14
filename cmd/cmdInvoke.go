@@ -42,6 +42,7 @@ var invokeFlags struct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: clean daemons run once
 func InvokeCmd() *cobra.Command {
 	d := horus.Must(domovoi.GlobalDocs())
 	cmd := horus.Must(d.MakeCmd("invoke", runInvoke,
