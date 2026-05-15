@@ -44,7 +44,7 @@ func runGenesis(cmd *cobra.Command, args []string) {
 	const op = "lilith.genesis"
 	createSubdirs(configDirs, rootFlags.verbose, op)
 	if genesisFlags.output != "" {
-		generateConfig(generateToml())
+		generateConfig(generateToml(), op)
 	}
 }
 
