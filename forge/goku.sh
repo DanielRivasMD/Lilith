@@ -51,7 +51,7 @@ HEAD
 ####################################################################################################
 
 # concatenate
-mbombo --in "${sedn}" --out "${karabiner}/karabiner.edn" \
+mb --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files ".header.tmp" \
   --files "header.edn" \
   --files ".main.tmp" \
