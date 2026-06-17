@@ -24,7 +24,7 @@ HEAD
 ####################################################################################################
 
 # concatenate
-mbombo --in "${zmodes}" --out "${zellij}/config.kdl" \
+dd --in "${zmodes}" --out "${zellij}/config.kdl" \
   --files "../.keybinds.tmp" \
   --files "except.kdl" \
   --files "locked.kdl" \

@@ -9,7 +9,7 @@
 ####################################################################################################
 
 # concatenate
-mbombo --in "${hlangs}" --out "${helix}/languages.toml" \
+dd --in "${hlangs}" --out "${helix}/languages.toml" \
   --files "awk.toml" \
   --files "bash.toml" \
   --files "csv.toml" \

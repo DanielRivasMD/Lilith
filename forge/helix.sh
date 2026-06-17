@@ -11,13 +11,13 @@
 # create temporary files
 for type in normal insert select
 do
-  mbombo --in "${hmodes}" --out "${helix}/.${type}.tmp" --files "common.toml" --replace MODE="${type}_mode"
+  dd --in "${hmodes}" --out "${helix}/.${type}.tmp" --files "common.toml" --replace MODE="${type}_mode"
 done
 
 ####################################################################################################
 
 # concatenate
-mbombo --in "${hmodes}" --out "${helix}/config.toml" \
+dd --in "${hmodes}" --out "${helix}/config.toml" \
   --files "theme.toml" \
   --files "editor.toml" \
   --files "mini-mode.toml" \
