@@ -55,9 +55,6 @@ mb --in "${sedn}" --out "${karabiner}/karabiner.edn" \
   --files ".header.tmp" \
   --files "header.edn" \
   --files ".main.tmp" \
-  --files "browser.edn" \
-  --files "finder.edn" \
-  --files "zoom.edn" \
   --files "q.edn" \
   --files "w.edn" \
   --files "z.edn" \
