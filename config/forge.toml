@@ -3,11 +3,11 @@ watch = "~/.config/alacritty/alacritty.yml"
 script = "~/.lilith/forge/alacritty.sh"
 
 [workflows.helix]
-watch = "~/lab/dotfiles/ex-situ/helix/modes"
+watch = "~/lab/dotfiles/remote/helix/modes"
 script = "~/.lilith/forge/helix.sh"
 
 [workflows.language]
-watch = "~/lab/dotfiles/ex-situ/helix/languages"
+watch = "~/lab/dotfiles/remote/helix/languages"
 script = "~/.lilith/forge/language.sh"
 
 [workflows.goku]
@@ -15,5 +15,5 @@ watch = "~/lab/Saiya-jin/src"
 script = "~/.lilith/forge/goku.sh"
 
 [workflows.zellij]
-watch = "~/lab/dotfiles/in-situ/zellij/modes"
+watch = "~/lab/dotfiles/local/zellij/modes"
 script = "~/.lilith/forge/zellij.sh"
